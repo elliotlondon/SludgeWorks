@@ -19,20 +19,20 @@ def get_constants():
     screen_width = 80
     screen_height = 50
 
-    bar_width = 20
+    bar_width = int(screen_width / 4)
     panel_height = 7
     panel_y = screen_height - panel_height
 
-    message_x = bar_width + 2
+    message_x = int(bar_width + 2)
     message_width = screen_width - bar_width - 2
     message_height = panel_height - 1
 
-    map_width = 80
-    map_height = 43
+    map_width = int(screen_width)
+    map_height = int(screen_height - panel_height)
 
     room_max_size = 12
     room_min_size = 4
-    max_rooms = 30
+    max_rooms = 50
 
     fov_algorithm = 0
     fov_light_walls = True
@@ -42,10 +42,10 @@ def get_constants():
     max_items_per_room = 2
 
     colors = {
-        'dark_wall': libtcod.Color(0, 0, 100),
-        'dark_ground': libtcod.Color(50, 50, 150),
-        'light_wall': libtcod.Color(130, 110, 50),
-        'light_ground': libtcod.Color(200, 180, 50)
+        'dark_wall': libtcod.Color(0, 0, 0),
+        'dark_ground': libtcod.Color(64, 64, 64),
+        'light_wall': libtcod.Color(128, 128, 128),
+        'light_ground': libtcod.Color(192, 192, 192)
     }
 
     constants = {

@@ -99,7 +99,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
 
         render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
                    constants['screen_width'], constants['screen_height'], constants['bar_width'],
-                   constants['panel_height'], constants['panel_y'], mouse, constants['colors'], game_state)
+                   constants['panel_height'], constants['panel_y'], mouse, constants['colours'], game_state)
 
         fov_recompute = False
 
@@ -243,7 +243,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                 if dead_entity == player:
                     message, game_state = kill_player(dead_entity)
                 else:
-                    message = kill_monster(dead_entity)
+                    message = kill_monster(dead_entity, entities)
 
                 message_log.add_message(message)
 
@@ -315,7 +315,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                             if dead_entity == player:
                                 message, game_state = kill_player(dead_entity)
                             else:
-                                message = kill_monster(dead_entity)
+                                message = kill_monster(dead_entity, entities)
 
                             message_log.add_message(message)
 

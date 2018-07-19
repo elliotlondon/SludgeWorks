@@ -9,7 +9,7 @@ from entity import Entity
 from equipment_slots import EquipmentSlots
 from game_messages import MessageLog
 from game_states import GameStates
-from map_objects.game_map import GameMap
+from game_map import GameMap
 from render_functions import RenderOrder
 
 
@@ -41,7 +41,7 @@ def get_constants():
     max_monsters_per_room = 4
     max_items_per_room = 2
 
-    colors = {
+    colours = {
         'dark_wall': libtcod.Color(0, 0, 0),
         'dark_ground': libtcod.Color(64, 64, 64),
         'light_wall': libtcod.Color(128, 128, 128),
@@ -68,7 +68,7 @@ def get_constants():
         'fov_radius': fov_radius,
         'max_monsters_per_room': max_monsters_per_room,
         'max_items_per_room': max_items_per_room,
-        'colors': colors
+        'colours': colours
     }
 
     return constants

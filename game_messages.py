@@ -4,9 +4,9 @@ import textwrap
 
 
 class Message:
-    def __init__(self, text, color=libtcod.white):
+    def __init__(self, text, colour=libtcod.white):
         self.text = text
-        self.color = color
+        self.colour = colour
 
 
 class MessageLog:
@@ -25,6 +25,6 @@ class MessageLog:
             if len(self.messages) == self.height:
                 del self.messages[0]
 
-            # Add the new line as a Message object, with the text and the color
+            # Add the new line as a Message object, with the text and the colour
 
-            self.messages.append(Message(line, message.color))
+            self.messages.append(Message(line, message.colour))

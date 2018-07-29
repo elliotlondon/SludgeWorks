@@ -138,7 +138,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                     attack_results = player.fighter.attack(target)
                     player_turn_results.extend(attack_results)
                 else:
-                    player.move(dx, dy)
+                    player.move(dx, dy, game_map)
 
                     fov_recompute = True
 
@@ -195,9 +195,9 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                 player.fighter.base_max_hp += 20
                 player.fighter.hp += player.fighter.hp
             elif level_up == 'str':
-                player.fighter.base_power += 1
-            elif level_up == 'def':
-                player.fighter.base_defense += 1
+                player.fighter.base_strength += 1
+            elif level_up == 'agi':
+                player.fighter.base_agility += 1
 
             game_state = previous_game_state
 
@@ -303,15 +303,6 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                     game_state = GameStates.LEVEL_UP
 
         if game_state == GameStates.ENEMY_TURN:
-            # Ensure that errors do not arise with rendering when enemies move
-            render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
-                       constants['screen_width'], constants['screen_height'], constants['bar_width'],
-                       constants['panel_height'], constants['panel_y'], mouse, constants['colours'], game_state)
-
-            fov_recompute = True
-            libtcod.console_flush()
-            clear_all(con, entities)
-
             for entity in entities:
                 if entity.ai:
                     enemy_turn_results = entity.ai.take_turn(player, fov_map, game_map, entities)

@@ -53,22 +53,24 @@ class Entity:
                 self.item = item
                 self.item.owner = self
 
-    def move(self, dx, dy):
-        # Move the entity by a given amount
-        self.x += dx
-        self.y += dy
+    def move(self, dx, dy, game_map):
+        if not game_map.is_blocked(self.x, self.y + dy):
+            self.y += dy
+        if not game_map.is_blocked(self.x + dx, self.y):
+            self.x += dx
 
-    def move_towards(self, target_x, target_y, game_map, entities):
+    def move_towards(self, target_x, target_y, game_map):
         dx = target_x - self.x
         dy = target_y - self.y
-        distance = math.sqrt(dx ** 2 + dy ** 2)
-
-        dx = int(round(dx / distance))
-        dy = int(round(dy / distance))
-
-        if not (game_map.is_blocked(self.x + dx, self.y + dy) or
-                get_blocking_entities_at_location(entities, self.x + dx, self.y + dy)):
-            self.move(dx, dy)
+        if dx > 0:
+            dx = 1
+        if dx < 0:
+            dx = -1
+        if dy > 0:
+            dy = 1
+        if dy < 0:
+            dy = -1
+        self.move(dx, dy, game_map)
 
     def move_astar(self, target, entities, game_map):
         # Create a FOV map that has the dimensions of the map
@@ -108,7 +110,7 @@ class Entity:
         else:
             # Keep the old move function as a backup so that if there are no paths (for example another monster blocks a corridor)
             # it will still try to move towards the player (closer to the corridor opening)
-            self.move_towards(target.x, target.y, game_map, entities)
+            self.move_towards(target.x, target.y, game_map)
 
             # Delete the path to free memory
         libtcod.path_delete(my_path)

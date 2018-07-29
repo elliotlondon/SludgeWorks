@@ -163,11 +163,11 @@ def handle_level_up_menu(key):
         key_char = chr(key.c)
 
         if key_char == 'a':
-            return {'level_up': 'hp'}
-        elif key_char == 'b':
             return {'level_up': 'str'}
+        elif key_char == 'b':
+            return {'level_up': 'agi'}
         elif key_char == 'c':
-            return {'level_up': 'def'}
+            return {'level_up': 'hp'}
 
     if key.vk == libtcod.KEY_F11:
         # fullscreen = F11

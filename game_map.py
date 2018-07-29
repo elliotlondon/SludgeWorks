@@ -121,7 +121,7 @@ class GameMap:
         number_of_items = randint(0, max_items_per_room)
 
         monster_chances = {
-            'Pathetic Wretch': 80,
+            'Wretch': 80,
             'Hunchback': from_dungeon_level([[10, 2], [25, 4], [80, 6], [40, 10]], self.dungeon_level),
             'Thresher': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level)
         }
@@ -129,7 +129,7 @@ class GameMap:
         # Item dictionary
         item_chances = {
             'healing_potion': 35,
-            'sword': from_dungeon_level([[5, 0], [10, 3]], self.dungeon_level),
+            'sword': from_dungeon_level([[10, 0]], self.dungeon_level),
             'helm': from_dungeon_level([[5, 0], [10, 3]], self.dungeon_level),
             'shield': from_dungeon_level([[5, 3], [10, 6]], self.dungeon_level),
             'lightning_scroll': from_dungeon_level([[25, 4]], self.dungeon_level),
@@ -144,7 +144,7 @@ class GameMap:
             y = randint(room.y1 + 1, room.y2 - 1)
 
             if not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                fighter_component = Fighter(hp=10, defense=1, power=3, xp=20)
+                fighter_component = Fighter(hp=10, strength=3, agility=1, vitality=1, intellect=1, perception=1, xp=20)
                 ai_component = Stationary()
                 monster = Entity(x, y, 'V', libtcod.light_grey, 'Whip Vine', blocks=True,
                                  render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
@@ -160,18 +160,24 @@ class GameMap:
             if not any([entity for entity in entities if entity.x == x and entity.y == y]):
                 monster_choice = random_choice_from_dict(monster_chances)
 
-                if monster_choice == 'Pathetic Wretch':
-                    fighter_component = Fighter(hp=20, defense=0, power=4, xp=30)
+                if monster_choice == 'Wretch':
+                    fighter_component = Fighter(hp=10,
+                                                damage_dice=1, damage_sides=4,
+                                                strength=4, agility=0, vitality=1, intellect=1, perception=1, xp=30)
                     ai_component = Aggressive()
-                    monster = Entity(x, y, 'w', libtcod.darker_red, 'Pathetic Wretch', blocks=True,
+                    monster = Entity(x, y, 'w', libtcod.darker_red, 'Wretch', blocks=True,
                                      render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
                 elif monster_choice == 'Hunchback':
-                    fighter_component = Fighter(hp=30, defense=1, power=7, xp=75)
+                    fighter_component = Fighter(hp=20,
+                                                damage_dice=2, damage_sides=6,
+                                                strength=7, agility=1, vitality=1, intellect=1, perception=1, xp=75)
                     ai_component = Aggressive()
                     monster = Entity(x, y, 'H', libtcod.brass, 'Hunchback', blocks=True,
                                      render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
                 else:
-                    fighter_component = Fighter(hp=60, defense=4, power=6, xp=150)
+                    fighter_component = Fighter(hp=50,
+                                                damage_dice=3, damage_sides=4,
+                                                strength=5, agility=4, vitality=1, intellect=1, perception=1, xp=150)
                     ai_component = Aggressive()
                     monster = Entity(x, y, 'T', libtcod.dark_azure, 'Thresher', blocks=True,
                                      fighter=fighter_component,
@@ -180,6 +186,7 @@ class GameMap:
                 entities.append(monster)
 
         # Place items
+        equipment = 0
         for i in range(number_of_items):
             x = randint(room.x1 + 1, room.x2 - 1)
             y = randint(room.y1 + 1, room.y2 - 1)
@@ -187,16 +194,24 @@ class GameMap:
             if not any([entity for entity in entities if entity.x == x and entity.y == y]):
                 item_choice = random_choice_from_dict(item_chances)
 
-                if item_choice == 'sword':
-                    equippable_component = Equippable(EquipmentSlots.MAIN_HAND, power_bonus=3)
-                    item = Entity(x, y, '/', libtcod.sky, 'Sword', equippable=equippable_component)
-                elif item_choice == 'shield':
-                    equippable_component = Equippable(EquipmentSlots.OFF_HAND, defense_bonus=1)
-                    item = Entity(x, y, '[', libtcod.darker_orange, 'Shield', equippable=equippable_component)
-                elif item_choice == 'helm':
-                    equippable_component = Equippable(EquipmentSlots.HEAD, defense_bonus=1)
-                    item = Entity(x, y, '[', libtcod.darker_orange, 'Helm', equippable=equippable_component)
+                # Weapons and armour
+                if item_choice == 'sword' and equipment <= 3:
+                    equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
+                                                      damage_dice=1, damage_sides=4,
+                                                      strength_bonus=4)
+                    item = Entity(x, y, '/', libtcod.sky, 'Sword (1d6)', equippable=equippable_component)
+                    equipment = equipment + 1
 
+                elif item_choice == 'shield' and equipment <= 3:
+                    equippable_component = Equippable(EquipmentSlots.OFF_HAND, agility_bonus=1)
+                    item = Entity(x, y, '[', libtcod.darker_orange, 'Shield', equippable=equippable_component)
+                    equipment = equipment + 1
+                elif item_choice == 'helm' and equipment <= 3:
+                    equippable_component = Equippable(EquipmentSlots.HEAD, agility_bonus=1)
+                    item = Entity(x, y, '[', libtcod.darker_orange, 'Helm', equippable=equippable_component)
+                    equipment = equipment + 1
+
+                # Consumables
                 elif item_choice == 'healing_potion':
                     item_component = Item(use_function=heal, amount=40)
                     item = Entity(x, y, '!', libtcod.violet, 'Healing Potion', render_order=RenderOrder.ITEM,

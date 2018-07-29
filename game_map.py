@@ -2,8 +2,7 @@ import libtcodpy as libtcod
 from random import randint
 
 from components.ai import Aggressive, Stationary
-from components.equipment import EquipmentSlots
-from components.equippable import Equippable
+from components.equipment import EquipmentSlots, Equippable
 from components.fighter import Fighter
 from components.item import Item
 from components.stairs import Stairs
@@ -114,7 +113,7 @@ class GameMap:
 
     def place_entities(self, room, entities):
         max_monsters_per_room = from_dungeon_level([[2, 1], [3, 4], [5, 6]], self.dungeon_level)
-        max_plants_per_room = 2
+        max_plants_per_room = 0
         max_items_per_room = from_dungeon_level([[1, 1], [2, 4]], self.dungeon_level)
         # Get a random number of monsters
         number_of_monsters = randint(0, max_monsters_per_room)
@@ -122,16 +121,17 @@ class GameMap:
         number_of_items = randint(0, max_items_per_room)
 
         monster_chances = {
-            'orc': 80,
-            'troll': from_dungeon_level([[15, 3], [30, 5], [60, 7]], self.dungeon_level)
+            'Pathetic Wretch': 80,
+            'Hunchback': from_dungeon_level([[10, 2], [25, 4], [80, 6], [40, 10]], self.dungeon_level),
+            'Thresher': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level)
         }
 
         # Item dictionary
         item_chances = {
             'healing_potion': 35,
-            'sword': from_dungeon_level([[5, 4]], self.dungeon_level),
-            'helm': from_dungeon_level([[3, 4]], self.dungeon_level),
-            'shield': from_dungeon_level([[15, 8]], self.dungeon_level),
+            'sword': from_dungeon_level([[5, 0], [10, 3]], self.dungeon_level),
+            'helm': from_dungeon_level([[5, 0], [10, 3]], self.dungeon_level),
+            'shield': from_dungeon_level([[5, 3], [10, 6]], self.dungeon_level),
             'lightning_scroll': from_dungeon_level([[25, 4]], self.dungeon_level),
             'fireball_scroll': from_dungeon_level([[25, 6]], self.dungeon_level),
             'confusion_scroll': from_dungeon_level([[10, 2]], self.dungeon_level)
@@ -160,15 +160,21 @@ class GameMap:
             if not any([entity for entity in entities if entity.x == x and entity.y == y]):
                 monster_choice = random_choice_from_dict(monster_chances)
 
-                if monster_choice == 'orc':
-                    fighter_component = Fighter(hp=20, defense=0, power=4, xp=35)
+                if monster_choice == 'Pathetic Wretch':
+                    fighter_component = Fighter(hp=20, defense=0, power=4, xp=30)
                     ai_component = Aggressive()
-                    monster = Entity(x, y, 'O', libtcod.desaturated_green, 'Orc', blocks=True,
+                    monster = Entity(x, y, 'w', libtcod.darker_red, 'Pathetic Wretch', blocks=True,
+                                     render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
+                elif monster_choice == 'Hunchback':
+                    fighter_component = Fighter(hp=30, defense=1, power=7, xp=75)
+                    ai_component = Aggressive()
+                    monster = Entity(x, y, 'H', libtcod.brass, 'Hunchback', blocks=True,
                                      render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
                 else:
-                    fighter_component = Fighter(hp=30, defense=2, power=8, xp=100)
+                    fighter_component = Fighter(hp=60, defense=4, power=6, xp=150)
                     ai_component = Aggressive()
-                    monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True, fighter=fighter_component,
+                    monster = Entity(x, y, 'T', libtcod.dark_azure, 'Thresher', blocks=True,
+                                     fighter=fighter_component,
                                      render_order=RenderOrder.ACTOR, ai=ai_component)
 
                 entities.append(monster)
@@ -244,7 +250,7 @@ class Tile:
         self.block_sight = block_sight
 
         # Change this if you wish to see everything!
-        self.explored = True
+        self.explored = False
 
 
 class Rect:

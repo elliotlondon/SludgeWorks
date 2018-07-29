@@ -1,7 +1,6 @@
 import libtcodpy as libtcod
 
-from components.equipment import Equipment
-from components.equippable import Equippable
+from components.equipment import Equipment, Equippable
 from components.fighter import Fighter
 from components.inventory import Inventory
 from components.level import Level
@@ -30,8 +29,8 @@ def get_constants():
     map_width = int(screen_width)
     map_height = int(screen_height - panel_height)
 
-    room_max_size = 12
-    room_min_size = 4
+    room_max_size = map_width / 5
+    room_min_size = map_width / 10
     max_rooms = 50
 
     fov_algorithm = 0
@@ -42,10 +41,10 @@ def get_constants():
     max_items_per_room = 2
 
     colours = {
-        'dark_wall': libtcod.Color(0, 0, 0),
-        'dark_ground': libtcod.Color(64, 64, 64),
-        'light_wall': libtcod.Color(128, 128, 128),
-        'light_ground': libtcod.Color(192, 192, 192)
+        'dark_wall': libtcod.dark_grey,
+        'light_wall': libtcod.Color(150, 100, 50),
+        'dark_ground': libtcod.black,
+        'light_ground': libtcod.dark_grey,
     }
 
     constants = {
@@ -79,7 +78,7 @@ def get_game_variables(constants):
     inventory_component = Inventory(26)
     level_component = Level()
     equipment_component = Equipment()
-    player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR,
+    player = Entity(0, 0, ord('@'.encode('cp437')), libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR,
                     fighter=fighter_component, inventory=inventory_component, level=level_component,
                     equipment=equipment_component)
     entities = [player]

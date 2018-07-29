@@ -12,5 +12,5 @@ class EquipmentSlots(Enum):
     LEGS = auto()
     FEET = auto()
     # Jewellery
-    FINGER_1 = auto()
-    FINGER_2 = auto()
+    LEFT_HAND = auto()
+    RIGHT_HAND = auto()

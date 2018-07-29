@@ -15,7 +15,7 @@ from render_functions import clear_all, render_all
 def main():
     constants = get_constants()
 
-    libtcod.console_set_custom_font('fonts/arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+    libtcod.console_set_custom_font('fonts/terminal8x8_gs_ro.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_ASCII_INROW)
 
     libtcod.console_init_root(constants['screen_width'], constants['screen_height'], constants['window_title'], False)
 
@@ -102,9 +102,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                    constants['panel_height'], constants['panel_y'], mouse, constants['colours'], game_state)
 
         fov_recompute = False
-
         libtcod.console_flush()
-
         clear_all(con, entities)
 
         action = handle_keys(key, game_state)
@@ -115,6 +113,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
         pickup = action.get('pickup')
         show_inventory = action.get('show_inventory')
         drop_inventory = action.get('drop_inventory')
+        look = action.get('look')
         inventory_index = action.get('inventory_index')
         take_stairs = action.get('take_stairs')
         level_up = action.get('level_up')
@@ -174,6 +173,10 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                 player_turn_results.extend(player.inventory.use(item, entities=entities, fov_map=fov_map))
             elif game_state == GameStates.DROP_INVENTORY:
                 player_turn_results.extend(player.inventory.drop_item(item))
+
+        if look:
+            previous_game_state = game_state
+            game_state = GameStates.LOOK
 
         if take_stairs and game_state == GameStates.PLAYERS_TURN:
             for entity in entities:
@@ -300,6 +303,15 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                     game_state = GameStates.LEVEL_UP
 
         if game_state == GameStates.ENEMY_TURN:
+            # Ensure that errors do not arise with rendering when enemies move
+            render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
+                       constants['screen_width'], constants['screen_height'], constants['bar_width'],
+                       constants['panel_height'], constants['panel_y'], mouse, constants['colours'], game_state)
+
+            fov_recompute = True
+            libtcod.console_flush()
+            clear_all(con, entities)
+
             for entity in entities:
                 if entity.ai:
                     enemy_turn_results = entity.ai.take_turn(player, fov_map, game_map, entities)

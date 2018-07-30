@@ -16,10 +16,10 @@ def get_constants():
     window_title = 'sludgeWorks'
 
     screen_width = 80
-    screen_height = 50
+    screen_height = 52
 
     bar_width = int(screen_width / 4)
-    panel_height = 7
+    panel_height = round(screen_height / 8)
     panel_y = screen_height - panel_height
 
     message_x = int(bar_width + 2)
@@ -79,7 +79,8 @@ def get_game_variables(constants):
                                 strength=1, agility=1, vitality=1, intellect=1, perception=1)
     inventory_component = Inventory(26)
     level_component = Level()
-    equipment_component = Equipment()
+    slot = ()
+    equipment_component = Equipment(slot)
     player = Entity(0, 0, ord('@'.encode('cp437')), libtcod.white, 'Player', blocks=True,
                     render_order=RenderOrder.ACTOR, fighter=fighter_component, inventory=inventory_component,
                     level=level_component, equipment=equipment_component)

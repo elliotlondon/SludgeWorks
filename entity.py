@@ -13,6 +13,8 @@ class Entity:
         self.char = char
         self.colour = colour
         self.name = name
+        # self.description = description
+        # self.seen = seen
         self.blocks = blocks
         self.render_order = render_order
         self.fighter = fighter

@@ -27,7 +27,8 @@ def get_names_under_char(player, entities, fov_map):
     (x, y) = (player.x, player.y)
 
     names = [entity.name for entity in entities
-             if entity.x == x and entity.y == y and libtcod.map_is_in_fov(fov_map, entity.x, entity.y)]
+             if entity.x == x and entity.y == y and libtcod.map_is_in_fov(fov_map, entity.x, entity.y)
+             and entity.name != 'Player']
     names = ', '.join(names)
 
     return names.capitalize()
@@ -49,7 +50,7 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_colour, back_
 
 
 def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height,
-               bar_width, panel_height, panel_y, mouse, colours, game_state):
+               bar_width, panel_height, panel_y, colours, game_state):
     if fov_recompute:
         for y in range(game_map.height):
             for x in range(game_map.width):
@@ -102,7 +103,7 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
 
     libtcod.console_set_default_foreground(panel, libtcod.light_gray)
     libtcod.console_print_ex(panel, 1, 0, libtcod.BKGND_NONE, libtcod.LEFT,
-                             get_names_under_mouse(mouse, entities, fov_map))
+                             get_names_under_char(player, entities, fov_map))
 
     libtcod.console_blit(panel, 0, 0, screen_width, panel_height, 0, 0, panel_y)
 

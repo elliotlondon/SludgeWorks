@@ -2,7 +2,6 @@ import libtcodpy as libtcod
 
 from random import randint
 
-from fov_functions import recompute_fov
 from game_messages import Message
 
 
@@ -85,7 +84,6 @@ class Fighter:
         return self.base_perception + bonus
 
     def take_damage(self, amount):
-        global recompute_fov
         results = []
 
         self.hp -= amount
@@ -112,14 +110,14 @@ class Fighter:
         if attack_roll > defence_roll:
             damage = self.damage
             if damage > 0:
-                results.append({'message': Message('{0} attacks {1} for {2} hit points. ([{2} vs. {3}])'.format(
+                results.append({'message': Message('{0} attacks {1} for {2} hit points. ([{3} vs. {4}])'.format(
                     self.owner.name.capitalize(), target.name, str(damage), attack_roll, defence_roll), libtcod.white)})
                 results.extend(target.fighter.take_damage(damage))
             else:
                 results.append({'message': Message('{0} attacks {1} but does no damage. ([{2} vs. {3}])'.format(
-                    self.owner.name.capitalize(), target.name, attack_roll, defence_roll), libtcod.white)})
+                    self.owner.name.capitalize(), target.name, attack_roll, defence_roll), libtcod.grey)})
         else:
             results.append({'message': Message('{0} attacks {1} and misses. ([{2} vs. {3}])'.format(
-                self.owner.name.capitalize(), target.name, attack_roll, defence_roll), libtcod.white)})
+                self.owner.name.capitalize(), target.name, attack_roll, defence_roll), libtcod.grey)})
 
         return results

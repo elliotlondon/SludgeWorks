@@ -99,7 +99,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
 
         render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
                    constants['screen_width'], constants['screen_height'], constants['bar_width'],
-                   constants['panel_height'], constants['panel_y'], mouse, constants['colours'], game_state)
+                   constants['panel_height'], constants['panel_y'], constants['colours'], game_state)
 
         fov_recompute = False
         libtcod.console_flush()
@@ -303,6 +303,14 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                     game_state = GameStates.LEVEL_UP
 
         if game_state == GameStates.ENEMY_TURN:
+            # Ensure that errors do not arise with rendering when enemies move
+            render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
+                       constants['screen_width'], constants['screen_height'], constants['bar_width'],
+                       constants['panel_height'], constants['panel_y'], constants['colours'], game_state)
+            fov_recompute = True
+            libtcod.console_flush()
+            clear_all(con, entities)
+
             for entity in entities:
                 if entity.ai:
                     enemy_turn_results = entity.ai.take_turn(player, fov_map, game_map, entities)

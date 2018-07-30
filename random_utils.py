@@ -29,14 +29,3 @@ def random_choice_from_dict(choice_dict):
     chances = list(choice_dict.values())
 
     return choices[random_choice_index(chances)]
-
-
-def roll_for(list):
-    roll_total = 0
-
-    # For i in range of the list's first value (which should be the number of dice)
-    for i in range(0, list[0], 1):
-        # Roll for a number between 1 and the second value (which should be the sides)
-        roll_total += libtcod.random_get_int(0, 1, list[1])
-
-    return roll_total

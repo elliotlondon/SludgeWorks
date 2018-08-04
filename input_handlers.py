@@ -20,6 +20,8 @@ def handle_keys(key, game_state):
         return handle_character_screen(key)
     elif game_state == GameStates.ESC_MENU:
         return handle_esc_menu_keys(key)
+    elif game_state == GameStates.HELP_MENU:
+        return handle_help_menu_keys(key)
 
     return {}
 
@@ -203,6 +205,16 @@ def handle_esc_menu_keys(key):
     if key.vk == libtcod.KEY_ESCAPE:
         return {'exit': True}
 
+    if key.vk == libtcod.KEY_F11:
+        # fullscreen = F11
+        return {'fullscreen': True}
+
+    return {}
+
+
+def handle_help_menu_keys(key):
+    if key.vk == libtcod.KEY_ESCAPE:
+        return {'exit': True}
     if key.vk == libtcod.KEY_F11:
         # fullscreen = F11
         return {'fullscreen': True}

@@ -224,19 +224,14 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
             game_state = GameStates.ESC_MENU
 
         if help:
-            previous_game_state = game_state
             game_state = GameStates.HELP_MENU
 
         if exit:
-            if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY, GameStates.CHARACTER_SCREEN,
-                              GameStates.LOOK, GameStates.ESC_MENU):
-                game_state = previous_game_state
-            elif game_state == GameStates.TARGETING:
+            if game_state == GameStates.TARGETING:
                 player_turn_results.append({'targeting_cancelled': True})
-            else:
-                save_game(player, entities, game_map, message_log, game_state)
-
                 return True
+            else:
+                game_state = previous_game_state
 
         if quit:
             save_game(player, entities, game_map, message_log, game_state)

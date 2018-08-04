@@ -122,7 +122,10 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
         character_screen(player, 30, 10, screen_width, screen_height)
 
     elif game_state == GameStates.ESC_MENU:
-        esc_menu(colours, 30, 10, screen_width, screen_height)
+        esc_menu(colours, 40, 10, screen_width, screen_height)
+
+    elif game_state == GameStates.HELP_MENU:
+        help_menu(50, 10, screen_width, screen_height)
 
 
 def clear_all(con, entities):

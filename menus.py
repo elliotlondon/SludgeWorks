@@ -89,7 +89,7 @@ def character_screen(player, menu_width, menu_height, screen_width, screen_heigh
     libtcod.console_set_default_foreground(window, libtcod.white)
 
     libtcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Character Information')
+                                  libtcod.CENTER, 'Character Information')
     libtcod.console_print_rect_ex(window, 0, 2, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, 'Level: {0}'.format(player.level.current_level))
     libtcod.console_print_rect_ex(window, 0, 3, menu_width, menu_height, libtcod.BKGND_NONE,
@@ -110,7 +110,6 @@ def character_screen(player, menu_width, menu_height, screen_width, screen_heigh
 
 def esc_menu(colours, menu_width, menu_height, screen_width, screen_height):
     window = libtcod.console_new(menu_width, menu_height)
-
     libtcod.console_set_default_foreground(window, libtcod.white)
     libtcod.console_set_color_control(libtcod.COLCTRL_1, libtcod.light_yellow, libtcod.white)
 
@@ -121,7 +120,33 @@ def esc_menu(colours, menu_width, menu_height, screen_width, screen_height):
     libtcod.console_print_rect_ex(window, 0, 4, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, 'b.) %c%s%cesume' % (libtcod.COLCTRL_1, 'R', libtcod.COLCTRL_STOP))
     libtcod.console_print_rect_ex(window, 0, 5, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'c.) %c%s%cuit' % (libtcod.COLCTRL_1, 'Q', libtcod.COLCTRL_STOP))
+                                  libtcod.LEFT, 'c.) Save & %c%s%cuit' % (libtcod.COLCTRL_1, 'Q', libtcod.COLCTRL_STOP))
+
+    x = screen_width // 2 - menu_width // 2
+    y = screen_height // 2 - menu_height // 2
+    libtcod.console_blit(window, 0, 0, menu_width, menu_height, 0, x, y, 1.0, 1.0)
+
+
+def help_menu(menu_width, menu_height, screen_width, screen_height):
+    window = libtcod.console_new(menu_width, menu_height)
+    libtcod.console_set_default_foreground(window, libtcod.white)
+
+    libtcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Help')
+    libtcod.console_print_rect_ex(window, 0, 2, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Movement:')
+    libtcod.console_print_rect_ex(window, 0, 3, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Move around using either the arrow keys,')
+    libtcod.console_print_rect_ex(window, 0, 4, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'or y u i, h j k l, b n m.')
+    libtcod.console_print_rect_ex(window, 0, 5, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Commands:')
+    libtcod.console_print_rect_ex(window, 0, 6, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'g: Get, i: Inventory, d: Drop, c: Character Info, >: Use Stairs')
+    libtcod.console_print_rect_ex(window, 0, 7, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Press F11 at any time to toggle fullscreen mode.')
+    libtcod.console_print_rect_ex(window, 0, 8, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Press Escape to leave this menu.')
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height // 2

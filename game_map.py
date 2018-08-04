@@ -91,6 +91,8 @@ class GameMap:
 
         stairs_component = Stairs(self.dungeon_level + 1)
         down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', libtcod.white, 'Stairs',
+                             'There\'s a dark chasm here which will allow you to take a one-way trip to'
+                             'the next chamber of the SludgeWorks.',
                              render_order=RenderOrder.STAIRS, stairs=stairs_component)
         entities.append(down_stairs)
 
@@ -165,21 +167,32 @@ class GameMap:
                                                 damage_dice=1, damage_sides=4,
                                                 strength=4, agility=0, vitality=1, intellect=1, perception=1, xp=30)
                     ai_component = Aggressive()
-                    monster = Entity(x, y, 'w', libtcod.darker_red, 'Wretch', blocks=True,
+                    monster = Entity(x, y, 'w', libtcod.darker_red, 'Wretch',
+                                     'A stunted human wrapped in filthy rags and long since driven feral by the '
+                                     'SludgeWorks.',
+                                     blocks=True,
                                      render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
                 elif monster_choice == 'Hunchback':
                     fighter_component = Fighter(hp=20,
                                                 damage_dice=2, damage_sides=6,
                                                 strength=7, agility=1, vitality=1, intellect=1, perception=1, xp=75)
                     ai_component = Aggressive()
-                    monster = Entity(x, y, 'H', libtcod.brass, 'Hunchback', blocks=True,
+                    monster = Entity(x, y, 'H', libtcod.brass, 'Hunchback',
+                                     'A humanoid figure draped in dark, hooded robes. It\'s face is completely '
+                                     'concealed and it carries a wicked, curved dagger. It moves with purpose and '
+                                     'chants in an ancient, guttural tongue.',
+                                     blocks=True,
                                      render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
                 else:
                     fighter_component = Fighter(hp=50,
                                                 damage_dice=3, damage_sides=4,
                                                 strength=5, agility=4, vitality=1, intellect=1, perception=1, xp=150)
                     ai_component = Aggressive()
-                    monster = Entity(x, y, 'T', libtcod.dark_azure, 'Thresher', blocks=True,
+                    monster = Entity(x, y, 'T', libtcod.dark_azure, 'Thresher',
+                                     'A colossal ogre-like ape covered in patches of matted hair and littered with '
+                                     'scars. This creature tirelessly searches it\'s surroundings for new objects to '
+                                     'smash together with a joyous, childlike expression.',
+                                     blocks=True,
                                      fighter=fighter_component,
                                      render_order=RenderOrder.ACTOR, ai=ai_component)
 
@@ -197,41 +210,63 @@ class GameMap:
                 # Weapons and armour
                 if item_choice == 'sword' and equipment <= 3:
                     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
-                                                      damage_dice=1, damage_sides=4,
-                                                      strength_bonus=4)
-                    item = Entity(x, y, '/', libtcod.sky, 'Sword (1d6)', equippable=equippable_component)
+                                                      damage_dice=1, damage_sides=6,
+                                                      strength_bonus=3)
+                    item = Entity(x, y, '/', libtcod.sky, 'Sword (1d6)',
+                                  'A rusted and dirt-caked longsword. It\'s fairly blunt, but much better than ' +
+                                  'nothing. +3 STR [1d6]',
+                                  equippable=equippable_component)
                     equipment = equipment + 1
-
                 elif item_choice == 'shield' and equipment <= 3:
                     equippable_component = Equippable(EquipmentSlots.OFF_HAND, agility_bonus=1)
-                    item = Entity(x, y, '[', libtcod.darker_orange, 'Shield', equippable=equippable_component)
+                    item = Entity(x, y, '[', libtcod.darker_orange, 'Shield',
+                                  'A small buckler that can be attached to the arm and used to deflect attacks.',
+                                  equippable=equippable_component)
                     equipment = equipment + 1
                 elif item_choice == 'helm' and equipment <= 3:
                     equippable_component = Equippable(EquipmentSlots.HEAD, agility_bonus=1)
-                    item = Entity(x, y, '[', libtcod.darker_orange, 'Helm', equippable=equippable_component)
+                    item = Entity(x, y, '[', libtcod.darker_orange, 'Helm',
+                                  'A leather helmet designed to help minimise head wounds. +1 AGI',
+                                  equippable=equippable_component)
                     equipment = equipment + 1
 
                 # Consumables
                 elif item_choice == 'healing_potion':
-                    item_component = Item(use_function=heal, amount=40)
-                    item = Entity(x, y, '!', libtcod.violet, 'Healing Potion', render_order=RenderOrder.ITEM,
+                    heal_amount = 40
+                    item_component = Item(use_function=heal, amount=heal_amount)
+                    item = Entity(x, y, '!', libtcod.violet, 'Healing Potion',
+                                  'A violet flask that you recognise to be a healing potion. This will help '
+                                  'heal your wounds. ' + str(heal_amount) + ' HP',
+                                  render_order=RenderOrder.ITEM,
                                   item=item_component)
                 elif item_choice == 'fireball_scroll':
+                    fireball_damage = 25
+                    fireball_range = 3
                     item_component = Item(use_function=cast_fireball, targeting=True, targeting_message=Message(
                         'Left-click a target tile for the fireball, or right-click to cancel.', libtcod.light_cyan),
-                                          damage=25, radius=3)
-                    item = Entity(x, y, '#', libtcod.red, 'Fireball Scroll', render_order=RenderOrder.ITEM,
+                                          damage=fireball_damage, radius=fireball_range)
+                    item = Entity(x, y, '#', libtcod.red, 'Fireball Scroll',
+                                  'A scroll containing an ancient text that you somehow understand the meaning ' +
+                                  'of. When invoked, envelopes an area with fire, causing ' + str(fireball_damage) +
+                                  ' damage to all creatures within ' + str(fireball_range) + 'tiles.'
+                                  , render_order=RenderOrder.ITEM,
                                   item=item_component)
                 elif item_choice == 'confusion_scroll':
                     item_component = Item(use_function=cast_confuse, targeting=True, targeting_message=Message(
                         'Left-click an enemy to confuse it, or right-click to cancel.', libtcod.light_cyan))
-                    item = Entity(x, y, '#', libtcod.light_pink, 'Confusion Scroll', render_order=RenderOrder.ITEM,
+                    item = Entity(x, y, '#', libtcod.light_pink, 'Confusion Scroll',
+                                  'A scroll containing an ancient text that you somehow understand the meaning ' +
+                                  'of. When invoked, this scroll will cause an enemy to wander aimlessly for 10 turns.',
+                                  render_order=RenderOrder.ITEM,
                                   item=item_component)
                 else:
-                    item_component = Item(use_function=cast_lightning, damage=40, maximum_range=5)
-                    item = Entity(x, y, '#', libtcod.yellow, 'Lightning Scroll', render_order=RenderOrder.ITEM,
+                    lightning_damage = 40
+                    item_component = Item(use_function=cast_lightning, damage=lightning_damage, maximum_range=5)
+                    item = Entity(x, y, '#', libtcod.yellow, 'Lightning Scroll',
+                                  'A scroll containing an ancient text that you somehow understand the meaning ' +
+                                  'of. When invoked, deals ' + str(lightning_damage) + ' damage.',
+                                  render_order=RenderOrder.ITEM,
                                   item=item_component)
-
                 entities.append(item)
 
     def is_blocked(self, x, y):

@@ -28,6 +28,7 @@ def kill_monster(monster, entities):
         monster.corpse_name = 'A ' + monster.name + ' corpse'
     item_component = ()
     item = Entity(monster.x, monster.y, '%', libtcod.dark_red, monster.corpse_name,
+                  'The remains of a vanquished inhabitant of these caverns.',
                   render_order=RenderOrder.ITEM, item=item_component)
 
     entities.remove(monster)

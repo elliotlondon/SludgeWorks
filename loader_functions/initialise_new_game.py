@@ -81,7 +81,7 @@ def get_game_variables(constants):
     level_component = Level()
     slot = ()
     equipment_component = Equipment(slot)
-    player = Entity(0, 0, ord('@'.encode('cp437')), libtcod.white, 'Player', blocks=True,
+    player = Entity(0, 0, ord('@'.encode('cp437')), libtcod.white, 'Player', 'This is you.', blocks=True,
                     render_order=RenderOrder.ACTOR, fighter=fighter_component, inventory=inventory_component,
                     level=level_component, equipment=equipment_component)
     entities = [player]
@@ -89,7 +89,9 @@ def get_game_variables(constants):
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
                                       damage_dice=1, damage_sides=4,
                                       strength_bonus=2)
-    dagger = Entity(0, 0, '-', libtcod.sky, 'Dagger (1d4)', equippable=equippable_component)
+    dagger = Entity(0, 0, '-', libtcod.sky,
+                    'Dagger (1d4)', 'A short blade ideal for swift stabbing attacks. ' + '+2 STR, [1d4]',
+                    equippable=equippable_component)
     player.inventory.add_item(dagger)
     player.equipment.toggle_equip(dagger)
 

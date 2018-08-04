@@ -119,7 +119,10 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
         take_stairs = action.get('take_stairs')
         level_up = action.get('level_up')
         show_character_screen = action.get('show_character_screen')
+        esc_menu = action.get('esc_menu')
+        help = action.get('help')
         exit = action.get('exit')
+        quit = action.get('quit')
         fullscreen = action.get('fullscreen')
 
         left_click = mouse_action.get('left_click')
@@ -216,8 +219,17 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
             elif right_click:
                 player_turn_results.append({'targeting_cancelled': True})
 
+        if esc_menu:
+            previous_game_state = game_state
+            game_state = GameStates.ESC_MENU
+
+        if help:
+            previous_game_state = game_state
+            game_state = GameStates.HELP_MENU
+
         if exit:
-            if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY, GameStates.CHARACTER_SCREEN):
+            if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY, GameStates.CHARACTER_SCREEN,
+                              GameStates.LOOK, GameStates.ESC_MENU):
                 game_state = previous_game_state
             elif game_state == GameStates.TARGETING:
                 player_turn_results.append({'targeting_cancelled': True})
@@ -225,6 +237,10 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                 save_game(player, entities, game_map, message_log, game_state)
 
                 return True
+
+        if quit:
+            save_game(player, entities, game_map, message_log, game_state)
+            return True
 
         if fullscreen:
             libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())

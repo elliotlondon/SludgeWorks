@@ -18,6 +18,8 @@ def handle_keys(key, game_state):
         return handle_level_up_menu(key)
     elif game_state == GameStates.CHARACTER_SCREEN:
         return handle_character_screen(key)
+    elif game_state == GameStates.ESC_MENU:
+        return handle_esc_menu_keys(key)
 
     return {}
 
@@ -71,7 +73,7 @@ def handle_player_turn_keys(key):
         return {'fullscreen': True}
     elif key.vk == libtcod.KEY_ESCAPE:
         # Exit the game
-        return {'exit': True}
+        return {'esc_menu': True}
 
     # No key was pressed
     return {}
@@ -177,6 +179,27 @@ def handle_level_up_menu(key):
 
 
 def handle_character_screen(key):
+    if key.vk == libtcod.KEY_ESCAPE:
+        return {'exit': True}
+
+    if key.vk == libtcod.KEY_F11:
+        # fullscreen = F11
+        return {'fullscreen': True}
+
+    return {}
+
+
+def handle_esc_menu_keys(key):
+    if key:
+        key_char = chr(key.c)
+
+        if key_char == 'H' or key_char == 'h' or key_char == 'a':
+            return {'help': True}
+        if key_char == 'b':
+            return {'exit': True}
+        if key_char == 'Q' or key_char == 'q' or key_char == 'c':
+            return {'quit': True}
+
     if key.vk == libtcod.KEY_ESCAPE:
         return {'exit': True}
 

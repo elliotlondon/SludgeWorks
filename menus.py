@@ -28,7 +28,7 @@ def menu(con, header, options, width, screen_width, screen_height):
     # blit the contents of "window" to the root console
     x = int(screen_width / 2 - width / 2)
     y = int(screen_height / 2 - height / 2)
-    libtcod.console_blit(window, 0, 0, width, height, 0, x, y, 1.0, 0.7)
+    libtcod.console_blit(window, 0, 0, width, height, 0, x, y, 1.0, 1.0)
 
 
 def inventory_menu(con, header, player, inventory_width, screen_width, screen_height):
@@ -105,25 +105,28 @@ def character_screen(player, menu_width, menu_height, screen_width, screen_heigh
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height // 2
-    libtcod.console_blit(window, 0, 0, menu_width, menu_height, 0, x, y, 1.0, 0.7)
+    libtcod.console_blit(window, 0, 0, menu_width, menu_height, 0, x, y, 1.0, 1.0)
 
 
-def esc_menu(con, header, menu_width, menu_height, screen_width, screen_height):
+def esc_menu(menu_width, menu_height, screen_width, screen_height):
     window = libtcod.console_new(menu_width, menu_height)
 
     libtcod.console_set_default_foreground(window, libtcod.white)
+    libtcod.COLCTRL_FORE_RGB = (95, 95, 95)
 
-    helpstr = libtcod.COLCTRL_FORE_RGB(libtcod.dark_grey) + 'H' + libtcod.COLCTRL_FORE_RGB(255, 255, 255) + 'elp'
-    quitstr = libtcod.COLCTRL_FORE_RGB(libtcod.dark_grey) + 'Q' + libtcod.COLCTRL_FORE_RGB(255, 255, 255) + 'uit'
+    helpstr = 'a.) Help'
+    quitstr = 'c.) Quit'
 
     libtcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, helpstr)
-    libtcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, libtcod.BKGND_NONE,
+    libtcod.console_print_rect_ex(window, 0, 2, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'b.) Resume')
+    libtcod.console_print_rect_ex(window, 0, 3, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, quitstr)
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height // 2
-    libtcod.console_blit(window, 0, 0, menu_width, menu_height, 0, x, y, 1.0, 0.7)
+    libtcod.console_blit(window, 0, 0, menu_width, menu_height, 0, x, y, 1.0, 1.0)
 
 
 def message_box(con, header, width, screen_width, screen_height):

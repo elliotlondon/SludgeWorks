@@ -56,12 +56,12 @@ class Entity:
                 self.item.owner = self
 
     def move(self, dx, dy, game_map):
-        if not game_map.is_blocked(self.x, self.y + dy):
+        if not game_map.is_blocked(self.x + dx, self.y + dy):
             self.y += dy
         if not game_map.is_blocked(self.x + dx, self.y):
             self.x += dx
 
-    def move_towards(self, target_x, target_y, game_map):
+    def move_towards(self, target_x, target_y, game_map, entities):
         dx = target_x - self.x
         dy = target_y - self.y
         if dx > 0:
@@ -72,7 +72,10 @@ class Entity:
             dy = 1
         if dy < 0:
             dy = -1
-        self.move(dx, dy, game_map)
+
+        if not (game_map.is_blocked(self.x + dx, self.y + dy) or
+                get_blocking_entities_at_location(entities, self.x + dx, self.y + dy)):
+                self.move(dx, dy, game_map)
 
     def move_astar(self, target, entities, game_map):
         # Create a FOV map that has the dimensions of the map
@@ -105,7 +108,7 @@ class Entity:
                 self.y = y
         else:
             # Keep the old move function as a backup so that if there are no paths
-            self.move_towards(target.x, target.y, game_map)
+            self.move_towards(target.x, target.y, game_map, entities)
 
         libtcod.path_delete(my_path)
 

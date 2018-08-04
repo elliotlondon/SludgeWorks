@@ -195,7 +195,7 @@ def handle_esc_menu_keys(key):
 
         if key_char == 'H' or key_char == 'h' or key_char == 'a':
             return {'help': True}
-        if key_char == 'b':
+        if key_char == 'R' or key_char == 'r' or key_char == 'b':
             return {'exit': True}
         if key_char == 'Q' or key_char == 'q' or key_char == 'c':
             return {'quit': True}

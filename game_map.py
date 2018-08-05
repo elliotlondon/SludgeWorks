@@ -27,29 +27,62 @@ class GameMap:
 
     def initialize_tiles(self):
         tiles = [[Tile(True) for y in range(self.height)] for x in range(self.width)]
-
         return tiles
 
     def make_map(self, map_width, map_height, player, entities):
         # Generate each floor's map by calling the appropriate chamber creation function.
         if self.dungeon_level == 1:
-            # Chamber 1: Rooms
+            # Chamber 1: Large, straightforward (barely eroded) rooms
             max_rooms = 50
             max_room_size = round(map_width / 5)
             min_room_size = round(map_width / 10)
-            self.rooms_chamber(max_rooms, min_room_size, max_room_size, map_width, map_height, player, entities)
-        elif 2 <= self.dungeon_level <= 4:
-            # Chamber 2, 3: Caves
-            print('caves')
+            self.rooms_chamber(max_rooms, min_room_size, int(max_room_size*2/3), map_width, map_height, player, entities)
+            self.erode(map_width, map_height, 1)
+        elif self.dungeon_level == 2:
+            # Chamber 2: Eroded rooms
+            max_rooms = 100
+            max_room_size = round(map_width / 5)
+            min_room_size = round(map_width / 10)
+            self.rooms_chamber(max_rooms, min_room_size/2, max_room_size/2, map_width, map_height, player, entities)
+            self.caves_chamber(map_width, map_height, 99.9, 1)
+            self.erode(map_width, map_height, 1)
+        elif self.dungeon_level == 3:
+            # Chamber 3: Caves
+            max_rooms = 50
+            max_room_size = round(map_width / 5)
+            min_room_size = round(map_width / 10)
+            self.rooms_chamber(max_rooms, min_room_size/2, max_room_size/2, map_width, map_height, player, entities)
+            self.caves_chamber(map_width, map_height, 60, 4)
+            self.erode(map_width, map_height, 1)
+        elif self.dungeon_level == 4:
+            # Chamber 4: Narrow Caves
+            max_rooms = 30
+            max_room_size = round(map_width / 5)
+            min_room_size = round(map_width / 10)
+            self.caves_chamber(map_width, map_height, 45, 1)
+            self.erode(map_width, map_height, 1)
+            self.rooms_chamber(max_rooms, round(min_room_size/2), round(max_room_size/3), map_width, map_height, player, entities)
+            self.erode(map_width, map_height, 1)
+        else:
+            # TODO: other chambers
+            max_rooms = 50
+            max_room_size = round(map_width / 5)
+            min_room_size = round(map_width / 10)
+            self.rooms_chamber(max_rooms, min_room_size/2, max_room_size/2, map_width, map_height, player, entities)
+            self.caves_chamber(map_width, map_height, 60, 4)
+            self.erode(map_width, map_height, 1)
 
-    def place_entities(self, room, entities):
+    def place_entities(self, room, entities, free_tiles):
         max_monsters_per_room = from_dungeon_level([[2, 1], [3, 4], [5, 6]], self.dungeon_level)
+        max_monsters = from_dungeon_level([[2, 1], [3, 4], [5, 6]], self.dungeon_level)
         max_plants_per_room = 0
         max_items_per_room = from_dungeon_level([[1, 1], [2, 4]], self.dungeon_level)
         # Get a random number of monsters
         number_of_monsters = randint(0, max_monsters_per_room)
         number_of_plants = randint(0, max_plants_per_room)
         number_of_items = randint(0, max_items_per_room)
+
+        monsters = randint(0, max_monsters)
 
         monster_chances = {
             'Wretch': 80,
@@ -212,7 +245,7 @@ class GameMap:
         self.make_map(constants['map_width'], constants['map_height'], player, entities)
 
         # Heal on change of floors?
-        # player.fighter.heal(player.fighter.max_hp // 2)
+        player.fighter.heal(player.fighter.max_hp // 2)
 
         return entities
 
@@ -227,14 +260,33 @@ class GameMap:
         for x in range(min(x1, x2), max(x1, x2) + 1):
             self.tiles[x][y].blocked = False
             self.tiles[x][y].block_sight = False
+            self.tiles[x][y].tunnel = True
 
     def create_v_tunnel(self, y1, y2, x):
         for y in range(min(y1, y2), max(y1, y2) + 1):
             self.tiles[x][y].blocked = False
             self.tiles[x][y].block_sight = False
+            self.tiles[x][y].tunnel = True
+
+    def find_neighbours(self, x, y):
+        """
+        Finds all cells that touch a cell in a 2D grid
+        Args:
+            x and y: integer, indices for the cell to search around
+        Returns:
+            returns a generator object with the x,y indices of cell neighbours
+        """
+        xi = (0, -1, 1) if 0 < x < self.width - 1 else ((0, -1) if x > 0 else (0, 1))
+        yi = (0, -1, 1) if 0 < y < self.height - 1 else ((0, -1) if y > 0 else (0, 1))
+        for a in xi:
+            for b in yi:
+                if a == b == 0:
+                    continue
+                yield (x + a, y + b)
 
     def rooms_chamber(self, max_rooms, min_room_size, max_room_size, map_width, map_height, player, entities):
         # A chamber which is filled with rectangular rooms of random sizes, joined with single-jointed corridors.
+        free_tiles = []
         rooms = []
         num_rooms = 0
         for r in range(max_rooms):
@@ -274,7 +326,12 @@ class GameMap:
                         self.create_v_tunnel(prev_y, new_y, prev_x)
                         self.create_h_tunnel(prev_x, new_x, new_y)
 
-                self.place_entities(new_room, entities)
+                # Make a list of all the free tiles to be sent to object placement
+                for x in range(map_width):
+                    for y in range(map_height):
+                        if not self.tiles[x][y].block_sight and not self.tiles[x][y].blocked:
+                            free_tiles.append(self.tiles[x][y])
+                self.place_entities(new_room, entities, free_tiles)
                 rooms.append(new_room)
                 num_rooms += 1
 
@@ -285,10 +342,65 @@ class GameMap:
                              render_order=RenderOrder.STAIRS, stairs=stairs_component)
         entities.append(down_stairs)
 
+    def caves_chamber(self, map_width, map_height, p, smoothing):
+        """
+        A chamber filled with random-sized, sprawling cave rooms, generated using an automata technique.
+        p is the probability of a cave sector being created. Smoothing values about 4 do nothing, below 4 cause
+        more rugged caves.
+        """
+        for x in range(map_width):
+            for y in range(map_height):
+                if randint(0, 100) > p:
+                    # Select a few random locations to be turned into a floor
+                    self.tiles[x][y].blocked = False
+                    self.tiles[x][y].block_sight = False
+
+        for i in range(smoothing):
+            for x in range(map_width):
+                for y in range(map_height):
+                    if x == 0 or x == map_width - 1 or y == 0 or y == map_height - 1:
+                        self.tiles[x][y].blocked = True
+                        self.tiles[x][y].block_sight = True
+                    touching_empty_space = 0
+                    for nx, ny in self.find_neighbours(x, y):
+                        if self.tiles[nx][ny].blocked:
+                            touching_empty_space += 1
+                    if touching_empty_space >= 5 and not self.tiles[x][y].tunnel:
+                        self.tiles[x][y].blocked = True
+                        self.tiles[x][y].block_sight = True
+                    elif touching_empty_space <= 1:
+                        self.tiles[x][y].blocked = False
+                        self.tiles[x][y].block_sight = False
+                    if x == 0 or x == map_width - 1 or y == 0 or y == map_height - 1:
+                        self.tiles[x][y].blocked = True
+                        self.tiles[x][y].block_sight = True
+
+    def erode(self, map_width, map_height, smoothing):
+        """
+        A tool for helping to increase the erosion of an already-generated map
+        """
+        for i in range(smoothing):
+            for x in range(map_width):
+                for y in range(map_height):
+                    touching_empty_space = 0
+                    for nx, ny in self.find_neighbours(x, y):
+                        if self.tiles[nx][ny].blocked:
+                            touching_empty_space += 1
+                    if touching_empty_space >= 5 and not self.tiles[x][y].tunnel:
+                        self.tiles[x][y].blocked = True
+                        self.tiles[x][y].block_sight = True
+                    elif touching_empty_space <= 3:
+                        self.tiles[x][y].blocked = False
+                        self.tiles[x][y].block_sight = False
+                    if x == 0 or x == map_width - 1 or y == 0 or y == map_height - 1:
+                        self.tiles[x][y].blocked = True
+                        self.tiles[x][y].block_sight = True
+
 
 class Tile:
     def __init__(self, blocked, block_sight=None):
         self.blocked = blocked
+        self.tunnel = False
 
         # By default, if a tile is blocked, it also blocks sight
         if block_sight is None:
@@ -297,7 +409,7 @@ class Tile:
         self.block_sight = block_sight
 
         # Change this if you wish to see everything!
-        self.explored = True
+        self.explored = False
 
 
 class Rect:

@@ -105,7 +105,7 @@ def character_screen(player, menu_width, menu_height, screen_width, screen_heigh
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height // 2
-    libtcod.console_blit(window, 0, 0, menu_width, menu_height, 0, x, y, 1.0, 1.0)
+    libtcod.console_blit(window, 0, 0, menu_width, menu_height, 0, x, y, 1.0, 0.7)
 
 
 def esc_menu(colours, menu_width, menu_height, screen_width, screen_height):
@@ -123,8 +123,8 @@ def esc_menu(colours, menu_width, menu_height, screen_width, screen_height):
                                   libtcod.LEFT, 'c.) Save & %c%s%cuit' % (libtcod.COLCTRL_1, 'Q', libtcod.COLCTRL_STOP))
 
     x = screen_width // 2 - menu_width // 2
-    y = screen_height // 2 - menu_height // 2
-    libtcod.console_blit(window, 0, 0, menu_width, menu_height, 0, x, y, 1.0, 1.0)
+    y = screen_height // 2 - menu_height
+    libtcod.console_blit(window, 0, 0, menu_width, int(menu_height/2 + 2), 0, x, y, 1.0, 0.75)
 
 
 def help_menu(menu_width, menu_height, screen_width, screen_height):

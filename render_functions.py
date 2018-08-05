@@ -1,6 +1,7 @@
 import libtcodpy as libtcod
 
 from enum import Enum, auto
+from random import randint, seed
 
 from game_states import GameStates
 from menus import *
@@ -51,11 +52,16 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_colour, back_
 
 def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height,
                bar_width, panel_height, panel_y, colours, game_state):
+    seed(1337)  # Seed the floor tile generation. Use 1337, obviously
     if fov_recompute:
         for y in range(game_map.height):
             for x in range(game_map.width):
                 visible = libtcod.map_is_in_fov(fov_map, x, y)
                 wall = game_map.tiles[x][y].block_sight
+
+                # Using randint without seed here causes a 'disco' effect. Great for hallucinations!!!
+                floor_char = [' ', '.', ',', '`']
+                floor_char = floor_char[randint(0, len(floor_char)-1)]
 
                 if visible:
                     if wall:
@@ -64,7 +70,7 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
                         game_map.tiles[x][y].explored = True
 
                     else:
-                        libtcod.console_put_char_ex(con, x, y, ord('.'.encode('cp437')), colours.get('light_ground'),
+                        libtcod.console_put_char_ex(con, x, y, floor_char, colours.get('light_ground'),
                                                     colours.get('dark_ground'))
                         game_map.tiles[x][y].explored = True
 

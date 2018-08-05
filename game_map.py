@@ -11,6 +11,7 @@ from game_messages import Message
 from item_functions import cast_confuse, cast_fireball, cast_lightning, heal
 from random_utils import from_dungeon_level, random_choice_from_dict
 from render_functions import RenderOrder
+from dungeon_generator import *
 
 
 class GameMap:

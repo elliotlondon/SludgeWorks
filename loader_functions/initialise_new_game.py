@@ -16,7 +16,7 @@ def get_constants():
     window_title = 'sludgeWorks'
 
     screen_width = 80
-    screen_height = 52
+    screen_height = 50
 
     bar_width = int(screen_width / 4)
     panel_height = round(screen_height / 8)
@@ -29,8 +29,8 @@ def get_constants():
     map_width = int(screen_width)
     map_height = int(screen_height - panel_height)
 
-    room_max_size = map_width / 5
-    room_min_size = map_width / 10
+    room_max_size = round(map_width / 5)
+    room_min_size = round(map_width / 10)
     max_rooms = 50
 
     fov_algorithm = 0

@@ -136,7 +136,7 @@ def handle_player_dead_keys(key):
 
     elif key.vk == libtcod.KEY_ESCAPE:
         # Exit the menu
-        return {'exit': True}
+        return {'quit': True}
 
     if key.vk == libtcod.KEY_F11:
         # fullscreen = F11

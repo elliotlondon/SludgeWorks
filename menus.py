@@ -28,7 +28,7 @@ def menu(con, header, options, width, screen_width, screen_height):
     # blit the contents of "window" to the root console
     x = int(screen_width / 2 - width / 2)
     y = int(screen_height / 2 - height / 2)
-    libtcod.console_blit(window, 0, 0, width, height, 0, x, y, 1.0, 0.7)
+    libtcod.console_blit(window, 0, 0, width, height, 0, x, y, 1, 0)
 
 
 def inventory_menu(con, header, player, inventory_width, screen_width, screen_height):
@@ -64,7 +64,7 @@ def inventory_menu(con, header, player, inventory_width, screen_width, screen_he
 
 
 def main_menu(con, background_image, screen_width, screen_height):
-    libtcod.image_blit_2x(background_image, 0, 0, 0)
+    libtcod.image_blit_2x(background_image, 0, 0, 0, 0, -1, -1)
 
     libtcod.console_set_default_foreground(0, libtcod.light_yellow)
     libtcod.console_print_ex(0, int(screen_width / 2), int(screen_height / 2) - 4, libtcod.BKGND_NONE, libtcod.CENTER,
@@ -89,7 +89,7 @@ def character_screen(player, menu_width, menu_height, screen_width, screen_heigh
     libtcod.console_set_default_foreground(window, libtcod.white)
 
     libtcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.CENTER, 'Character Information')
+                                  libtcod.LEFT, 'Character Information')
     libtcod.console_print_rect_ex(window, 0, 2, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, 'Level: {0}'.format(player.level.current_level))
     libtcod.console_print_rect_ex(window, 0, 3, menu_width, menu_height, libtcod.BKGND_NONE,

@@ -29,10 +29,6 @@ def get_constants():
     map_width = int(screen_width)
     map_height = int(screen_height - panel_height)
 
-    room_max_size = round(map_width / 5)
-    room_min_size = round(map_width / 10)
-    max_rooms = 50
-
     fov_algorithm = 0
     fov_light_walls = True
     fov_radius = 10
@@ -59,9 +55,6 @@ def get_constants():
         'message_height': message_height,
         'map_width': map_width,
         'map_height': map_height,
-        'room_max_size': room_max_size,
-        'room_min_size': room_min_size,
-        'max_rooms': max_rooms,
         'fov_algorithm': fov_algorithm,
         'fov_light_walls': fov_light_walls,
         'fov_radius': fov_radius,
@@ -96,8 +89,7 @@ def get_game_variables(constants):
     player.equipment.toggle_equip(dagger)
 
     game_map = GameMap(constants['map_width'], constants['map_height'])
-    game_map.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
-                      constants['map_width'], constants['map_height'], player, entities)
+    game_map.make_map(constants['map_width'], constants['map_height'], player, entities)
 
     message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])
 

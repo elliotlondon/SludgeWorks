@@ -1,5 +1,3 @@
-import libtcodpy as libtcod
-
 from random import randint
 
 

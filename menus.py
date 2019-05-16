@@ -68,7 +68,7 @@ def main_menu(con, background_image, screen_width, screen_height):
 
     libtcod.console_set_default_foreground(0, libtcod.light_yellow)
     libtcod.console_print_ex(0, int(screen_width / 2), int(screen_height / 2) - 4, libtcod.BKGND_NONE, libtcod.CENTER,
-                             'SludgeQuest')
+                             'SludgeWorks')
     libtcod.console_print_ex(0, int(screen_width / 2), int(screen_height - 2), libtcod.BKGND_NONE, libtcod.CENTER,
                              'designed by the Supreme Peasant')
 
@@ -76,8 +76,8 @@ def main_menu(con, background_image, screen_width, screen_height):
 
 
 def level_up_menu(con, header, player, menu_width, screen_width, screen_height):
-    options = ['Strength (+1 attack, from {0})'.format(player.fighter.strength),
-               'Agility (+1 defense, from {0})'.format(player.fighter.agility),
+    options = ['Strength (+1 attack, from {0})'.format(player.fighter.base_strength),
+               'Agility (+1 defense, from {0})'.format(player.fighter.base_agility),
                'Vitality (+10 HP, from {0})'.format(player.fighter.max_hp)]
 
     menu(con, header, options, menu_width, screen_width, screen_height)
@@ -95,13 +95,14 @@ def character_screen(player, menu_width, menu_height, screen_width, screen_heigh
     libtcod.console_print_rect_ex(window, 0, 3, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, 'Experience: {0}'.format(player.level.current_xp))
     libtcod.console_print_rect_ex(window, 0, 4, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Experience to Level: {0}'.format(player.level.experience_to_next_level))
+                                  libtcod.LEFT, 'Experience to Level: {0}'
+                                  .format(player.level.experience_to_next_level))
     libtcod.console_print_rect_ex(window, 0, 6, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, 'Maximum HP: {0}'.format(player.fighter.max_hp))
     libtcod.console_print_rect_ex(window, 0, 7, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Attack: {0}'.format(player.fighter.strength))
+                                  libtcod.LEFT, 'Attack: {0}'.format(player.fighter.total_strength))
     libtcod.console_print_rect_ex(window, 0, 8, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Defence: {0}'.format(player.fighter.agility))
+                                  libtcod.LEFT, 'Defence: {0}'.format(player.fighter.total_agility))
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height // 2

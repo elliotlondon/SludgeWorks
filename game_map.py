@@ -1,4 +1,6 @@
 import libtcodpy as libtcod
+import math, random
+
 from random import randint
 
 from components.ai import Aggressive, Stationary
@@ -31,58 +33,65 @@ class GameMap:
 
     def make_map(self, map_width, map_height, player, entities):
         # Generate each floor's map by calling the appropriate chamber creation function.
+        entire_dungeon = Rect(0, 0, map_width, map_height)
         if self.dungeon_level == 1:
             # Chamber 1: Large, straightforward (barely eroded) rooms
             max_rooms = 50
-            max_room_size = round(map_width / 5)
-            min_room_size = round(map_width / 10)
-            self.rooms_chamber(max_rooms, min_room_size, int(max_room_size*2/3), map_width, map_height, player, entities)
+            max_room_size = 10
+            min_room_size = 4
+            self.rooms_chamber(max_rooms, min_room_size, max_room_size, map_width, map_height, player,
+                               entities)
             self.erode(map_width, map_height, 1)
+
+            # TODO: Stop monsters and items being placed within blocked tiles!!!
+
+            self.place_entities(entire_dungeon, entities)
         elif self.dungeon_level == 2:
             # Chamber 2: Eroded rooms
-            max_rooms = 100
-            max_room_size = round(map_width / 5)
-            min_room_size = round(map_width / 10)
-            self.rooms_chamber(max_rooms, min_room_size/2, max_room_size/2, map_width, map_height, player, entities)
-            self.caves_chamber(map_width, map_height, 99.9, 1)
+            max_rooms = 40
+            max_room_size = 10
+            min_room_size = 4
+            self.rooms_chamber(max_rooms, min_room_size, max_room_size, map_width, map_height, player,
+                               entities)
+            self.caves_chamber(map_width, map_height, 80, 1)
             self.erode(map_width, map_height, 1)
         elif self.dungeon_level == 3:
             # Chamber 3: Caves
-            max_rooms = 50
-            max_room_size = round(map_width / 5)
-            min_room_size = round(map_width / 10)
-            self.rooms_chamber(max_rooms, min_room_size/2, max_room_size/2, map_width, map_height, player, entities)
+            max_rooms = 30
+            max_room_size = 26
+            min_room_size = 6
+            self.rooms_chamber(max_rooms, min_room_size, max_room_size, map_width, map_height, player,
+                               entities)
             self.caves_chamber(map_width, map_height, 60, 4)
             self.erode(map_width, map_height, 1)
         elif self.dungeon_level == 4:
             # Chamber 4: Narrow Caves
-            max_rooms = 30
-            max_room_size = round(map_width / 5)
-            min_room_size = round(map_width / 10)
+            max_rooms = 20
+            max_room_size = 6
+            min_room_size = 2
             self.caves_chamber(map_width, map_height, 45, 1)
             self.erode(map_width, map_height, 1)
-            self.rooms_chamber(max_rooms, round(min_room_size/2), round(max_room_size/3), map_width, map_height, player, entities)
+            self.rooms_chamber(max_rooms, min_room_size, max_room_size, map_width, map_height, player,
+                               entities)
             self.erode(map_width, map_height, 1)
         else:
             # TODO: other chambers
-            max_rooms = 50
-            max_room_size = round(map_width / 5)
-            min_room_size = round(map_width / 10)
-            self.rooms_chamber(max_rooms, min_room_size/2, max_room_size/2, map_width, map_height, player, entities)
+            max_rooms = 30
+            max_room_size = 10
+            min_room_size = 6
+            self.rooms_chamber(max_rooms, min_room_size, max_room_size, map_width, map_height, player,
+                               entities)
             self.caves_chamber(map_width, map_height, 60, 4)
             self.erode(map_width, map_height, 1)
 
-    def place_entities(self, room, entities, free_tiles):
-        max_monsters_per_room = from_dungeon_level([[2, 1], [3, 4], [5, 6]], self.dungeon_level)
-        max_monsters = from_dungeon_level([[2, 1], [3, 4], [5, 6]], self.dungeon_level)
-        max_plants_per_room = 0
-        max_items_per_room = from_dungeon_level([[1, 1], [2, 4]], self.dungeon_level)
+    def place_entities(self, room, entities):
+        max_monsters = from_dungeon_level([[40, 1], [60, 4], [100, 6]], self.dungeon_level)
+        max_plants = from_dungeon_level([[20, 1], [30, 4], [20, 6]], self.dungeon_level)
+        max_items = from_dungeon_level([[20, 1], [30, 4]], self.dungeon_level)
         # Get a random number of monsters
-        number_of_monsters = randint(0, max_monsters_per_room)
-        number_of_plants = randint(0, max_plants_per_room)
-        number_of_items = randint(0, max_items_per_room)
-
-        monsters = randint(0, max_monsters)
+        number_of_monsters = randint(round(max_monsters*0.75), max_monsters)
+        number_of_plants = randint(round(max_plants*0.75), max_plants)
+        number_of_items = randint(round(max_items*0.75), max_items)
 
         monster_chances = {
             'Wretch': 80,
@@ -95,7 +104,7 @@ class GameMap:
             'healing_potion': 35,
             'sword': from_dungeon_level([[10, 0]], self.dungeon_level),
             'helm': from_dungeon_level([[5, 0], [10, 3]], self.dungeon_level),
-            'shield': from_dungeon_level([[5, 3], [10, 6]], self.dungeon_level),
+            'shield': from_dungeon_level([[10, 0]], self.dungeon_level),
             'lightning_scroll': from_dungeon_level([[25, 4]], self.dungeon_level),
             'fireball_scroll': from_dungeon_level([[25, 6]], self.dungeon_level),
             'confusion_scroll': from_dungeon_level([[10, 2]], self.dungeon_level)
@@ -103,17 +112,24 @@ class GameMap:
 
         # Place stationary monsters (plants) independent of monster number
         for i in range(number_of_plants):
-            # Choose a random location in the room around the edges
+            # Choose a random location in within the dungeon that isn't blocked
             x = randint(room.x1 + 1, room.x2 - 1)
             y = randint(room.y1 + 1, room.y2 - 1)
 
             if not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                fighter_component = Fighter(hp=10, strength=3, agility=1, vitality=1, intellect=1, perception=1, xp=20)
-                ai_component = Stationary()
-                monster = Entity(x, y, 'V', libtcod.light_grey, 'Whip Vine', blocks=True,
-                                 render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
+                if not any([Tile in self.tiles if self.tiles[x][y] == self.blocked]):
+                    fighter_component = Fighter(current_hp=8, max_hp=8,
+                                                damage_dice=1, damage_sides=2,
+                                                strength=3, agility=1, vitality=1, intellect=1, perception=1,
+                                                xp=randint(20, 30))
+                    ai_component = Stationary()
+                    monster = Entity(x, y, 'V', libtcod.light_grey, 'Whip Vine',
+                                     'What at first appears to be no more than a dead, waist-height bush in actuality' 
+                                     'represents a highly specialized carnivorous flayer',
+                                     blocks=True,
+                                     render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
 
-                entities.append(monster)
+                    entities.append(monster)
 
         # Place monsters with random spawning chances
         for i in range(number_of_monsters):
@@ -125,9 +141,10 @@ class GameMap:
                 monster_choice = random_choice_from_dict(monster_chances)
 
                 if monster_choice == 'Wretch':
-                    fighter_component = Fighter(hp=10,
-                                                damage_dice=1, damage_sides=4,
-                                                strength=4, agility=0, vitality=1, intellect=1, perception=1, xp=30)
+                    fighter_component = Fighter(current_hp=6, max_hp=6,
+                                                damage_dice=1, damage_sides=3,
+                                                strength=3, agility=0, vitality=1, intellect=1, perception=1,
+                                                xp=50)
                     ai_component = Aggressive()
                     monster = Entity(x, y, 'w', libtcod.darker_red, 'Wretch',
                                      'A stunted human wrapped in filthy rags and long since driven feral by the '
@@ -135,9 +152,10 @@ class GameMap:
                                      blocks=True,
                                      render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
                 elif monster_choice == 'Hunchback':
-                    fighter_component = Fighter(hp=20,
+                    fighter_component = Fighter(current_hp=12, max_hp=12,
                                                 damage_dice=2, damage_sides=6,
-                                                strength=7, agility=1, vitality=1, intellect=1, perception=1, xp=75)
+                                                strength=7, agility=1, vitality=1, intellect=1, perception=1,
+                                                xp=125)
                     ai_component = Aggressive()
                     monster = Entity(x, y, 'H', libtcod.brass, 'Hunchback',
                                      'A humanoid figure draped in dark, hooded robes. It\'s face is completely '
@@ -146,9 +164,10 @@ class GameMap:
                                      blocks=True,
                                      render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
                 else:
-                    fighter_component = Fighter(hp=50,
+                    fighter_component = Fighter(current_hp=26, max_hp=26,
                                                 damage_dice=3, damage_sides=4,
-                                                strength=5, agility=4, vitality=1, intellect=1, perception=1, xp=150)
+                                                strength=5, agility=4, vitality=1, intellect=1, perception=1,
+                                                xp=225)
                     ai_component = Aggressive()
                     monster = Entity(x, y, 'T', libtcod.dark_azure, 'Thresher',
                                      'A colossal ogre-like ape covered in patches of matted hair and littered with '
@@ -161,7 +180,6 @@ class GameMap:
                 entities.append(monster)
 
         # Place items
-        equipment = 0
         for i in range(number_of_items):
             x = randint(room.x1 + 1, room.x2 - 1)
             y = randint(room.y1 + 1, room.y2 - 1)
@@ -170,27 +188,25 @@ class GameMap:
                 item_choice = random_choice_from_dict(item_chances)
 
                 # Weapons and armour
-                if item_choice == 'sword' and equipment <= 3:
+                if item_choice == 'sword':
                     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
                                                       damage_dice=1, damage_sides=6,
                                                       strength_bonus=3)
-                    item = Entity(x, y, '/', libtcod.sky, 'Sword (1d6)',
-                                  'A rusted and dirt-caked longsword. It\'s fairly blunt, but much better than ' +
-                                  'nothing. +3 STR [1d6]',
+                    item = Entity(x, y, '/', libtcod.sky, 'Rusted Longsword',
+                                  'An iron longsword with an edge that has been significantly corroded by rust. ' +
+                                  'It\'s fairly blunt, but much better than ' +
+                                  'nothing.',
                                   equippable=equippable_component)
-                    equipment = equipment + 1
-                elif item_choice == 'shield' and equipment <= 3:
+                elif item_choice == 'shield':
                     equippable_component = Equippable(EquipmentSlots.OFF_HAND, agility_bonus=1)
                     item = Entity(x, y, '[', libtcod.darker_orange, 'Shield',
                                   'A small buckler that can be attached to the arm and used to deflect attacks.',
                                   equippable=equippable_component)
-                    equipment = equipment + 1
-                elif item_choice == 'helm' and equipment <= 3:
+                elif item_choice == 'helm':
                     equippable_component = Equippable(EquipmentSlots.HEAD, agility_bonus=1)
                     item = Entity(x, y, '[', libtcod.darker_orange, 'Helm',
-                                  'A leather helmet designed to help minimise head wounds. +1 AGI',
+                                  'A leather helmet designed to help minimise head wounds.',
                                   equippable=equippable_component)
-                    equipment = equipment + 1
 
                 # Consumables
                 elif item_choice == 'healing_potion':
@@ -210,8 +226,8 @@ class GameMap:
                     item = Entity(x, y, '#', libtcod.red, 'Fireball Scroll',
                                   'A scroll containing an ancient text that you somehow understand the meaning ' +
                                   'of. When invoked, envelopes an area with fire, causing ' + str(fireball_damage) +
-                                  ' damage to all creatures within ' + str(fireball_range) + 'tiles.'
-                                  , render_order=RenderOrder.ITEM,
+                                  ' damage to all creatures within ' + str(fireball_range) + 'tiles.',
+                                  render_order=RenderOrder.ITEM,
                                   item=item_component)
                 elif item_choice == 'confusion_scroll':
                     item_component = Item(use_function=cast_confuse, targeting=True, targeting_message=Message(
@@ -245,7 +261,7 @@ class GameMap:
         self.make_map(constants['map_width'], constants['map_height'], player, entities)
 
         # Heal on change of floors?
-        player.fighter.heal(player.fighter.max_hp // 2)
+        # player.fighter.heal(player.fighter.max_hp // 2)
 
         return entities
 
@@ -331,16 +347,20 @@ class GameMap:
                     for y in range(map_height):
                         if not self.tiles[x][y].block_sight and not self.tiles[x][y].blocked:
                             free_tiles.append(self.tiles[x][y])
-                self.place_entities(new_room, entities, free_tiles)
+                # Use this if you wish to place actors on a room-by-room basis
+                # self.place_entities(new_room, entities)
                 rooms.append(new_room)
                 num_rooms += 1
 
-        stairs_component = Stairs(self.dungeon_level + 1)
-        down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', libtcod.white, 'Stairs',
-                             'There\'s a dark chasm here which will allow you to take a one-way trip to'
-                             'the next chamber of the SludgeWorks.',
-                             render_order=RenderOrder.STAIRS, stairs=stairs_component)
-        entities.append(down_stairs)
+        if num_rooms > 0:
+            stairs_component = Stairs(self.dungeon_level + 1)
+            down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', libtcod.white, 'Stairs',
+                                 'There\'s a dark chasm here which will allow you to take a one-way trip to'
+                                 'the next chamber of the SludgeWorks.',
+                                 render_order=RenderOrder.STAIRS, stairs=stairs_component)
+            entities.append(down_stairs)
+        else:
+            print('Map generation failed: No rooms generated.')
 
     def caves_chamber(self, map_width, map_height, p, smoothing):
         """

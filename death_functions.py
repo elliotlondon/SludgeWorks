@@ -8,9 +8,9 @@ from render_functions import RenderOrder
 
 def kill_player(player):
     player.char = '%'
-    player.colour = libtcod.dark_red
+    player.colour = libtcod.white
 
-    return Message('You did not survive.', libtcod.red), GameStates.PLAYER_DEAD
+    return Message('YOU DIED', libtcod.red), GameStates.PLAYER_DEAD
 
 
 def kill_monster(monster, entities):
@@ -28,7 +28,7 @@ def kill_monster(monster, entities):
         monster.corpse_name = 'A ' + monster.name + ' corpse'
     item_component = ()
     item = Entity(monster.x, monster.y, '%', libtcod.dark_red, monster.corpse_name,
-                  'The remains of a vanquished inhabitant of these caverns.',
+                  'The grotesque remains of an unfortunate inhabitant of the SludgeWorks.',
                   render_order=RenderOrder.ITEM, item=item_component)
 
     entities.remove(monster)

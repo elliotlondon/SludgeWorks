@@ -29,6 +29,8 @@ def handle_keys(key, game_state):
 def handle_targeting_keys(key):
     if key.vk == libtcod.KEY_ESCAPE:
         return {'exit': True}
+    if key.vk == libtcod.KEY_F11:
+        return {'fullscreen': True}
 
     return {}
 
@@ -71,13 +73,10 @@ def handle_player_turn_keys(key):
         return {'take_stairs': True}
 
     if key.vk == libtcod.KEY_F11:
-        # fullscreen = F11
         return {'fullscreen': True}
     elif key.vk == libtcod.KEY_ESCAPE:
-        # Exit the game
         return {'esc_menu': True}
 
-    # No key was pressed
     return {}
 
 
@@ -88,11 +87,8 @@ def handle_inventory_keys(key):
         return {'inventory_index': index}
 
     elif key.vk == libtcod.KEY_ESCAPE:
-        # Exit the menu
         return {'exit': True}
-
     if key.vk == libtcod.KEY_F11:
-        # fullscreen = F11
         return {'fullscreen': True}
 
     return {}
@@ -174,7 +170,6 @@ def handle_level_up_menu(key):
             return {'level_up': 'hp'}
 
     if key.vk == libtcod.KEY_F11:
-        # fullscreen = F11
         return {'fullscreen': True}
 
     return {}
@@ -183,9 +178,7 @@ def handle_level_up_menu(key):
 def handle_character_screen(key):
     if key.vk == libtcod.KEY_ESCAPE:
         return {'exit': True}
-
     if key.vk == libtcod.KEY_F11:
-        # fullscreen = F11
         return {'fullscreen': True}
 
     return {}
@@ -204,9 +197,7 @@ def handle_esc_menu_keys(key):
 
     if key.vk == libtcod.KEY_ESCAPE:
         return {'exit': True}
-
     if key.vk == libtcod.KEY_F11:
-        # fullscreen = F11
         return {'fullscreen': True}
 
     return {}
@@ -216,7 +207,6 @@ def handle_help_menu_keys(key):
     if key.vk == libtcod.KEY_ESCAPE:
         return {'exit': True}
     if key.vk == libtcod.KEY_F11:
-        # fullscreen = F11
         return {'fullscreen': True}
 
     return {}

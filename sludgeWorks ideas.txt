@@ -1,0 +1,211 @@
+All monsters & Player
+	5 stats:
+		Strength:
+			Carry capacity
+			Weapon damage
+			'Missile' range
+			Melee critical chance
+		Agility:
+			Movement speed (?)
+			Dodge capability
+			Resistance to binds
+			Ranged critical chance
+		Vitality:
+			HP
+			Resistance to damaging status effects (poison, paralysis, heat, cold, acid, disease)
+		Intelligence:
+			Resistance to hallucinations
+			Hallucination recovery
+			Monster intent
+		Perception:
+			Monster identification (type, level, mutations)
+			FOV range
+			"Danger level" of each floor
+	Armour slots:
+		Head
+		Chest
+		Legs
+		Hands
+		Feet
+		Left_Ring
+		Right_Ring
+	Item attributes:
+		Damage: XdX + X 
+		Additional damage types: fire, frost, poison, acid
+		Carry capacity
+		Critical hit chance (ranged or melee)
+		Movement speed (?)
+		Stat bonuses:
+			Strength
+			Agility
+			Vitality
+			Intelligence
+			Perception
+			
+Levels:
+	Goal:
+		The sludgeworks is a deep complex where the essence of life itself is supposedly found at it's lowest chamber.
+		Many adventurers have attempted to reach this level and perish, only further enhancing the capabilities of the
+		mutated horrors within it. Remnants of societies past which have attempted to control it are evident, and it's 
+		twisted layers reform around those that try to explore it, the works themselves trying to preserve itself.
+		Your goal is to reach the bottom layer of the sludgeworks.
+	Level 0:
+		Player enters the a map screen with no armour, items and with base stats. This area serves as only a stylistic 
+		intro and no items/mutations can be acquired here. Only exit is into the sludgeworks, which begins the game.
+	Levels 1 & 2:
+		Easier levels which allow the player to begin acquiring items, mutations and stats to determine their play
+		style this run. Monsters start out fairly easy but some challenging opponents can still rarely be generated
+		and environmental hazards and swarmer enemies may cause significant problems.
+		Few mutations
+	Levels 3-5:
+		First randomly selected biome is chosen which persists for 3 floors. Each biome carries it's own style, mutation
+		preference and dangers. High chance of death if the player ignores warnings and is unfamiliar with how to play.
+		Low-Level mutations
+	Level 6-9:
+		Second randomly selected biome. By this point, player should be well equipped, mutated and leveled. Enemies have
+		began to significantly mutate and unlucky combinations can make your life miserable. Player should have enough
+		items to be able to have fun with the enemies and scenario and unusual play styles really start to shine as being
+		very entertaining.
+		Low & Mid-Level Mutations
+	Level 10:
+		First boss (TBD).
+	Levels 11-14:
+		'Ruin' biome, where hallucination-inflicting enemies become more common, paired with enemies that must be dealt
+		with through other means than just hack & slashing. Within these floors, an optional but !fun! chamber will 
+		be spawned, each having their own style and lucrative loot. 
+		Mid-Level Mutations
+			Ruin Chambers:
+				Cleansers:
+					'Stratholme Scarlet Crusade' chamber. Long-forgotten remains of a zealous expedition that are violently 
+					holding back hordes of mutated creatures. Their only goal is to survive and try to escape the sludgeworks
+					and they cannot be bargained with in any way, and see you as some mutated spawn, even if you are 
+					unmutated. As you progress, the enemies spawned in the ruins will follow you which may cause unprepared 
+					players to become surrounded. Chamber layout is with many square rooms and winding corridoors.
+				Cultists:
+					A sect of mutation-obsessed post-humans which have created a camp on their way to the bottom of the 
+					sludgeworks. The majority of them have lost their humanity, but still follow their leader with religious
+					fanaticism. This chamber can be highly unpredictable, as all enemies have weak base stats, but are
+					highly mutated. Chamber layout is a large cavern adapted into a base.
+	Level 15:
+		Second boss (TBD)
+	Levels 15-19:
+		Another random biome. Game is challenging by this point. Another random chamber will spawn within these floors.
+		Mid/High Level mutations
+	Level 20:
+		Third (and final) boss (TBD)
+	Levels 21-23:
+		Player enters the realms where reality is beginning to unfold, and the monsters encountered are horrific lovecraftian
+		mutants, some of which are so badly mutated they're incapable of dealing damage any more and have become part of the
+		scenery. Hallucinations may be encountered which make the player question what's actually happening and the game
+		becomes very nightmarish. These floors are difficult, but the third boss is the real final challenge and these floors
+		only exist to weed out those fortunate enough to beat the final boss through luck. These floors should be run through
+		as fast as possible as they exist as an endurance test, with dangers intended to slow the player down.
+		High & Random mutations
+	Level 24:
+		The player has reached the bottom of the sludgeworks and will be presented with an ending which is open to
+		interpretation, with multiple endings depending upon the player's previous choices (if applicable), stats and 
+		mutations.
+		
+Mutations:
+	Info:
+		Every time a player progresses to the next floor, they will have the ability to assign a certain number of stat 
+		points and gain one of five mutations. The player can skip this mutation if they wish and may instead gain a stat 
+		point in a random skill, or remove a negative mutation. It may be beneficial to skip mutations, as certain monsters 
+		may apply negative mutations which can flood the mutation choice menus with negative mutations. Although there is 
+		no mutation 'skill tree', certain combinations of mutations may affect the chance of other mutations appearing.
+	Mutation list:
+		Stat-related:
+			Beneficial:
+				
+			Negative:
+				
+				
+		Ability-giving:
+			Teleport Self:
+				Can choose a location that has previously been seen to teleport to. Long cooldown.
+			Teleport Other:
+				Teleport an enemy to a location that THEY have seen before. Long cooldown. May cause unintended
+				consequences if an enemy has not seen any location.
+			Force Push:
+				Push an enemy away a distance proportional to their weight, damaging them if they hit something, stunning 
+				them for X turns.
+			Force Pull:
+				Pull an enemy within your FOV towards you, stunning for X turns proportional to their weight.
+			Withering Touch:
+				Gain advantage on all melee attacks made against plants.
+			
+		Supplementary:
+			Beneficial:
+				Space Render:
+					Whenever you teleport, cause an explosion centred at your new location.
+				Gene Splicer:
+					Add +1 mutation to choose from whenever you descend. Stacks.
+				Force Expert:
+					Req: Force Push/Pull
+					Your Force Abilities affect all enemies within melee range in addition to your target
+				
+			Negative:
+				Nearsighted:
+					-1 FOV Radius
+				Reality Warper:
+					Whenever you teleport, everything in a +1 range travels with you. Unstable materials and enemies
+					may explode. Stacks.
+				Corrupt DNA:
+					When you are forcefully mutated, gain an additional negative mutation.
+				
+Monster table:
+	Player:
+		A hopeless fool convinced that he can not only survive the sludgeworks, but understand it's corrupted depths.
+	Plants:
+		Bloated Fungus:
+			An enormous, spherical fungus anchored to the floor. It occasionally puffs dense clouds of spores through it's 
+			powdered gills.
+			Abilities: Explodes if damaged, releasing hallucinatory spores. Immune to it's own spore types.
+			Mutations: Sentience, Camouflage, Spores: Random Disease, Paralyzing, Poisoning
+	Humanoids:
+		Wretch:
+			A stunted human wrapped in filthy rags and long since driven feral by the sludgeworks.
+			Abilities: AoS, Flees on low HP (Rare), Armoured (Rare).
+			Mutations: Low-Level List.
+		Hunchback:
+			Hooded:
+			A humanoid figure draped in dark, hooded robes. It's face is completely concealed and it carries a wicked, 
+			curved dagger. It moves with purpose and chants in an ancient, guttural tongue.
+			Hoodless:
+			A humanoid figure draped in dark, hooded robes. It's head is dominated by a gaping horizontal maw, lined with 
+			rows of serrated teeth. Rivers of blood stream down it's disfigured visage, covering the floor with a glossy 
+			sheen.
+			Abilities (Hooded): AoS, Flurry, Casts Fear (The Hunchback removes it's hood and you are overcome with terror!).
+			Abilities (Hoodless): AoS, Bleeds on Surroundings, Always Follows, Berserk, Bite.
+			Mutations: Mid-Level List.
+		Thresher:
+			A colossal ogre-like ape covered in patches of matted hair and littered with scars. This creature tirelessly 
+			searches it's surroundings for new objects to smash together with a joyous, childlike expression.
+			Abilities: AoS, Stupid, Knockback, Grabs, Berserk, Attacks Nearest Target, High HP.
+			Mutations: Low-Level List. Very dangerous if 'stupid' is removed.
+		Flagellant:
+			Alignment: Cultist
+			Driven by insane fervor, this 'man' tears apart his flesh in religious fury. The back of his embroidened robes 
+			are lacerated beyond repair and blackened with dried blood, however the skin below is flawless and unscarred.
+			Abilities: Regenerates, Melee Range: 2, Damages Self When Idle && When HP>50%, Poisonproof, Diseaseproof.
+			Mutations: Mid-Level List.
+		Bloodseeker:
+			An asymmetric monstrosity the size of a bear with a grinning, skinless snout. Rusted weaponry from previous 
+			encountered juts from it's hide like gruesome jewellery and 
+		
+	Beasts:
+		
+	Horrors:
+		
+	Bosses:
+		Dymanikos, Effigy of Perfection
+			Boss
+			Alignment: Cultist
+			An elegant, towering figure with an inhumanly soothing voice. This man appears to be unarmed,
+			but you are not so easily deceived to think this he is worshipped for his weaknesses.
+			Abilities: Can cast Heal, Inspires nearby enemies, Can negate magic, Can lower STR & AGI on INT fail.
+			
+			
+	
+	
+	

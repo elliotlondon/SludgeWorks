@@ -11,8 +11,7 @@
 # Feel free to use this as you wish, but please keep this header #
 #                                                                #
 ##################################################################
- 
- 
+
 from random import randint, choice, randrange
  
 # tile constants
@@ -40,7 +39,6 @@ class DungeonRoom:
         width: the amount of cells the room spans
         height: the amount of cells the room spans
     """
-     
     def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
@@ -55,25 +53,25 @@ class DungeonGenerator:
      
     The dungeon is built around a 2D list, the resulting dungeon is a 2D tile map, where each x,y point holds a
     constant. The grid can then be iterated through using the contained constant to determine the tile to render and
-    the x,y indices can be multiplied by x,y size of the tile. The class it's self can be iterated through. For example:
-        tileSize = 2
+    the x, y indices can be multiplied by x, y size of the tile. The class it's self can be iterated through.
+    For example:
+        tile_size = 2
         for x, y, tile in dungeonGenerator:
             if tile = FLOOR:
-                render(floorTile)
-                floorTile.xPosition = x * tileSize
-                floorTile.yPosition = y * tileSize
+                render(floor_tile)
+                floor_tile.xPosition = x * tile_size
+                floor_tile.yPosition = y * tile_size
             and so forth...
-     
     Alternatively:
-        for x in range(dungeonGenerator.width):
-            for y in range(dungeonGenerator.height):
-                if dungeonGenerator.grid[x][y] = FLOOR:
-                    render(floorTile)
-                    floorTile.xPosition = x * tileSize
-                    floorTile.yPosition = y * tileSize
+        for x in range(DungeonGenerator.width):
+            for y in range(DungeonGenerator.height):
+                if DungeonGenerator.grid[x][y] = FLOOR:
+                    render(floor_tile)
+                    floor_tile.xPosition = x * tile_size
+                    floor_tile.yPosition = y * tile_size
                 and so forth...
      
-    Throughout x,y refer to indices in the tile map, nx,ny are used to refer to neighbours of x,y
+    Throughout x, y refer to indices in the tile map, nx, ny are used to refer to neighbours of x, y
      
     Args:
         height and width of the dungeon to be generated
@@ -249,7 +247,8 @@ class DungeonGenerator:
              
     def find_empty_space(self, distance):
         """
-        Finds the first empty space encountered in the 2D grid that it not surrounding by anything within the given distance
+        Finds the first empty space encountered in the 2D grid that it not surrounding by anything within the given
+        distance
          
         Args:
             distance: integer, the distance from the current x,y point being checked to see if is empty
@@ -327,9 +326,10 @@ class DungeonGenerator:
         place a defined quad within the grid and add it to self.rooms
          
         Args:
-            x and y: integer, starting corner of the room, grid indicies
-            roomWdith and room_height: integer, height and width of the room where room_width > x and room_height > y
-            ignore_overlap: boolean, if true the room will be placed irregardless of if it overlaps with any other tile in the grid
+            x and y: integer, starting corner of the room, grid indices
+            roomWidth and room_height: integer, height and width of the room where room_width > x and room_height > y
+            ignore_overlap: boolean, if true the room will be placed irregardless of if it overlaps with any other tile
+            in the grid
                 note, if true then it is up to you to ensure the room is within the bounds of the grid
         Returns:
             True if the room was placed
@@ -341,7 +341,7 @@ class DungeonGenerator:
             self.rooms.append(DungeonRoom(start_x, start_y, room_width, room_height))
             return True
          
-    def place_random_rooms(self, min_room_size, max_room_size, room_step=1, margin=1, attempts=500):
+    def place_random_rooms(self, min_room_size, max_room_size, room_step=1, margin=1, attempts=100):
         """ 
         randomly places quads in the grid
         takes a brute force approach: randomly a generate quad in a random place -> check if fits -> reject if not
@@ -389,7 +389,7 @@ class DungeonGenerator:
                     if x == 0 or x == self.width or y == 0 or y == self.height:
                         self.grid[x][y] = EMPTY
                     touching_empty_space = 0
-                    for nx, ny in self.find_neighbours(x,y):
+                    for nx, ny in self.find_neighbours(x, y):
                         if self.grid[nx][ny] == CAVE: 
                             touching_empty_space += 1
                     if touching_empty_space >= 5:
@@ -484,10 +484,12 @@ class DungeonGenerator:
         Populates self.doors
          
         Args:
-            extra_door_chance: integer, where 0 >= extra_door_chance <= 100, the chance a room will have more than one connection to the corridors
+            extra_door_chance: integer, where 0 >= extra_door_chance <= 100, the chance a room will have more than one
+            connection to the corridors
         if extra_door_chance >= 100: extra_door_chance = 99
         Returns:
-            list of DungeonRoom's that are not connected, this will not include islands, so 2 rooms connected to each other, but not the rest will not be included
+            list of DungeonRoom's that are not connected, this will not include islands, so 2 rooms connected to each
+            other, but not the rest will not be included
         """
         unconnected_rooms = []
         for room in self.rooms:

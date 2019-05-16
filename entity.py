@@ -6,8 +6,9 @@ from components.item import Item
 
 
 class Entity:
-    def __init__(self, x, y, char, colour, name, description, blocks=False, render_order=RenderOrder.CORPSE, fighter=None, ai=None,
-                 item=None, inventory=None, stairs=None, level=None, equipment=None, equippable=None):
+    def __init__(self, x, y, char, colour, name, description, blocks=False, render_order=RenderOrder.CORPSE,
+                 fighter=None, ai=None, item=None, inventory=None, stairs=None, level=None, equipment=None,
+                 equippable=None, damage_dice=None, damage_sides=None):
         self.x = x
         self.y = y
         self.char = char
@@ -25,6 +26,8 @@ class Entity:
         self.level = level
         self.equipment = equipment
         self.equippable = equippable
+        self.damage_dice = damage_dice
+        self.damage_sides = damage_sides
 
         if self.fighter:
             self.fighter.owner = self
@@ -81,7 +84,7 @@ class Entity:
         # Create a FOV map that has the dimensions of the map
         fov = libtcod.map_new(game_map.width, game_map.height)
 
-        # Scan the current map each turn and set all the walls as unwalkable
+        # Scan the current map each turn and set all the walls as un-walkable
         for y1 in range(game_map.height):
             for x1 in range(game_map.width):
                 libtcod.map_set_properties(fov, x1, y1, not game_map.tiles[x1][y1].block_sight,

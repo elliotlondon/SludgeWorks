@@ -1,4 +1,8 @@
 import libtcodpy as libtcod
+from random import randint
+
+# TODO: Import tcod instead of libtcod and start vectorizing the code with numpy. libtcodpy is deprecated and replaced
+# TODO: with tcod!
 
 from death_functions import kill_monster, kill_player
 from entity import get_blocking_entities_at_location
@@ -18,22 +22,18 @@ def main():
 
     libtcod.console_set_custom_font('terminal8x8_gs_ro.png',
                                     libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_ASCII_INROW)
-
     libtcod.console_init_root(constants['screen_width'], constants['screen_height'], constants['window_title'], False)
-
     con = libtcod.console_new(constants['screen_width'], constants['screen_height'])
     panel = libtcod.console_new(constants['screen_width'], constants['panel_height'])
+    main_menu_background_image = libtcod.image_load('sludge2.png')
 
     player = None
     entities = []
     game_map = None
     message_log = None
     game_state = None
-
     show_main_menu = True
     show_load_error_message = False
-
-    main_menu_background_image = libtcod.image_load('sludge2.png')
 
     key = libtcod.Key()
     mouse = libtcod.Mouse()
@@ -88,6 +88,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
     mouse = libtcod.Mouse()
 
     game_state = GameStates.PLAYERS_TURN
+    turn_number = 1
     previous_game_state = game_state
 
     targeting_item = None
@@ -197,8 +198,9 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
 
         if level_up:
             if level_up == 'hp':
-                player.fighter.base_max_hp += 20
-                player.fighter.hp += player.fighter.hp
+                hit_dice_roll = randint(0, round(player.fighter.base_vitality/4))
+                player.fighter.base_max_hp += 10 + hit_dice_roll
+                player.fighter.current_hp += 10 + hit_dice_roll
             elif level_up == 'str':
                 player.fighter.base_strength += 1
             elif level_up == 'agi':
@@ -265,7 +267,6 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
 
             if item_added:
                 entities.remove(item_added)
-
                 game_state = GameStates.ENEMY_TURN
 
             if item_consumed:
@@ -273,7 +274,6 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
 
             if item_dropped:
                 entities.append(item_dropped)
-
                 game_state = GameStates.ENEMY_TURN
 
             if equip:
@@ -326,6 +326,10 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
 
             for entity in entities:
                 if entity.ai:
+                    # Heal-over time effect for enemies
+                    if turn_number % 4 == 0:
+                        if entity.fighter.current_hp < entity.fighter.base_max_hp:
+                            entity.fighter.current_hp += 1
                     enemy_turn_results = entity.ai.take_turn(player, fov_map, game_map, entities)
 
                     for enemy_turn_result in enemy_turn_results:
@@ -349,7 +353,15 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                     if game_state == GameStates.PLAYER_DEAD:
                         break
             else:
+                print("Turn Number = ", turn_number)
+                # Heal-over time effect for the player
                 game_state = GameStates.PLAYERS_TURN
+                if turn_number % 4 == 0:
+                    if player.fighter.current_hp < player.fighter.base_max_hp:
+                        player.fighter.current_hp += 1
+                        turn_number += 1
+                else:
+                    turn_number += 1
 
 
 if __name__ == '__main__':

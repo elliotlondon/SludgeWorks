@@ -1,7 +1,7 @@
 import libtcodpy as libtcod
 
 from enum import Enum, auto
-from random import randint, seed
+from random import Random
 
 from game_states import GameStates
 from menus import *
@@ -52,7 +52,7 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_colour, back_
 
 def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height,
                bar_width, panel_height, panel_y, colours, game_state):
-    seed(1337)  # Seed the floor tile generation. Use 1337, obviously
+    seed = Random(1337)  # Randomise randint yourself to prevent d&d roll changes
     if fov_recompute:
         for y in range(game_map.height):
             for x in range(game_map.width):
@@ -61,7 +61,7 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
 
                 # Using randint without seed here causes a 'disco' effect. Great for hallucinations!!!
                 floor_char = [' ', '.', ',', '`']
-                floor_char = floor_char[randint(0, len(floor_char)-1)]
+                floor_char = floor_char[Random.randint(seed, 0, len(floor_char)-1)]
 
                 if visible:
                     if wall:
@@ -90,7 +90,7 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
 
     libtcod.console_set_default_foreground(con, libtcod.white)
     libtcod.console_print_ex(con, 1, screen_height - 2, libtcod.BKGND_NONE, libtcod.LEFT,
-                             'HP: {0:02}/{1:02}'.format(player.fighter.hp, player.fighter.max_hp))
+                             'HP: {0:02}/{1:02}'.format(player.fighter.current_hp, player.fighter.max_hp))
 
     libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
 
@@ -104,7 +104,7 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
         libtcod.console_print_ex(panel, message_log.x, y, libtcod.BKGND_NONE, libtcod.LEFT, message.text)
         y += 1
 
-    render_bar(panel, 1, 1, bar_width, 'HP', player.fighter.hp, player.fighter.max_hp,
+    render_bar(panel, 1, 1, bar_width, 'HP', player.fighter.current_hp, player.fighter.max_hp,
                libtcod.light_red, libtcod.darker_red)
 
     libtcod.console_set_default_foreground(panel, libtcod.light_gray)

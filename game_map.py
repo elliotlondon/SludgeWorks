@@ -1,4 +1,4 @@
-import libtcodpy as libtcod
+import tcod as libtcod
 import math, random
 
 from random import randint
@@ -45,7 +45,7 @@ class GameMap:
 
             # TODO: Stop monsters and items being placed within blocked tiles!!!
 
-            self.place_entities(entire_dungeon, entities)
+            # self.place_entities(entire_dungeon, entities)
         elif self.dungeon_level == 2:
             # Chamber 2: Eroded rooms
             max_rooms = 40
@@ -85,9 +85,9 @@ class GameMap:
             self.erode(map_width, map_height, 1)
 
     def place_entities(self, room, entities):
-        max_monsters = from_dungeon_level([[40, 1], [60, 4], [100, 6]], self.dungeon_level)
-        max_plants = from_dungeon_level([[20, 1], [30, 4], [20, 6]], self.dungeon_level)
-        max_items = from_dungeon_level([[20, 1], [30, 4]], self.dungeon_level)
+        max_monsters = from_dungeon_level([[2, 1], [3, 4], [5, 6]], self.dungeon_level)
+        max_plants = from_dungeon_level([[2, 1], [3, 4], [2, 6]], self.dungeon_level)
+        max_items = from_dungeon_level([[2, 1], [3, 4]], self.dungeon_level)
         # Get a random number of monsters
         number_of_monsters = randint(round(max_monsters*0.75), max_monsters)
         number_of_plants = randint(round(max_plants*0.75), max_plants)
@@ -117,7 +117,7 @@ class GameMap:
             y = randint(room.y1 + 1, room.y2 - 1)
 
             if not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                if not any([Tile in self.tiles if self.tiles[x][y] == self.blocked]):
+                # if not any([Tile in self.tiles if self.tiles[x][y] == self.blocked]):
                     fighter_component = Fighter(current_hp=8, max_hp=8,
                                                 damage_dice=1, damage_sides=2,
                                                 strength=3, agility=1, vitality=1, intellect=1, perception=1,
@@ -348,7 +348,7 @@ class GameMap:
                         if not self.tiles[x][y].block_sight and not self.tiles[x][y].blocked:
                             free_tiles.append(self.tiles[x][y])
                 # Use this if you wish to place actors on a room-by-room basis
-                # self.place_entities(new_room, entities)
+                self.place_entities(new_room, entities)
                 rooms.append(new_room)
                 num_rooms += 1
 

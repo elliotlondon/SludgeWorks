@@ -1,4 +1,4 @@
-import libtcodpy as libtcod
+import tcod as libtcod
 from random import randint
 
 # TODO: Import tcod instead of libtcod and start vectorizing the code with numpy. libtcodpy is deprecated and replaced
@@ -20,11 +20,11 @@ def main():
     libtcod.sys_set_fps(60)
     constants = get_constants()
 
-    libtcod.console_set_custom_font('terminal8x8_gs_ro.png',
-                                    libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_ASCII_INROW)
-    libtcod.console_init_root(constants['screen_width'], constants['screen_height'], constants['window_title'], False)
-    con = libtcod.console_new(constants['screen_width'], constants['screen_height'])
-    panel = libtcod.console_new(constants['screen_width'], constants['panel_height'])
+    libtcod.console_set_custom_font('Curses_1920x900.png', libtcod.FONT_LAYOUT_ASCII_INROW)
+    libtcod.console_init_root(constants['screen_width'], constants['screen_height'],
+                              constants['window_title'], True, libtcod.RENDERER_SDL2)
+    root_console = libtcod.console.Console(constants['screen_width'], constants['screen_height'])
+    panel = libtcod.console.Console(constants['screen_width'], constants['panel_height'])
     main_menu_background_image = libtcod.image_load('sludge2.png')
 
     player = None
@@ -42,11 +42,12 @@ def main():
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
 
         if show_main_menu:
-            main_menu(con, main_menu_background_image, constants['screen_width'],
+            main_menu(root_console, main_menu_background_image, constants['screen_width'],
                       constants['screen_height'])
 
             if show_load_error_message:
-                message_box(con, 'No save game to load', 50, constants['screen_width'], constants['screen_height'])
+                message_box(root_console, 'No save game to load', 50, constants['screen_width'],
+                            constants['screen_height'])
 
             libtcod.console_flush()
 
@@ -73,13 +74,13 @@ def main():
                 break
 
         else:
-            libtcod.console_clear(con)
-            play_game(player, entities, game_map, message_log, game_state, con, panel, constants)
+            libtcod.console_clear(root_console)
+            play_game(player, entities, game_map, message_log, game_state, root_console, panel, constants)
 
             show_main_menu = True
 
 
-def play_game(player, entities, game_map, message_log, game_state, con, panel, constants):
+def play_game(player, entities, game_map, message_log, game_state, root_console, panel, constants):
     fov_recompute = True
 
     fov_map = initialize_fov(game_map)
@@ -100,13 +101,13 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
             recompute_fov(fov_map, player.x, player.y, constants['fov_radius'], constants['fov_light_walls'],
                           constants['fov_algorithm'])
 
-        render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
+        render_all(root_console, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
                    constants['screen_width'], constants['screen_height'], constants['bar_width'],
                    constants['panel_height'], constants['panel_y'], constants['colours'], game_state)
 
         fov_recompute = False
         libtcod.console_flush()
-        clear_all(con, entities)
+        clear_all(root_console, entities)
 
         action = handle_keys(key, game_state)
         mouse_action = handle_mouse(mouse)
@@ -190,7 +191,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                     entities = game_map.next_floor(player, constants)
                     fov_map = initialize_fov(game_map)
                     fov_recompute = True
-                    libtcod.console_clear(con)
+                    libtcod.console_clear(root_console)
 
                     break
             else:
@@ -317,12 +318,12 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
 
         if game_state == GameStates.ENEMY_TURN:
             # Ensure that errors do not arise with rendering when enemies move
-            render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
+            render_all(root_console, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
                        constants['screen_width'], constants['screen_height'], constants['bar_width'],
                        constants['panel_height'], constants['panel_y'], constants['colours'], game_state)
             fov_recompute = True
             libtcod.console_flush()
-            clear_all(con, entities)
+            clear_all(root_console, entities)
 
             for entity in entities:
                 if entity.ai:

@@ -1,4 +1,4 @@
-import libtcodpy as libtcod
+import tcod as libtcod
 
 from components.equipment import Equipment, Equippable
 from components.fighter import Fighter
@@ -15,7 +15,7 @@ from render_functions import RenderOrder
 def get_constants():
     window_title = 'SludgeWorks'
 
-    screen_width = 96
+    screen_width = 80
     screen_height = 45
 
     bar_width = int(screen_width / 4)

@@ -1,4 +1,5 @@
 import tcod as libtcod
+import custrender
 from random import randint
 
 # TODO: Import tcod instead of libtcod and start vectorizing the code with numpy. libtcodpy is deprecated and replaced
@@ -20,13 +21,6 @@ def main():
     libtcod.sys_set_fps(60)
     constants = get_constants()
 
-    libtcod.console_set_custom_font('Curses_1920x900.png', libtcod.FONT_LAYOUT_ASCII_INROW)
-    libtcod.console_init_root(constants['screen_width'], constants['screen_height'],
-                              constants['window_title'], True, libtcod.RENDERER_SDL2)
-    root_console = libtcod.console.Console(constants['screen_width'], constants['screen_height'])
-    panel = libtcod.console.Console(constants['screen_width'], constants['panel_height'])
-    main_menu_background_image = libtcod.image_load('sludge2.png')
-
     player = None
     entities = []
     game_map = None
@@ -38,46 +32,54 @@ def main():
     key = libtcod.Key()
     mouse = libtcod.Mouse()
 
-    while not libtcod.console_is_window_closed():
-        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
+    libtcod.console_set_custom_font('terminal8x8_gs_ro.png', libtcod.FONT_TYPE_GRAYSCALE |
+                                    libtcod.FONT_LAYOUT_ASCII_INROW)
+    panel = libtcod.console.Console(constants['screen_width'], constants['panel_height'])
+    main_menu_background_image = libtcod.image_load('sludge2.png')
 
-        if show_main_menu:
-            main_menu(root_console, main_menu_background_image, constants['screen_width'],
-                      constants['screen_height'])
+    with libtcod.console_init_root(constants['screen_width'], constants['screen_height'],
+                                   constants['window_title'], True, libtcod.RENDERER_SDL2) as root_console:
+        while True:
+            libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
 
-            if show_load_error_message:
-                message_box(root_console, 'No save game to load', 50, constants['screen_width'],
-                            constants['screen_height'])
+            if show_main_menu:
+                main_menu(root_console, main_menu_background_image, constants['screen_width'],
+                          constants['screen_height'])
 
-            libtcod.console_flush()
+                if show_load_error_message:
+                    message_box(root_console, 'No save game to load', 50, constants['screen_width'],
+                                constants['screen_height'])
 
-            action = handle_main_menu(key)
+                custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))
+                custrender.present()
 
-            new_game = action.get('new_game')
-            load_saved_game = action.get('load_game')
-            exit_game = action.get('exit')
+                action = handle_main_menu(key)
 
-            if show_load_error_message and (new_game or load_saved_game or exit_game):
-                show_load_error_message = False
-            elif new_game:
-                player, entities, game_map, message_log, game_state = get_game_variables(constants)
-                game_state = GameStates.PLAYERS_TURN
+                new_game = action.get('new_game')
+                load_saved_game = action.get('load_game')
+                exit_game = action.get('exit')
 
-                show_main_menu = False
-            elif load_saved_game:
-                try:
-                    player, entities, game_map, message_log, game_state = load_game()
+                if show_load_error_message and (new_game or load_saved_game or exit_game):
+                    show_load_error_message = False
+                elif new_game:
+                    player, entities, game_map, message_log, game_state = get_game_variables(constants)
+                    game_state = GameStates.PLAYERS_TURN
+
                     show_main_menu = False
-                except FileNotFoundError:
-                    show_load_error_message = True
-            elif exit_game:
-                break
+                elif load_saved_game:
+                    try:
+                        player, entities, game_map, message_log, game_state = load_game()
+                        show_main_menu = False
+                    except FileNotFoundError:
+                        show_load_error_message = True
+                elif exit_game:
+                    break
 
-        else:
-            libtcod.console_clear(root_console)
-            play_game(player, entities, game_map, message_log, game_state, root_console, panel, constants)
+            else:
+                libtcod.console_clear(root_console)
+                play_game(player, entities, game_map, message_log, game_state, root_console, panel, constants)
 
-            show_main_menu = True
+                show_main_menu = True
 
 
 def play_game(player, entities, game_map, message_log, game_state, root_console, panel, constants):
@@ -94,7 +96,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
     targeting_item = None
 
-    while not libtcod.console_is_window_closed():
+    while True:
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
 
         if fov_recompute:
@@ -106,7 +108,8 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                    constants['panel_height'], constants['panel_y'], constants['colours'], game_state)
 
         fov_recompute = False
-        libtcod.console_flush()
+        custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))
+        custrender.present()
         clear_all(root_console, entities)
 
         action = handle_keys(key, game_state)
@@ -322,7 +325,8 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                        constants['screen_width'], constants['screen_height'], constants['bar_width'],
                        constants['panel_height'], constants['panel_y'], constants['colours'], game_state)
             fov_recompute = True
-            libtcod.console_flush()
+            custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))
+            custrender.present()
             clear_all(root_console, entities)
 
             for entity in entities:

@@ -1,4 +1,5 @@
 import tcod as libtcod
+import custrender
 
 from enum import Enum, auto
 from random import Random
@@ -140,7 +141,8 @@ def clear_all(con, entities):
 
 
 def draw_entity(con, entity, fov_map, game_map):
-    if libtcod.map_is_in_fov(fov_map, entity.x, entity.y) or (entity.stairs and game_map.tiles[entity.x][entity.y].explored):
+    if libtcod.map_is_in_fov(fov_map, entity.x, entity.y) or (entity.stairs and
+                                                              game_map.tiles[entity.x][entity.y].explored):
         libtcod.console_set_default_foreground(con, entity.colour)
         libtcod.console_put_char(con, entity.x, entity.y, entity.char, libtcod.BKGND_NONE)
 

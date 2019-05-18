@@ -1,9 +1,9 @@
 import tcod as libtcod
 
-from components.equipment import Equipment, Equippable
-from components.fighter import Fighter
-from components.inventory import Inventory
-from components.level import Level
+from equipment import Equipment, Equippable
+from fighter import Fighter
+from inventory import Inventory
+from level import Level
 from entity import Entity
 from equipment_slots import EquipmentSlots
 from game_messages import MessageLog

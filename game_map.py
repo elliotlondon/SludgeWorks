@@ -3,11 +3,11 @@ import math, random
 
 from random import randint
 
-from components.ai import Aggressive, Stationary
-from components.equipment import EquipmentSlots, Equippable
-from components.fighter import Fighter
-from components.item import Item
-from components.stairs import Stairs
+from ai import Aggressive, Stationary
+from equipment import EquipmentSlots, Equippable
+from fighter import Fighter
+from item import Item
+from stairs import Stairs
 from entity import Entity
 from game_messages import Message
 from item_functions import cast_confuse, cast_fireball, cast_lightning, heal

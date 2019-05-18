@@ -1,7 +1,7 @@
 import tcod as libtcod
 
 from game_messages import Message
-from components.ai import ConfusedMonster
+from ai import ConfusedMonster
 
 
 def heal(*args, **kwargs):

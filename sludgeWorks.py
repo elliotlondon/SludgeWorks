@@ -11,8 +11,8 @@ from fov_functions import initialize_fov, recompute_fov
 from game_messages import Message
 from game_states import GameStates
 from input_handlers import handle_keys, handle_mouse, handle_main_menu
-from loader_functions.initialise_new_game import get_constants, get_game_variables
-from loader_functions.data_loaders import load_game, save_game
+from initialise_new_game import get_constants, get_game_variables
+from data_loaders import load_game, save_game
 from menus import main_menu, message_box
 from render_functions import clear_all, render_all
 
@@ -32,7 +32,7 @@ def main():
     key = libtcod.Key()
     mouse = libtcod.Mouse()
 
-    libtcod.console_set_custom_font('terminal8x8_gs_ro.png', libtcod.FONT_TYPE_GRAYSCALE |
+    libtcod.console_set_custom_font('Fonts/terminal8x8_gs_ro.png', libtcod.FONT_TYPE_GRAYSCALE |
                                     libtcod.FONT_LAYOUT_ASCII_INROW)
     panel = libtcod.console.Console(constants['screen_width'], constants['panel_height'])
     main_menu_background_image = libtcod.image_load('sludge2.png')
@@ -50,8 +50,10 @@ def main():
                     message_box(root_console, 'No save game to load', 50, constants['screen_width'],
                                 constants['screen_height'])
 
+                custrender.clear((0, 0, 0))
                 custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))
                 custrender.present()
+                root_console.clear(fg=(255, 255, 63))
 
                 action = handle_main_menu(key)
 
@@ -76,7 +78,7 @@ def main():
                     break
 
             else:
-                libtcod.console_clear(root_console)
+                root_console.clear(fg=(255, 255, 63))
                 play_game(player, entities, game_map, message_log, game_state, root_console, panel, constants)
 
                 show_main_menu = True
@@ -108,6 +110,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                    constants['panel_height'], constants['panel_y'], constants['colours'], game_state)
 
         fov_recompute = False
+        custrender.clear((0, 0, 0))
         custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))
         custrender.present()
         clear_all(root_console, entities)
@@ -194,7 +197,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                     entities = game_map.next_floor(player, constants)
                     fov_map = initialize_fov(game_map)
                     fov_recompute = True
-                    libtcod.console_clear(root_console)
+                    root_console.clear(fg=(255, 255, 63))
 
                     break
             else:
@@ -325,6 +328,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                        constants['screen_width'], constants['screen_height'], constants['bar_width'],
                        constants['panel_height'], constants['panel_y'], constants['colours'], game_state)
             fov_recompute = True
+            custrender.clear((0, 0, 0))
             custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))
             custrender.present()
             clear_all(root_console, entities)
@@ -358,7 +362,6 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                     if game_state == GameStates.PLAYER_DEAD:
                         break
             else:
-                print("Turn Number = ", turn_number)
                 # Heal-over time effect for the player
                 game_state = GameStates.PLAYERS_TURN
                 if turn_number % 4 == 0:

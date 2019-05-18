@@ -8,7 +8,7 @@ from components.item import Item
 class Entity:
     def __init__(self, x, y, char, colour, name, description, blocks=False, render_order=RenderOrder.CORPSE,
                  fighter=None, ai=None, item=None, inventory=None, stairs=None, level=None, equipment=None,
-                 equippable=None, damage_dice=None, damage_sides=None):
+                 equippable=None, damage_dice=None, damage_sides=None, faction=None):
         self.x = x
         self.y = y
         self.char = char
@@ -28,6 +28,7 @@ class Entity:
         self.equippable = equippable
         self.damage_dice = damage_dice
         self.damage_sides = damage_sides
+        self.faction = faction
 
         if self.fighter:
             self.fighter.owner = self

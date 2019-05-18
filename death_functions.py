@@ -1,4 +1,4 @@
-import libtcodpy as libtcod
+import tcod as libtcod
 
 from entity import Entity
 from game_messages import Message
@@ -14,26 +14,29 @@ def kill_player(player):
 
 
 def kill_monster(monster, entities):
-    death_message = Message('The {0} dies!'.format(monster.name.capitalize()), libtcod.orange)
-
     monster.blocks = False
     monster.fighter = None
-    monster.ai = None
     monster.char = ' '
-
-    # Generate a corpse as an item
-    if monster.name[0].lower() in 'aeiou':
-        monster.corpse_name = 'An ' + monster.name + ' corpse'
+    # Death condition for plant enemies
+    if monster.faction == 'Plants':
+        death_message = Message('The {0} dies!'.format(monster.name.capitalize()), libtcod.orange)
+        monster.ai = None
     else:
-        monster.corpse_name = 'A ' + monster.name + ' corpse'
-    item_component = ()
-    item = Entity(monster.x, monster.y, '%', libtcod.dark_red, monster.corpse_name,
-                  'The grotesque remains of an unfortunate inhabitant of the SludgeWorks.',
-                  render_order=RenderOrder.ITEM, item=item_component)
+        death_message = Message('The {0} dies!'.format(monster.name.capitalize()), libtcod.orange)
+        monster.ai = None
 
-    entities.remove(monster)
-    entities.append(item)
+        # Generate a corpse as an item
+        if monster.name[0].lower() in 'aeiou':
+            monster.corpse_name = 'An ' + monster.name + ' corpse'
+        else:
+            monster.corpse_name = 'A ' + monster.name + ' corpse'
+        item_component = ()
+        item = Entity(monster.x, monster.y, '%', libtcod.dark_red, monster.corpse_name,
+                      'The grotesque remains of an unfortunate inhabitant of the SludgeWorks.',
+                      render_order=RenderOrder.ITEM, item=item_component)
+        entities.append(item)
 
     monster.render_order = RenderOrder.CORPSE
+    entities.remove(monster)
 
     return death_message

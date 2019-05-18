@@ -1,9 +1,5 @@
-import tcod as libtcod
-import custrender
-
 from enum import Enum, auto
 from random import Random
-
 from game_states import GameStates
 from menus import *
 
@@ -83,7 +79,7 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
                         libtcod.console_put_char_ex(con, x, y, ord('.'.encode('cp437')), colours.get('dark_ground'),
                                                     colours.get('dark_ground'))
 
-    entities_in_render_order = sorted(entities, key=lambda x: x.render_order.value)
+    entities_in_render_order = sorted(entities, key=lambda z: z.render_order.value)
 
     # Draw all entities in the list
     for entity in entities_in_render_order:
@@ -93,10 +89,10 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
     libtcod.console_print_ex(con, 1, screen_height - 2, libtcod.BKGND_NONE, libtcod.LEFT,
                              'HP: {0:02}/{1:02}'.format(player.fighter.current_hp, player.fighter.max_hp))
 
-    libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
+    libtcod.console_blit(con, 0, 0, screen_width, screen_height, con, 0, 0)
 
     libtcod.console_set_default_background(panel, libtcod.black)
-    libtcod.console_clear(panel)
+    panel.clear(fg=(255, 255, 63))
 
     # Print the game messages, one line at a time
     y = 1
@@ -112,7 +108,7 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
     libtcod.console_print_ex(panel, 1, 0, libtcod.BKGND_NONE, libtcod.LEFT,
                              get_names_under_char(player, entities, fov_map))
 
-    libtcod.console_blit(panel, 0, 0, screen_width, panel_height, 0, 0, panel_y)
+    libtcod.console_blit(panel, 0, 0, screen_width, panel_height, con, 0, panel_y)
 
     if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):
         if game_state == GameStates.SHOW_INVENTORY:
@@ -126,13 +122,13 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
         level_up_menu(con, 'Choose a stat to increase:', player, 40, screen_width, screen_height)
 
     elif game_state == GameStates.CHARACTER_SCREEN:
-        character_screen(player, 30, 10, screen_width, screen_height)
+        character_screen(con, player, 30, 10, screen_width, screen_height)
 
     elif game_state == GameStates.ESC_MENU:
-        esc_menu(colours, 40, 10, screen_width, screen_height)
+        esc_menu(con, 40, 10, screen_width, screen_height)
 
     elif game_state == GameStates.HELP_MENU:
-        help_menu(50, 10, screen_width, screen_height)
+        help_menu(con, 50, 10, screen_width, screen_height)
 
 
 def clear_all(con, entities):
@@ -148,5 +144,4 @@ def draw_entity(con, entity, fov_map, game_map):
 
 
 def clear_entity(con, entity):
-    # erase the character that represents this object
     libtcod.console_put_char(con, entity.x, entity.y, ' ', libtcod.BKGND_NONE)

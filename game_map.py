@@ -121,13 +121,13 @@ class GameMap:
                     fighter_component = Fighter(current_hp=8, max_hp=8,
                                                 damage_dice=1, damage_sides=2,
                                                 strength=3, agility=1, vitality=1, intellect=1, perception=1,
-                                                xp=randint(20, 30))
+                                                xp=25)
                     ai_component = Stationary()
                     monster = Entity(x, y, 'V', libtcod.light_grey, 'Whip Vine',
                                      'What at first appears to be no more than a dead, waist-height bush in actuality' 
                                      'represents a highly specialized carnivorous flayer',
-                                     blocks=True,
-                                     render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
+                                     blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component,
+                                     ai=ai_component, faction='Plants')
 
                     entities.append(monster)
 
@@ -147,10 +147,10 @@ class GameMap:
                                                 xp=50)
                     ai_component = Aggressive()
                     monster = Entity(x, y, 'w', libtcod.darker_red, 'Wretch',
-                                     'A stunted human wrapped in filthy rags and long since driven feral by the '
+                                     'A stunted human swaddled in filthy rags and long since driven feral by the '
                                      'SludgeWorks.',
-                                     blocks=True,
-                                     render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
+                                     blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component,
+                                     ai=ai_component, faction='Scavengers')
                 elif monster_choice == 'Hunchback':
                     fighter_component = Fighter(current_hp=12, max_hp=12,
                                                 damage_dice=2, damage_sides=6,
@@ -161,8 +161,8 @@ class GameMap:
                                      'A humanoid figure draped in dark, hooded robes. It\'s face is completely '
                                      'concealed and it carries a wicked, curved dagger. It moves with purpose and '
                                      'chants in an ancient, guttural tongue.',
-                                     blocks=True,
-                                     render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
+                                     blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component,
+                                     ai=ai_component, faction='Horrors')
                 else:
                     fighter_component = Fighter(current_hp=26, max_hp=26,
                                                 damage_dice=3, damage_sides=4,
@@ -173,9 +173,8 @@ class GameMap:
                                      'A colossal ogre-like ape covered in patches of matted hair and littered with '
                                      'scars. This creature tirelessly searches it\'s surroundings for new objects to '
                                      'smash together with a joyous, childlike expression.',
-                                     blocks=True,
-                                     fighter=fighter_component,
-                                     render_order=RenderOrder.ACTOR, ai=ai_component)
+                                     blocks=True, fighter=fighter_component, render_order=RenderOrder.ACTOR,
+                                     ai=ai_component, faction='Scavengers')
 
                 entities.append(monster)
 

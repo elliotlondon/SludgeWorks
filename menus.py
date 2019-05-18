@@ -28,7 +28,7 @@ def menu(con, header, options, width, screen_width, screen_height):
     # blit the contents of "window" to the root console
     x = int(screen_width / 2 - width / 2)
     y = int(screen_height / 2 - height / 2)
-    libtcod.console_blit(window, 0, 0, width, height, 0, x, y, 1, 0)
+    libtcod.console_blit(window, 0, 0, width, height, con, x, y, 1, 0)
 
 
 def inventory_menu(con, header, player, inventory_width, screen_width, screen_height):
@@ -64,12 +64,12 @@ def inventory_menu(con, header, player, inventory_width, screen_width, screen_he
 
 
 def main_menu(con, background_image, screen_width, screen_height):
-    libtcod.image_blit_2x(background_image, 0, 0, 0, 0, -1, -1)
+    libtcod.image_blit_2x(background_image, con, 0, 0, 0, -1, -1)
 
-    libtcod.console_set_default_foreground(0, libtcod.light_yellow)
-    libtcod.console_print_ex(0, int(screen_width / 2), int(screen_height / 2) - 4, libtcod.BKGND_NONE, libtcod.CENTER,
+    libtcod.console_set_default_foreground(con, libtcod.light_yellow)
+    libtcod.console_print_ex(con, int(screen_width / 2), int(screen_height / 2) - 4, libtcod.BKGND_NONE, libtcod.CENTER,
                              'SludgeWorks')
-    libtcod.console_print_ex(0, int(screen_width / 2), int(screen_height - 2), libtcod.BKGND_NONE, libtcod.CENTER,
+    libtcod.console_print_ex(con, int(screen_width / 2), int(screen_height - 2), libtcod.BKGND_NONE, libtcod.CENTER,
                              'designed by the Supreme Peasant')
 
     menu(con, '', ['New game', 'Continue', 'Quit'], 24, screen_width, screen_height)
@@ -83,7 +83,7 @@ def level_up_menu(con, header, player, menu_width, screen_width, screen_height):
     menu(con, header, options, menu_width, screen_width, screen_height)
 
 
-def character_screen(player, menu_width, menu_height, screen_width, screen_height):
+def character_screen(con, player, menu_width, menu_height, screen_width, screen_height):
     window = libtcod.console_new(menu_width, menu_height)
 
     libtcod.console_set_default_foreground(window, libtcod.white)
@@ -106,10 +106,10 @@ def character_screen(player, menu_width, menu_height, screen_width, screen_heigh
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height // 2
-    libtcod.console_blit(window, 0, 0, menu_width, menu_height, 0, x, y, 1.0, 0.7)
+    libtcod.console_blit(window, 0, 0, menu_width, menu_height, con, x, y, 1.0, 0.7)
 
 
-def esc_menu(colours, menu_width, menu_height, screen_width, screen_height):
+def esc_menu(con, menu_width, menu_height, screen_width, screen_height):
     window = libtcod.console_new(menu_width, menu_height)
     libtcod.console_set_default_foreground(window, libtcod.white)
     libtcod.console_set_color_control(libtcod.COLCTRL_1, libtcod.light_yellow, libtcod.white)
@@ -125,10 +125,10 @@ def esc_menu(colours, menu_width, menu_height, screen_width, screen_height):
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height
-    libtcod.console_blit(window, 0, 0, menu_width, int(menu_height/2 + 2), 0, x, y, 1.0, 0.75)
+    libtcod.console_blit(window, 0, 0, menu_width, int(menu_height/2 + 2), con, x, y, 1.0, 0.75)
 
 
-def help_menu(menu_width, menu_height, screen_width, screen_height):
+def help_menu(con, menu_width, menu_height, screen_width, screen_height):
     window = libtcod.console_new(menu_width, menu_height)
     libtcod.console_set_default_foreground(window, libtcod.white)
 
@@ -151,7 +151,7 @@ def help_menu(menu_width, menu_height, screen_width, screen_height):
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height // 2
-    libtcod.console_blit(window, 0, 0, menu_width, menu_height, 0, x, y, 1.0, 1.0)
+    libtcod.console_blit(window, 0, 0, menu_width, menu_height, con, x, y, 1.0, 1.0)
 
 
 def message_box(con, header, width, screen_width, screen_height):

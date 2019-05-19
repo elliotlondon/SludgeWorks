@@ -31,10 +31,7 @@ class GameMap:
             self.rooms_chamber(max_rooms, min_room_size, max_room_size, map_width, map_height, player,
                                entities)
             self.erode(map_width, map_height, 1)
-
-            # TODO: Stop monsters and items being placed within blocked tiles!!!
-
-            # self.place_entities(entire_dungeon, entities)
+            self.place_entities(entire_dungeon, entities)
         elif self.dungeon_level == 2:
             # Chamber 2: Eroded rooms
             max_rooms = 40
@@ -44,6 +41,7 @@ class GameMap:
                                entities)
             self.caves_chamber(map_width, map_height, 80, 1)
             self.erode(map_width, map_height, 1)
+            self.place_entities(entire_dungeon, entities)
         elif self.dungeon_level == 3:
             # Chamber 3: Caves
             max_rooms = 30
@@ -53,6 +51,7 @@ class GameMap:
                                entities)
             self.caves_chamber(map_width, map_height, 60, 4)
             self.erode(map_width, map_height, 1)
+            self.place_entities(entire_dungeon, entities)
         elif self.dungeon_level == 4:
             # Chamber 4: Narrow Caves
             max_rooms = 20
@@ -63,6 +62,7 @@ class GameMap:
             self.rooms_chamber(max_rooms, min_room_size, max_room_size, map_width, map_height, player,
                                entities)
             self.erode(map_width, map_height, 1)
+            self.place_entities(entire_dungeon, entities)
         else:
             # TODO: other chambers
             max_rooms = 30
@@ -72,20 +72,22 @@ class GameMap:
                                entities)
             self.caves_chamber(map_width, map_height, 60, 4)
             self.erode(map_width, map_height, 1)
+            self.place_entities(entire_dungeon, entities)
 
     def place_entities(self, room, entities):
-        max_monsters = from_dungeon_level([[2, 1], [3, 4], [5, 6]], self.dungeon_level)
-        max_plants = from_dungeon_level([[2, 1], [3, 4], [2, 6]], self.dungeon_level)
-        max_items = from_dungeon_level([[2, 1], [3, 4]], self.dungeon_level)
+        max_monsters = from_dungeon_level([[100, 1], [150, 4], [200, 6]], self.dungeon_level)
+        max_plants = from_dungeon_level([[25, 1], [50, 4], [35, 6]], self.dungeon_level)
+        max_items = from_dungeon_level([[20, 1], [30, 4]], self.dungeon_level)
         # Get a random number of monsters
         number_of_monsters = randint(round(max_monsters*0.75), max_monsters)
         number_of_plants = randint(round(max_plants*0.75), max_plants)
         number_of_items = randint(round(max_items*0.75), max_items)
 
         monster_chances = {
-            'Wretch': 80,
+            'Wretch': from_dungeon_level([[50, 1], [34, 4], [25, 6], [10, 10]], self.dungeon_level),
             'Hunchback': from_dungeon_level([[10, 2], [25, 4], [80, 6], [40, 10]], self.dungeon_level),
-            'Thresher': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level)
+            'Thresher': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
+            'Bloodseeker': from_dungeon_level([[5, 5], [10, 8]], self.dungeon_level)
         }
 
         # Item dictionary
@@ -101,20 +103,16 @@ class GameMap:
 
         # Place stationary monsters (plants) independent of monster number
         for i in range(number_of_plants):
-            # Choose a random location in within the dungeon that isn't blocked
             x = randint(room.x1 + 1, room.x2 - 1)
             y = randint(room.y1 + 1, room.y2 - 1)
-
             if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
                     and not self.is_blocked(x, y):
                     entities.append(whip_vine(x, y))
 
         # Place monsters with random spawning chances
         for i in range(number_of_monsters):
-            # Choose a random location in the room
             x = randint(room.x1 + 1, room.x2 - 1)
             y = randint(room.y1 + 1, room.y2 - 1)
-
             if not any([entity for entity in entities if entity.x == x and entity.y == y])\
                     and not self.is_blocked(x, y):
                 monster_choice = random_choice_from_dict(monster_chances)
@@ -129,7 +127,6 @@ class GameMap:
         for i in range(number_of_items):
             x = randint(room.x1 + 1, room.x2 - 1)
             y = randint(room.y1 + 1, room.y2 - 1)
-
             if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
                     and not self.is_blocked(x, y):
                 item_choice = random_choice_from_dict(item_chances)
@@ -173,7 +170,7 @@ class GameMap:
         return entities
 
     def create_room(self, room):
-        # go through the tiles in the rectangle and make them passable
+        # Go through the tiles in the rectangle and make them passable
         for x in range(room.x1 + 1, room.x2):
             for y in range(room.y1 + 1, room.y2):
                 self.tiles[x][y].blocked = False
@@ -213,10 +210,8 @@ class GameMap:
         rooms = []
         num_rooms = 0
         for r in range(max_rooms):
-            # Random width and height
             w = randint(min_room_size, max_room_size)
             h = randint(min_room_size, max_room_size)
-            # Random position without going out of the boundaries of the map
             x = randint(0, map_width - w - 1)
             y = randint(0, map_height - h - 1)
 
@@ -255,7 +250,7 @@ class GameMap:
                         if not self.tiles[x][y].block_sight and not self.tiles[x][y].blocked:
                             free_tiles.append(self.tiles[x][y])
                 # Use this if you wish to place actors on a room-by-room basis
-                self.place_entities(new_room, entities)
+                # self.place_entities(new_room, entities)
                 rooms.append(new_room)
                 num_rooms += 1
 

@@ -1,10 +1,6 @@
 import tcod as libtcod
 import custrender
 from random import randint
-
-# TODO: Import tcod instead of libtcod and start vectorizing the code with numpy. libtcodpy is deprecated and replaced
-# TODO: with tcod!
-
 from death_functions import kill_monster, kill_player
 from entity import get_blocking_entities_at_location
 from fov_functions import initialize_fov, recompute_fov

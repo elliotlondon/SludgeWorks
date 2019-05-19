@@ -19,13 +19,13 @@ def whip_vine(x, y):
 
 
 def wretch(x, y):
-        fighter_component = Fighter(current_hp=6, max_hp=6, damage_dice=1, damage_sides=3,
-                                    strength=3, agility=0, vitality=1, intellect=1, perception=1, xp=50)
-        ai_component = Aggressive()
-        return Entity(x, y, 'w', libtcod.darker_red, 'Wretch',
-                      'A stunted human swaddled in filthy rags and long since driven feral by the SludgeWorks.',
-                      blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
-                      faction='Scavengers')
+    fighter_component = Fighter(current_hp=6, max_hp=6, damage_dice=1, damage_sides=3,
+                                strength=3, agility=0, vitality=1, intellect=1, perception=1, xp=50)
+    ai_component = Aggressive()
+    return Entity(x, y, 'w', libtcod.darker_red, 'Wretch',
+                  'A stunted human swaddled in filthy rags and long since driven feral by the SludgeWorks.',
+                  blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
+                  faction='Scavengers')
 
 
 def thresher(x, y):
@@ -41,13 +41,26 @@ def thresher(x, y):
 
 
 def hunchback(x, y):
-        fighter_component = Fighter(current_hp=12, max_hp=12, damage_dice=1, damage_sides=12,
-                                    strength=4, agility=0, vitality=1, intellect=1, perception=1, xp=125)
-        ai_component = Aggressive()
-        return Entity(x, y, 'H', libtcod.brass, 'Hunchback',
-                      'A stunted and broken humanoid draped in tattered linen stained with the characteristic ochre'
-                      'of dried blood. It\'s face is completely concealed by a tapered hood, and the glint of a wicked '
-                      'kirpan scatters the all nearby light. Echoes of guttural chanting reverberate off the cave '
-                      'walls as it glacially stumbles forward towards its next target.',
-                      blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component,
-                      ai=ai_component, faction='Horrors')
+    fighter_component = Fighter(current_hp=12, max_hp=12, damage_dice=1, damage_sides=12,
+                                strength=4, agility=0, vitality=1, intellect=1, perception=1, xp=125)
+    ai_component = Aggressive()
+    return Entity(x, y, 'H', libtcod.brass, 'Hunchback',
+                  'A stunted and broken humanoid draped in tattered linen stained with the characteristic ochre'
+                  'of dried blood. It\'s face is completely concealed by a tapered hood, and the glint of a wicked '
+                  'kirpan scatters the all nearby light. Echoes of guttural chanting reverberate off the cave '
+                  'walls as it glacially stumbles forward towards its next target.',
+                  blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component,
+                  ai=ai_component, faction='Horrors')
+
+
+def bloodseeker(x, y):
+    fighter_component = Fighter(current_hp=50, max_hp=50, damage_dice=4, damage_sides=6,
+                                strength=6, agility=3, vitality=1, intellect=1, perception=1, xp=500)
+    ai_component = Aggressive()
+    return Entity(x, y, 'B', libtcod.light_crimson, 'Bloodseeker',
+                  'An asymmetric monstrosity the size of a bear with a grinning, skinless snout. Rusted weaponry from '
+                  'previous encounters juts from it\'s hide like gruesome jewellery, with pale, twisted flesh creeping '
+                  'up the hilts. The creature\'s eyes are consumed by feral rage as it prowls the caverns, twitching '
+                  'from the eternal	state of pain inflicted by its inherent regeneration.',
+                  blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component,
+                  ai=ai_component, faction='Scavengers')

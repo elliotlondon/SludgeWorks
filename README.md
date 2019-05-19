@@ -29,3 +29,4 @@ Welcome to the SludgeWorks; adapt or be adapted.
 - Biome: Screaming Ruins
 - Chamber: Cleansing Hand Bastion
 - Chamber: Palace of Hedonism
+- Passive Ability: Regeneration

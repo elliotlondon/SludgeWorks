@@ -1,18 +1,7 @@
-import tcod as libtcod
-import math, random
-
-from random import randint
-
-from ai import Aggressive, Stationary
-from equipment import EquipmentSlots, Equippable
-from fighter import Fighter
-from item import Item
 from stairs import Stairs
-from entity import Entity
-from game_messages import Message
-from item_functions import cast_confuse, cast_fireball, cast_lightning, heal
 from random_utils import from_dungeon_level, random_choice_from_dict
-from render_functions import RenderOrder
+from monster_dict import *
+from item_dict import *
 
 
 class GameMap:
@@ -102,9 +91,9 @@ class GameMap:
         # Item dictionary
         item_chances = {
             'healing_potion': 35,
-            'sword': from_dungeon_level([[10, 0]], self.dungeon_level),
-            'helm': from_dungeon_level([[5, 0], [10, 3]], self.dungeon_level),
-            'shield': from_dungeon_level([[10, 0]], self.dungeon_level),
+            'iron_longsword': from_dungeon_level([[10, 0]], self.dungeon_level),
+            'iron_helmet': from_dungeon_level([[5, 0], [10, 3]], self.dungeon_level),
+            'iron_buckler': from_dungeon_level([[10, 0]], self.dungeon_level),
             'lightning_scroll': from_dungeon_level([[25, 4]], self.dungeon_level),
             'fireball_scroll': from_dungeon_level([[25, 6]], self.dungeon_level),
             'confusion_scroll': from_dungeon_level([[10, 2]], self.dungeon_level)
@@ -116,20 +105,9 @@ class GameMap:
             x = randint(room.x1 + 1, room.x2 - 1)
             y = randint(room.y1 + 1, room.y2 - 1)
 
-            if not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                # if not any([Tile in self.tiles if self.tiles[x][y] == self.blocked]):
-                    fighter_component = Fighter(current_hp=8, max_hp=8,
-                                                damage_dice=1, damage_sides=2,
-                                                strength=3, agility=1, vitality=1, intellect=1, perception=1,
-                                                xp=25)
-                    ai_component = Stationary()
-                    monster = Entity(x, y, 'V', libtcod.light_grey, 'Whip Vine',
-                                     'What at first appears to be no more than a dead, waist-height bush in actuality' 
-                                     'represents a highly specialized carnivorous flayer',
-                                     blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component,
-                                     ai=ai_component, faction='Plants')
-
-                    entities.append(monster)
+            if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
+                    and not self.is_blocked(x, y):
+                    entities.append(whip_vine(x, y))
 
         # Place monsters with random spawning chances
         for i in range(number_of_monsters):
@@ -137,114 +115,44 @@ class GameMap:
             x = randint(room.x1 + 1, room.x2 - 1)
             y = randint(room.y1 + 1, room.y2 - 1)
 
-            if not any([entity for entity in entities if entity.x == x and entity.y == y]):
+            if not any([entity for entity in entities if entity.x == x and entity.y == y])\
+                    and not self.is_blocked(x, y):
                 monster_choice = random_choice_from_dict(monster_chances)
-
                 if monster_choice == 'Wretch':
-                    fighter_component = Fighter(current_hp=6, max_hp=6,
-                                                damage_dice=1, damage_sides=3,
-                                                strength=3, agility=0, vitality=1, intellect=1, perception=1,
-                                                xp=50)
-                    ai_component = Aggressive()
-                    monster = Entity(x, y, 'w', libtcod.darker_red, 'Wretch',
-                                     'A stunted human swaddled in filthy rags and long since driven feral by the '
-                                     'SludgeWorks.',
-                                     blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component,
-                                     ai=ai_component, faction='Scavengers')
+                    entities.append(wretch(x, y))
                 elif monster_choice == 'Hunchback':
-                    fighter_component = Fighter(current_hp=12, max_hp=12,
-                                                damage_dice=2, damage_sides=6,
-                                                strength=7, agility=1, vitality=1, intellect=1, perception=1,
-                                                xp=125)
-                    ai_component = Aggressive()
-                    monster = Entity(x, y, 'H', libtcod.brass, 'Hunchback',
-                                     'A humanoid figure draped in dark, hooded robes. It\'s face is completely '
-                                     'concealed and it carries a wicked, curved dagger. It moves with purpose and '
-                                     'chants in an ancient, guttural tongue.',
-                                     blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component,
-                                     ai=ai_component, faction='Horrors')
-                else:
-                    fighter_component = Fighter(current_hp=26, max_hp=26,
-                                                damage_dice=3, damage_sides=4,
-                                                strength=5, agility=4, vitality=1, intellect=1, perception=1,
-                                                xp=225)
-                    ai_component = Aggressive()
-                    monster = Entity(x, y, 'T', libtcod.dark_azure, 'Thresher',
-                                     'A colossal ogre-like ape covered in patches of matted hair and littered with '
-                                     'scars. This creature tirelessly searches it\'s surroundings for new objects to '
-                                     'smash together with a joyous, childlike expression.',
-                                     blocks=True, fighter=fighter_component, render_order=RenderOrder.ACTOR,
-                                     ai=ai_component, faction='Scavengers')
-
-                entities.append(monster)
+                    entities.append(hunchback(x, y))
+                elif monster_choice == 'Thresher':
+                    entities.append(thresher(x, y))
 
         # Place items
         for i in range(number_of_items):
             x = randint(room.x1 + 1, room.x2 - 1)
             y = randint(room.y1 + 1, room.y2 - 1)
 
-            if not any([entity for entity in entities if entity.x == x and entity.y == y]):
+            if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
+                    and not self.is_blocked(x, y):
                 item_choice = random_choice_from_dict(item_chances)
 
-                # Weapons and armour
-                if item_choice == 'sword':
-                    equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
-                                                      damage_dice=1, damage_sides=6,
-                                                      strength_bonus=3)
-                    item = Entity(x, y, '/', libtcod.sky, 'Rusted Longsword',
-                                  'An iron longsword with an edge that has been significantly corroded by rust. ' +
-                                  'It\'s fairly blunt, but much better than ' +
-                                  'nothing.',
-                                  equippable=equippable_component)
-                elif item_choice == 'shield':
-                    equippable_component = Equippable(EquipmentSlots.OFF_HAND, agility_bonus=1)
-                    item = Entity(x, y, '[', libtcod.darker_orange, 'Shield',
-                                  'A small buckler that can be attached to the arm and used to deflect attacks.',
-                                  equippable=equippable_component)
-                elif item_choice == 'helm':
-                    equippable_component = Equippable(EquipmentSlots.HEAD, agility_bonus=1)
-                    item = Entity(x, y, '[', libtcod.darker_orange, 'Helm',
-                                  'A leather helmet designed to help minimise head wounds.',
-                                  equippable=equippable_component)
+                # Weapons and shields (main-hand and off-hand)
+                if item_choice == 'iron_longsword':
+                    entities.append(iron_longsword(x, y))
+                elif item_choice == 'iron_buckler':
+                    entities.append(iron_buckler(x, y))
+
+                # Armour
+                elif item_choice == 'iron_helmet':
+                    entities.append(iron_helmet(x, y))
 
                 # Consumables
                 elif item_choice == 'healing_potion':
-                    heal_amount = 40
-                    item_component = Item(use_function=heal, amount=heal_amount)
-                    item = Entity(x, y, '!', libtcod.violet, 'Healing Potion',
-                                  'A violet flask that you recognise to be a healing potion. This will help '
-                                  'heal your wounds. ' + str(heal_amount) + ' HP',
-                                  render_order=RenderOrder.ITEM,
-                                  item=item_component)
+                    entities.append(healing_potion(x, y))
                 elif item_choice == 'fireball_scroll':
-                    fireball_damage = 25
-                    fireball_range = 3
-                    item_component = Item(use_function=cast_fireball, targeting=True, targeting_message=Message(
-                        'Left-click a target tile for the fireball, or right-click to cancel.', libtcod.light_cyan),
-                                          damage=fireball_damage, radius=fireball_range)
-                    item = Entity(x, y, '#', libtcod.red, 'Fireball Scroll',
-                                  'A scroll containing an ancient text that you somehow understand the meaning ' +
-                                  'of. When invoked, envelopes an area with fire, causing ' + str(fireball_damage) +
-                                  ' damage to all creatures within ' + str(fireball_range) + 'tiles.',
-                                  render_order=RenderOrder.ITEM,
-                                  item=item_component)
+                    entities.append(fireball_scroll(x, y))
                 elif item_choice == 'confusion_scroll':
-                    item_component = Item(use_function=cast_confuse, targeting=True, targeting_message=Message(
-                        'Left-click an enemy to confuse it, or right-click to cancel.', libtcod.light_cyan))
-                    item = Entity(x, y, '#', libtcod.light_pink, 'Confusion Scroll',
-                                  'A scroll containing an ancient text that you somehow understand the meaning ' +
-                                  'of. When invoked, this scroll will cause an enemy to wander aimlessly for 10 turns.',
-                                  render_order=RenderOrder.ITEM,
-                                  item=item_component)
-                else:
-                    lightning_damage = 40
-                    item_component = Item(use_function=cast_lightning, damage=lightning_damage, maximum_range=5)
-                    item = Entity(x, y, '#', libtcod.yellow, 'Lightning Scroll',
-                                  'A scroll containing an ancient text that you somehow understand the meaning ' +
-                                  'of. When invoked, deals ' + str(lightning_damage) + ' damage.',
-                                  render_order=RenderOrder.ITEM,
-                                  item=item_component)
-                entities.append(item)
+                    entities.append(confusion_scroll(x, y))
+                elif item_choice == 'lightning_scroll':
+                    entities.append(lightning_scroll(x, y))
 
     def is_blocked(self, x, y):
         if self.tiles[x][y].blocked:

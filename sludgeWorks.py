@@ -49,7 +49,7 @@ def main():
                 custrender.clear((0, 0, 0))
                 custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))
                 custrender.present()
-                root_console.clear(fg=(255, 255, 63))
+                root_console.clear(fg=(255, 255, 255))
 
                 action = handle_main_menu(key)
 
@@ -74,13 +74,14 @@ def main():
                     break
 
             else:
-                root_console.clear(fg=(255, 255, 63))
+                root_console.clear(fg=(255, 255, 255))
                 play_game(player, entities, game_map, message_log, game_state, root_console, panel, constants)
 
                 show_main_menu = True
 
 
 def play_game(player, entities, game_map, message_log, game_state, root_console, panel, constants):
+    root_console.clear(fg=(255, 255, 255))
     fov_recompute = True
 
     fov_map = initialize_fov(game_map)
@@ -135,6 +136,11 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
         player_turn_results = []
 
+        # For all actions that do not return to the main menu, recompute fov (prevents off-screen window drawing errors)
+        if action != quit and action != fullscreen:
+            fov_recompute = True
+            root_console.clear(fg=(255, 255, 255))
+
         if move and game_state == GameStates.PLAYERS_TURN:
             dx, dy = move
             destination_x = player.x + dx
@@ -142,15 +148,11 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
             if not game_map.is_blocked(destination_x, destination_y):
                 target = get_blocking_entities_at_location(entities, destination_x, destination_y)
-
                 if target:
                     attack_results = player.fighter.attack(target)
                     player_turn_results.extend(attack_results)
                 else:
                     player.move(dx, dy, game_map)
-
-                    fov_recompute = True
-
                 game_state = GameStates.ENEMY_TURN
 
         elif wait:
@@ -161,7 +163,6 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 if entity.item and entity.x == player.x and entity.y == player.y:
                     pickup_results = player.inventory.add_item(entity)
                     player_turn_results.extend(pickup_results)
-
                     break
             else:
                 message_log.add_message(Message('There is nothing here to pick up.', libtcod.yellow))
@@ -192,9 +193,6 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 if entity.stairs and entity.x == player.x and entity.y == player.y:
                     entities = game_map.next_floor(player, constants)
                     fov_map = initialize_fov(game_map)
-                    fov_recompute = True
-                    root_console.clear(fg=(255, 255, 63))
-
                     break
             else:
                 message_log.add_message(Message('There are no stairs here.', libtcod.yellow))
@@ -208,7 +206,6 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 player.fighter.base_strength += 1
             elif level_up == 'agi':
                 player.fighter.base_agility += 1
-
             game_state = previous_game_state
 
         if show_character_screen:
@@ -218,7 +215,6 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
         if game_state == GameStates.TARGETING:
             if left_click:
                 target_x, target_y = left_click
-
                 item_use_results = player.inventory.use(targeting_item, entities=entities, fov_map=fov_map,
                                                         target_x=target_x, target_y=target_y)
                 player_turn_results.extend(item_use_results)
@@ -238,7 +234,6 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 return True
             else:
                 game_state = previous_game_state
-
         if quit:
             save_game(player, entities, game_map, message_log, game_state)
             return True
@@ -281,7 +276,6 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
             if equip:
                 equip_results = player.equipment.toggle_equip(equip)
-
                 for equip_result in equip_results:
                     equipped = equip_result.get('equipped')
                     dequipped = equip_result.get('dequipped')
@@ -291,26 +285,21 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
                     if dequipped:
                         message_log.add_message(Message('You dequipped the {0}'.format(dequipped.name)))
-
                 game_state = GameStates.ENEMY_TURN
 
             if targeting:
                 previous_game_state = GameStates.PLAYERS_TURN
                 game_state = GameStates.TARGETING
-
                 targeting_item = targeting
-
                 message_log.add_message(targeting_item.item.targeting_message)
 
             if targeting_cancelled:
                 game_state = previous_game_state
-
                 message_log.add_message(Message('Targeting cancelled'))
 
             if xp:
                 leveled_up = player.level.add_xp(xp)
                 message_log.add_message(Message('You gain {0} experience points.'.format(xp)))
-
                 if leveled_up:
                     message_log.add_message(Message(
                         'You level up! You are now level {0}'.format(
@@ -319,16 +308,6 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                     game_state = GameStates.LEVEL_UP
 
         if game_state == GameStates.ENEMY_TURN:
-            # Ensure that errors do not arise with rendering when enemies move
-            render_all(root_console, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
-                       constants['screen_width'], constants['screen_height'], constants['bar_width'],
-                       constants['panel_height'], constants['panel_y'], constants['colours'], game_state)
-            fov_recompute = True
-            custrender.clear((0, 0, 0))
-            custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))
-            custrender.present()
-            clear_all(root_console, entities)
-
             for entity in entities:
                 if entity.ai:
                     # Heal-over time effect for enemies

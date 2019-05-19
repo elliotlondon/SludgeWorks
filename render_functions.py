@@ -2,6 +2,7 @@ from enum import Enum, auto
 from random import Random
 from game_states import GameStates
 from menus import *
+import custrender
 
 
 class RenderOrder(Enum):
@@ -92,7 +93,7 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
     libtcod.console_blit(con, 0, 0, screen_width, screen_height, con, 0, 0)
 
     libtcod.console_set_default_background(panel, libtcod.black)
-    panel.clear(fg=(255, 255, 63))
+    panel.clear(fg=(255, 255, 255))
 
     # Print the game messages, one line at a time
     y = 1

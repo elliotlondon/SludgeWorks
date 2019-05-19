@@ -20,7 +20,7 @@ def iron_longsword(x, y):
 
 def iron_buckler(x, y):
     equippable_component = Equippable(EquipmentSlots.OFF_HAND, agility_bonus=1)
-    return Entity(x, y, '[', libtcod.darker_orange, 'Shield',
+    return Entity(x, y, '[', libtcod.darker_orange, 'Iron Buckler',
                   'A small buckler that can be attached to the arm and used to deflect attacks.',
                   equippable=equippable_component)
 
@@ -28,7 +28,7 @@ def iron_buckler(x, y):
 # Armour
 def iron_helmet(x, y):
     equippable_component = Equippable(EquipmentSlots.HEAD, agility_bonus=1)
-    return Entity(x, y, '[', libtcod.darker_orange, 'Helm',
+    return Entity(x, y, '[', libtcod.darker_orange, 'Iron Helmet',
                   'An iron helmet designed to help minimise head wounds.',
                   equippable=equippable_component)
 

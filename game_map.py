@@ -75,7 +75,7 @@ class GameMap:
             self.place_entities(entire_dungeon, entities)
 
     def place_entities(self, room, entities):
-        max_monsters = from_dungeon_level([[100, 1], [150, 4], [200, 6]], self.dungeon_level)
+        max_monsters = from_dungeon_level([[75, 1], [100, 4], [125, 6]], self.dungeon_level)
         max_plants = from_dungeon_level([[25, 1], [50, 4], [35, 6]], self.dungeon_level)
         max_items = from_dungeon_level([[20, 1], [30, 4]], self.dungeon_level)
         # Get a random number of monsters

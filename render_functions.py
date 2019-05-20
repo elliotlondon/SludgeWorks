@@ -2,7 +2,6 @@ from enum import Enum, auto
 from random import Random
 from game_states import GameStates
 from menus import *
-import custrender
 
 
 class RenderOrder(Enum):
@@ -49,7 +48,7 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_colour, back_
 
 
 def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height,
-               bar_width, panel_height, panel_y, colours, game_state):
+               bar_width, panel_height, panel_y, colours, game_state, turn_number):
     seed = Random(1337)  # Randomise randint yourself to prevent d&d roll changes
     if fov_recompute:
         for y in range(game_map.height):
@@ -126,7 +125,7 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
         character_screen(con, player, 30, 10, screen_width, screen_height)
 
     elif game_state == GameStates.ESC_MENU:
-        esc_menu(con, 40, 10, screen_width, screen_height)
+        esc_menu(con, 40, 10, screen_width, screen_height, turn_number)
 
     elif game_state == GameStates.HELP_MENU:
         help_menu(con, 50, 10, screen_width, screen_height)
@@ -146,3 +145,14 @@ def draw_entity(con, entity, fov_map, game_map):
 
 def clear_entity(con, entity):
     libtcod.console_put_char(con, entity.x, entity.y, ' ', libtcod.BKGND_NONE)
+
+
+def entity_in_fov(game_map, entities, fov_map):
+    for y in range(game_map.height):
+        for x in range(game_map.width):
+            for entity in entities:
+                if entity.faction != 'Plants' and entity.ai:
+                    if libtcod.map_is_in_fov(fov_map, entity.x, entity.y):
+                        return True
+    else:
+        return False

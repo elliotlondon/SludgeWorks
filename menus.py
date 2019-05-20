@@ -5,19 +5,19 @@ def menu(con, header, options, width, screen_width, screen_height):
     if len(options) > 26:
         raise ValueError('Cannot have a menu with more than 26 options.')
 
-    # calculate total height for the header (after auto-wrap) and one line per option
+    # Calculate total height for the header (after auto-wrap) and one line per option
     header_height = libtcod.console_get_height_rect(con, 0, 0, width, screen_height, header)
     height = len(options) + header_height
 
-    # create an off-screen console that represents the menu's window
+    # Create an off-screen console that represents the menu's window
     window = libtcod.console_new(width, height)
 
-    # print the header, with auto-wrap
+    # Print the header, with auto-wrap
     libtcod.console_set_default_foreground(window, libtcod.white)
     libtcod.console_set_default_background(window, libtcod.black)
     libtcod.console_print_rect_ex(window, 0, 0, width, height, libtcod.BKGND_NONE, libtcod.LEFT, header)
 
-    # print all the options
+    # Print all the options
     y = header_height
     letter_index = ord('a')
     for option_text in options:
@@ -26,7 +26,7 @@ def menu(con, header, options, width, screen_width, screen_height):
         y += 1
         letter_index += 1
 
-    # blit the contents of "window" to the root console
+    # Blit the contents of "window" to the root console
     x = int(screen_width / 2 - width / 2)
     y = int(screen_height / 2 - height / 2)
     libtcod.console_blit(window, 0, 0, width, height, con, x, y, 1, 0)
@@ -36,7 +36,7 @@ def inventory_menu(con, header, player, inventory_width, screen_width, screen_he
     window = libtcod.console_new(screen_width, screen_height)
     libtcod.console_set_default_foreground(window, libtcod.white)
 
-    # show a menu with each item of the inventory as an option
+    # Show a menu with each item of the inventory as an option
     if len(player.inventory.items) == 0:
         options = ['Your inventory is empty.']
     else:
@@ -76,6 +76,7 @@ def main_menu(con, background_image, screen_width, screen_height):
 def level_up_menu(con, header, player, menu_width, screen_width, screen_height):
     window = libtcod.console_new(menu_width, screen_height)
     libtcod.console_set_default_foreground(window, libtcod.white)
+    libtcod.console_set_default_background(window, libtcod.black)
 
     options = ['Strength (+1 attack, from {0})'.format(player.fighter.base_strength),
                'Agility (+1 defense, from {0})'.format(player.fighter.base_agility),
@@ -109,7 +110,7 @@ def character_screen(con, player, menu_width, menu_height, screen_width, screen_
     libtcod.console_blit(window, 0, 0, menu_width, menu_height, con, x, y, 1, 1)
 
 
-def esc_menu(con, menu_width, menu_height, screen_width, screen_height):
+def esc_menu(con, menu_width, menu_height, screen_width, screen_height, turn_number):
     window = libtcod.console_new(menu_width, menu_height)
     libtcod.console_set_default_foreground(window, libtcod.white)
     libtcod.console_set_color_control(libtcod.COLCTRL_1, libtcod.light_yellow, libtcod.white)
@@ -122,10 +123,12 @@ def esc_menu(con, menu_width, menu_height, screen_width, screen_height):
                                   libtcod.LEFT, 'b.) %c%s%cesume' % (libtcod.COLCTRL_1, 'R', libtcod.COLCTRL_STOP))
     libtcod.console_print_rect_ex(window, 0, 5, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, 'c.) Save & %c%s%cuit' % (libtcod.COLCTRL_1, 'Q', libtcod.COLCTRL_STOP))
+    libtcod.console_print_rect_ex(window, 0, 6, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, '\nTurns passed: {0}'.format(turn_number))
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height
-    libtcod.console_blit(window, 0, 0, menu_width, int(menu_height/2 + 2), con, x, y, 1, 1)
+    libtcod.console_blit(window, 0, 0, menu_width, int(menu_height/2 + 6), con, x, y, 1, 1)
 
 
 def help_menu(con, menu_width, menu_height, screen_width, screen_height):
@@ -143,10 +146,22 @@ def help_menu(con, menu_width, menu_height, screen_width, screen_height):
     libtcod.console_print_rect_ex(window, 0, 5, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, 'Commands:')
     libtcod.console_print_rect_ex(window, 0, 6, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'g: Get, i: Inventory, d: Drop, c: Character Info, >: Use Stairs')
+                                  libtcod.LEFT, 'g: Get')
     libtcod.console_print_rect_ex(window, 0, 7, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Press F11 at any time to toggle fullscreen mode.')
+                                  libtcod.LEFT, 'i: Inventory')
     libtcod.console_print_rect_ex(window, 0, 8, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'd: Drop')
+    libtcod.console_print_rect_ex(window, 0, 9, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'c: Character Info')
+    libtcod.console_print_rect_ex(window, 0, 10, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, '>: Use Stairs')
+    libtcod.console_print_rect_ex(window, 0, 11, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, '.: Wait 1 turn')
+    libtcod.console_print_rect_ex(window, 0, 11, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, ';: Rest until healed')
+    libtcod.console_print_rect_ex(window, 0, 12, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Press F11 at any time to toggle fullscreen mode.')
+    libtcod.console_print_rect_ex(window, 0, 13, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, 'Press Escape to leave this menu.')
 
     x = screen_width // 2 - menu_width // 2

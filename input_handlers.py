@@ -56,6 +56,8 @@ def handle_player_turn_keys(key):
         return {'move': (1, 1)}
     elif key_char == '.':
         return {'wait': True}
+    elif key_char == ';':
+        return {'rest': True}
 
     if key_char == 'g':
         return {'pickup': True}

@@ -10,7 +10,7 @@ from input_handlers import handle_keys, handle_mouse, handle_main_menu
 from initialise_new_game import get_constants, get_game_variables
 from data_loaders import load_game, save_game
 from menus import main_menu, message_box
-from render_functions import clear_all, render_all
+from render_functions import clear_all, render_all, entity_in_fov
 
 
 def main():
@@ -90,7 +90,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
     mouse = libtcod.Mouse()
 
     game_state = GameStates.PLAYERS_TURN
-    turn_number = 1
+    turn_number = 0
     previous_game_state = game_state
 
     targeting_item = None
@@ -104,7 +104,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
         render_all(root_console, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
                    constants['screen_width'], constants['screen_height'], constants['bar_width'],
-                   constants['panel_height'], constants['panel_y'], constants['colours'], game_state)
+                   constants['panel_height'], constants['panel_y'], constants['colours'], game_state, turn_number)
 
         fov_recompute = False
         custrender.clear((0, 0, 0))
@@ -117,6 +117,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
         move = action.get('move')
         wait = action.get('wait')
+        rest = action.get('rest')
         pickup = action.get('pickup')
         show_inventory = action.get('show_inventory')
         drop_inventory = action.get('drop_inventory')
@@ -153,10 +154,28 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                     player_turn_results.extend(attack_results)
                 else:
                     player.move(dx, dy, game_map)
+                turn_number += 1
                 game_state = GameStates.ENEMY_TURN
 
         elif wait:
             game_state = GameStates.ENEMY_TURN
+
+        elif rest:
+            if player.fighter.current_hp == player.fighter.base_max_hp:
+                message_log.add_message(Message('You are already at full health.', libtcod.yellow))
+            elif entity_in_fov(game_map, entities, fov_map):
+                message_log.add_message(Message('You cannot rest when enemies are nearby.', libtcod.yellow))
+            else:
+                start_turn = turn_number
+                while player.fighter.current_hp < player.fighter.base_max_hp:
+                    if turn_number % 4 == 0:
+                        player.fighter.current_hp += 1
+                        turn_number += 1
+                    else:
+                        turn_number += 1
+                turns_passed = turn_number - start_turn
+                message_log.add_message(Message('You rest for {0} turns, returning to max HP.'.format(turns_passed),
+                                                libtcod.yellow))
 
         elif pickup and game_state == GameStates.PLAYERS_TURN:
             for entity in entities:
@@ -234,6 +253,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 return True
             else:
                 game_state = previous_game_state
+
         if quit:
             save_game(player, entities, game_map, message_log, game_state)
             return True
@@ -342,9 +362,6 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 if turn_number % 4 == 0:
                     if player.fighter.current_hp < player.fighter.base_max_hp:
                         player.fighter.current_hp += 1
-                        turn_number += 1
-                else:
-                    turn_number += 1
 
 
 if __name__ == '__main__':

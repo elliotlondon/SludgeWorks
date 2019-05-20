@@ -1,5 +1,5 @@
 from stairs import Stairs
-from random_utils import from_dungeon_level, random_choice_from_dict
+from random_utils import from_dungeon_level, random_choice_from_dict, simple_distance
 from monster_dict import *
 from item_dict import *
 
@@ -84,10 +84,11 @@ class GameMap:
         number_of_items = randint(round(max_items*0.75), max_items)
 
         monster_chances = {
-            'Wretch': from_dungeon_level([[50, 1], [34, 4], [25, 6], [10, 10]], self.dungeon_level),
-            'Hunchback': from_dungeon_level([[10, 2], [25, 4], [80, 6], [40, 10]], self.dungeon_level),
+            'Wretch': from_dungeon_level([[50, 1], [35, 4], [20, 6], [20, 8]], self.dungeon_level),
+            'Hunchback': from_dungeon_level([[10, 2], [30, 4], [50, 6], [40, 8]], self.dungeon_level),
+            'Moire Beast': from_dungeon_level([[10, 2], [20, 4], [40, 6], [20, 8]], self.dungeon_level),
             'Thresher': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
-            'Bloodseeker': from_dungeon_level([[5, 5], [10, 8]], self.dungeon_level)
+            'Bloodseeker': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level)
         }
 
         # Item dictionary
@@ -122,6 +123,8 @@ class GameMap:
                     entities.append(hunchback(x, y))
                 elif monster_choice == 'Thresher':
                     entities.append(thresher(x, y))
+                elif monster_choice == 'Moire Beast':
+                    entities.append(moire_beast(x, y))
 
         # Place items
         for i in range(number_of_items):
@@ -189,13 +192,6 @@ class GameMap:
             self.tiles[x][y].tunnel = True
 
     def find_neighbours(self, x, y):
-        """
-        Finds all cells that touch a cell in a 2D grid
-        Args:
-            x and y: integer, indices for the cell to search around
-        Returns:
-            returns a generator object with the x,y indices of cell neighbours
-        """
         xi = (0, -1, 1) if 0 < x < self.width - 1 else ((0, -1) if x > 0 else (0, 1))
         yi = (0, -1, 1) if 0 < y < self.height - 1 else ((0, -1) if y > 0 else (0, 1))
         for a in xi:
@@ -318,11 +314,78 @@ class GameMap:
                         self.tiles[x][y].blocked = True
                         self.tiles[x][y].block_sight = True
 
+    # This function uses a dijkstra map to navigate the player towards the nearest unexplored tile. Interrupted by
+    # monsters entering FoV.
+    def explore(self, player, entities, message_log, fov_map):
+        # Create a FOV map that has the dimensions of the map
+        fov = libtcod.map_new(self.width, self.height)
+
+        # Break out if a monster is seen
+        seen_monsters = []
+        for entity in entities:
+            if entity.ai and entity.name != 'Player':
+                if libtcod.map_is_in_fov(fov_map, entity.x, entity.y):
+                    seen_monsters.append(entity.name)
+                    message_log.add_message(Message('You spot a {0} and stop exploring.'
+                                                    .format(seen_monsters[0]), libtcod.yellow))
+                    return
+
+        all_costs = []
+        target_x = 0
+        target_y = 0
+        # Scan the current map each turn and set all the walls as un-walkable
+        for y in range(self.height):
+            for x in range(self.width):
+                libtcod.map_set_properties(fov, x, y, not self.tiles[x][y].block_sight,
+                                           not self.tiles[x][y].blocked)
+
+                # Assign a cost to each un-blocked, unexplored tile representing how far away it is from the player
+                if self.tiles[x][y].blocked or self.tiles[x][y].explored:
+                    self.tiles[x][y].cost = -99
+                elif x == player.x and y == player.y:
+                    self.tiles[x][y].cost = -99
+                else:
+                    cost = simple_distance(player.x, player.y, x, y)
+                    all_costs.append(cost)
+                    self.tiles[x][y].cost = cost
+                    # Make the target destination equal to the closest unexplored tile
+                    if min(all_costs):
+                        target_x = x
+                        target_y = y
+
+        # Throw an error if a target cannot be found
+        if target_x == 0 or target_y == 0:
+            message_log.add_message(Message('ERROR: target destination could not be found', libtcod.red))
+            return
+
+        # Scan all the objects to see if there are objects that must be navigated around (and obj != self/target)
+        for entity in entities:
+            if entity.blocks and entity != player and entity.x != target_x and entity.y != target_y:
+                libtcod.map_set_properties(fov, entity.x, entity.y, True, False)
+
+        # Allocate an A* path
+        my_path = libtcod.path_new_using_map(fov, 1.41)
+
+        # Compute the path between the player's coordinates and the target's coordinates
+        libtcod.path_compute(my_path, player.x, player.y, target_x, target_y)
+
+        # Check if the path exists
+        if not libtcod.path_is_empty(my_path):
+            # Find the next coordinates in the computed full path
+            x, y = libtcod.path_walk(my_path, True)
+            if x or y:
+                # Set self's coordinates to the next path tile
+                player.x = x
+                player.y = y
+
+        libtcod.path_delete(my_path)
+
 
 class Tile:
-    def __init__(self, blocked, block_sight=None):
+    def __init__(self, blocked, cost=0, block_sight=None):
         self.blocked = blocked
         self.tunnel = False
+        self.cost = cost
 
         # By default, if a tile is blocked, it also blocks sight
         if block_sight is None:

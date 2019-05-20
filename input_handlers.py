@@ -58,6 +58,8 @@ def handle_player_turn_keys(key):
         return {'wait': True}
     elif key_char == ';':
         return {'rest': True}
+    elif key_char == '#':
+        return {'auto_explore': True}
 
     if key_char == 'g':
         return {'pickup': True}

@@ -28,18 +28,6 @@ def wretch(x, y):
                   faction='Scavengers')
 
 
-def thresher(x, y):
-        fighter_component = Fighter(current_hp=26, max_hp=26, damage_dice=3, damage_sides=4,
-                                    strength=5, agility=4, vitality=1, intellect=1, perception=1, xp=225)
-        ai_component = Aggressive()
-        return Entity(x, y, 'T', libtcod.dark_azure, 'Thresher',
-                      'A colossal ogre-like ape covered in patches of matted hair and littered with scars. This '
-                      'creature tirelessly searches it\'s surroundings for new objects to smash together with a '
-                      'joyous, childlike expression.',
-                      blocks=True, fighter=fighter_component, render_order=RenderOrder.ACTOR, ai=ai_component,
-                      faction='Scavengers')
-
-
 def hunchback(x, y):
     fighter_component = Fighter(current_hp=12, max_hp=12, damage_dice=1, damage_sides=12,
                                 strength=4, agility=0, vitality=1, intellect=1, perception=1, xp=125)
@@ -51,6 +39,31 @@ def hunchback(x, y):
                   'walls as it glacially stumbles forward towards its next target.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component,
                   ai=ai_component, faction='Horrors')
+
+
+def moire_beast(x, y):
+    fighter_component = Fighter(current_hp=18, max_hp=18, damage_dice=3, damage_sides=3,
+                                strength=3, agility=8, vitality=1, intellect=1, perception=1, xp=325)
+    ai_component = Aggressive()
+    return Entity(x, y, 'M', libtcod.light_grey, 'Moire Beast',
+                  'The hide of this squat quadruped is an affront to the senses; dense and intricate greyscale '
+                  'patterns constantly shift epileptically upon the beast\'s surface like a zebra beyond all '
+                  'imagination. The gleam of it\'s fluorescent yellow, feline irises serve as the only ubiquitous '
+                  'reference point on this monster\'s migraine-inducing form.',
+                  blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component,
+                  ai=ai_component, faction='Scavengers')
+
+
+def thresher(x, y):
+        fighter_component = Fighter(current_hp=26, max_hp=26, damage_dice=3, damage_sides=4,
+                                    strength=5, agility=4, vitality=1, intellect=1, perception=1, xp=225)
+        ai_component = Aggressive()
+        return Entity(x, y, 'T', libtcod.dark_azure, 'Thresher',
+                      'A colossal ogre-like ape covered in patches of matted hair and littered with scars. This '
+                      'creature tirelessly searches it\'s surroundings for new objects to smash together with a '
+                      'joyous, childlike expression.',
+                      blocks=True, fighter=fighter_component, render_order=RenderOrder.ACTOR, ai=ai_component,
+                      faction='Scavengers')
 
 
 def bloodseeker(x, y):

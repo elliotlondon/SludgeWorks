@@ -148,11 +148,9 @@ def clear_entity(con, entity):
 
 
 def entity_in_fov(game_map, entities, fov_map):
-    for y in range(game_map.height):
-        for x in range(game_map.width):
-            for entity in entities:
-                if entity.faction != 'Plants' and entity.ai:
-                    if libtcod.map_is_in_fov(fov_map, entity.x, entity.y):
-                        return True
+    for entity in entities:
+        if entity.ai and entity.name != 'Player':
+            if libtcod.map_is_in_fov(fov_map, entity.x, entity.y):
+                return True
     else:
         return False

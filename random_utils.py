@@ -30,7 +30,8 @@ def random_choice_from_dict(choice_dict):
     return choices[random_choice_index(chances)]
 
 
-def distance_to(start_x, start_y, target_x, target_y):
-    distance_x = abs(target_x - start_x)
-    distance_y = abs(target_y - start_y)
-    return np.sqrt((distance_x**2 + distance_y**2))
+def simple_distance(start_x, start_y, final_x, final_y):
+    # A function that returns the distance between two points on a grid, weighting diagonals equally
+    distance_x = abs(final_x - start_x)
+    distance_y = abs(final_y - start_y)
+    return distance_x + distance_y

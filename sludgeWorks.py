@@ -1,11 +1,11 @@
-import tcod as libtcod
 import custrender
 from random import randint
 from death_functions import kill_monster, kill_player
 from entity import get_blocking_entities_at_location
-from fov_functions import initialize_fov, recompute_fov
+from fov_functions import *
 from game_messages import Message
 from game_states import GameStates
+from game_map import GameMap
 from input_handlers import handle_keys, handle_mouse, handle_main_menu
 from initialise_new_game import get_constants, get_game_variables
 from data_loaders import load_game, save_game
@@ -94,6 +94,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
     previous_game_state = game_state
 
     targeting_item = None
+    exploring = False
 
     while True:
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
@@ -131,6 +132,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
         exit = action.get('exit')
         quit = action.get('quit')
         fullscreen = action.get('fullscreen')
+        auto_explore = action.get('auto_explore')
 
         left_click = mouse_action.get('left_click')
         right_click = mouse_action.get('right_click')
@@ -157,10 +159,17 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 turn_number += 1
                 game_state = GameStates.ENEMY_TURN
 
+        if auto_explore and game_state == GameStates.PLAYERS_TURN:
+            exploring = True
+
+        if exploring and game_state == GameStates.PLAYERS_TURN:
+            GameMap.explore(game_map, player, entities, message_log, fov_map)
+            game_state = GameStates.ENEMY_TURN
+
         elif wait:
             game_state = GameStates.ENEMY_TURN
 
-        elif rest:
+        elif rest and game_state == GameStates.PLAYERS_TURN:
             if player.fighter.current_hp == player.fighter.base_max_hp:
                 message_log.add_message(Message('You are already at full health.', libtcod.yellow))
             elif entity_in_fov(game_map, entities, fov_map):
@@ -357,11 +366,17 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                     if game_state == GameStates.PLAYER_DEAD:
                         break
             else:
-                # Heal-over time effect for the player
                 game_state = GameStates.PLAYERS_TURN
+                # Heal-over time effect for the player
                 if turn_number % 4 == 0:
                     if player.fighter.current_hp < player.fighter.base_max_hp:
                         player.fighter.current_hp += 1
+                if exploring:
+                    for entity in entities:
+                        if entity.ai and entity.name != 'Player':
+                            if libtcod.map_is_in_fov(fov_map, entity.x, entity.y):
+                                exploring = False
+                                break
 
 
 if __name__ == '__main__':

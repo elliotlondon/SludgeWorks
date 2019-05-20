@@ -1,3 +1,4 @@
+import numpy as np
 from stairs import Stairs
 from random_utils import from_dungeon_level, random_choice_from_dict, simple_distance
 from monster_dict import *
@@ -319,6 +320,7 @@ class GameMap:
     def explore(self, player, entities, message_log, fov_map):
         # Create a FOV map that has the dimensions of the map
         fov = libtcod.map_new(self.width, self.height)
+        exploring = False
 
         # Break out if a monster is seen
         seen_monsters = []
@@ -334,16 +336,16 @@ class GameMap:
         target_x = 0
         target_y = 0
         # Scan the current map each turn and set all the walls as un-walkable
-        for y in range(self.height):
-            for x in range(self.width):
+        for x in range(self.width):
+            for y in range(self.height):
                 libtcod.map_set_properties(fov, x, y, not self.tiles[x][y].block_sight,
                                            not self.tiles[x][y].blocked)
 
                 # Assign a cost to each un-blocked, unexplored tile representing how far away it is from the player
                 if self.tiles[x][y].blocked or self.tiles[x][y].explored:
-                    self.tiles[x][y].cost = -99
+                    self.tiles[x][y].cost = np.inf
                 elif x == player.x and y == player.y:
-                    self.tiles[x][y].cost = -99
+                    self.tiles[x][y].cost = np.inf
                 else:
                     cost = simple_distance(player.x, player.y, x, y)
                     all_costs.append(cost)
@@ -355,13 +357,13 @@ class GameMap:
 
         # Throw an error if a target cannot be found
         if target_x == 0 or target_y == 0:
-            message_log.add_message(Message('ERROR: target destination could not be found', libtcod.red))
+            message_log.add_message(Message('There is nowhere else for you to explore', libtcod.yellow))
             return
 
         # Scan all the objects to see if there are objects that must be navigated around (and obj != self/target)
-        for entity in entities:
-            if entity.blocks and entity != player and entity.x != target_x and entity.y != target_y:
-                libtcod.map_set_properties(fov, entity.x, entity.y, True, False)
+        # for entity in entities:
+        #     if entity.blocks and entity != player and entity.x != target_x and entity.y != target_y:
+        #         libtcod.map_set_properties(fov, entity.x, entity.y, True, False)
 
         # Allocate an A* path
         my_path = libtcod.path_new_using_map(fov, 1.41)
@@ -377,8 +379,10 @@ class GameMap:
                 # Set self's coordinates to the next path tile
                 player.x = x
                 player.y = y
+                exploring = True
 
         libtcod.path_delete(my_path)
+        return exploring
 
 
 class Tile:

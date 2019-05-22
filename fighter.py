@@ -1,5 +1,5 @@
-import libtcodpy as libtcod
-from random import randint
+import tcod as libtcod
+import random
 from game_messages import Message
 
 
@@ -33,10 +33,10 @@ class Fighter:
     @property
     def damage(self):
         if self.owner and self.owner.equipment:
-            damage = randint(self.owner.equipment.damage_dice,
-                             self.owner.equipment.damage_dice * self.owner.equipment.damage_sides)
+            damage = random.randint(self.owner.equipment.damage_dice,
+                                    self.owner.equipment.damage_dice * self.owner.equipment.damage_sides)
         else:
-            damage = randint(self.damage_dice, self.damage_dice * self.damage_sides)
+            damage = random.randint(self.damage_dice, self.damage_dice * self.damage_sides)
 
         return damage
 
@@ -98,8 +98,8 @@ class Fighter:
         results = []
 
         # Roll to see if hit
-        attack_roll = randint(1, 20) + self.total_strength
-        defence_roll = randint(1, 20) - target.fighter.total_agility
+        attack_roll = random.randint(1, 20) + self.total_strength
+        defence_roll = random.randint(1, 20) - target.fighter.total_agility
         damage = self.damage
 
         if attack_roll > defence_roll:
@@ -115,3 +115,13 @@ class Fighter:
                 self.owner.name.capitalize(), target.name, attack_roll, defence_roll), libtcod.grey)})
 
         return results
+
+
+def roll_dice(num, dice):  # rolls dice, returns the sum of all rolls
+    roll = 0
+    for x in range(0, num):
+        n = random.randint(1, dice)
+        roll = roll + n
+
+    return roll
+

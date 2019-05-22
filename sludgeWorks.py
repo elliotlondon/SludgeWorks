@@ -10,7 +10,7 @@ from input_handlers import handle_keys, handle_mouse, handle_main_menu
 from initialise_new_game import get_constants, get_game_variables
 from data_loaders import load_game, save_game
 from menus import main_menu, message_box
-from render_functions import clear_all, render_all, entity_in_fov
+from render_functions import clear_all, render_all, entity_in_fov, entities_in_fov
 
 
 def main():
@@ -156,15 +156,26 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                     player_turn_results.extend(attack_results)
                 else:
                     player.move(dx, dy, game_map)
-                turn_number += 1
                 game_state = GameStates.ENEMY_TURN
 
         if auto_explore and game_state == GameStates.PLAYERS_TURN:
-            exploring = True
+            if entities_in_fov(entities, fov_map, message_log):
+                game_state = GameStates.PLAYERS_TURN
+            elif GameMap.explore(game_map, player, entities, message_log) is True:
+                game_state = GameStates.ENEMY_TURN
+                exploring = True
+            else:
+                exploring = False
 
         if exploring and game_state == GameStates.PLAYERS_TURN:
-            GameMap.explore(game_map, player, entities, message_log, fov_map)
-            game_state = GameStates.ENEMY_TURN
+            if entities_in_fov(entities, fov_map, message_log):
+                game_state = GameStates.PLAYERS_TURN
+                exploring = False
+            elif GameMap.explore(game_map, player, entities, message_log) is True:
+                game_state = GameStates.ENEMY_TURN
+                exploring = True
+            else:
+                exploring = False
 
         elif wait:
             game_state = GameStates.ENEMY_TURN
@@ -366,17 +377,12 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                     if game_state == GameStates.PLAYER_DEAD:
                         break
             else:
-                game_state = GameStates.PLAYERS_TURN
                 # Heal-over time effect for the player
                 if turn_number % 4 == 0:
                     if player.fighter.current_hp < player.fighter.base_max_hp:
                         player.fighter.current_hp += 1
-                if exploring:
-                    for entity in entities:
-                        if entity.ai and entity.name != 'Player':
-                            if libtcod.map_is_in_fov(fov_map, entity.x, entity.y):
-                                exploring = False
-                                break
+                turn_number += 1
+                game_state = GameStates.PLAYERS_TURN
 
 
 if __name__ == '__main__':

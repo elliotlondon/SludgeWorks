@@ -2,6 +2,7 @@ from enum import Enum, auto
 from random import Random
 from game_states import GameStates
 from menus import *
+from game_messages import Message
 
 
 class RenderOrder(Enum):
@@ -43,7 +44,7 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_colour, back_
         libtcod.console_rect(panel, x, y, bar_width, 1, False, libtcod.BKGND_SCREEN)
 
     libtcod.console_set_default_foreground(panel, libtcod.white)
-    libtcod.console_print_ex(panel, int(x + total_width / 2), y, libtcod.BKGND_NONE, libtcod.CENTER,
+    libtcod.console_print_ex(panel, int(x + total_width / 4), y, libtcod.BKGND_NONE, libtcod.LEFT,
                              '{0}: {1}/{2}'.format(name, value, maximum))
 
 
@@ -75,6 +76,7 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
                     if wall:
                         libtcod.console_put_char_ex(con, x, y, ord('▒'.encode('cp437')), colours.get('dark_wall'),
                                                     colours.get('dark_ground'))
+                        game_map.tiles[x][y].blocks_sight = True
                     else:
                         libtcod.console_put_char_ex(con, x, y, ord('.'.encode('cp437')), colours.get('dark_ground'),
                                                     colours.get('dark_ground'))
@@ -152,5 +154,16 @@ def entity_in_fov(game_map, entities, fov_map):
         if entity.ai and entity.name != 'Player':
             if libtcod.map_is_in_fov(fov_map, entity.x, entity.y):
                 return True
-    else:
-        return False
+    return False
+
+
+def entities_in_fov(entities, fov_map, message_log):
+    seen_monsters = []
+    for entity in entities:
+        if entity.ai and entity.name != 'Player':
+            if libtcod.map_is_in_fov(fov_map, entity.x, entity.y):
+                seen_monsters.append(entity.name)
+                message_log.add_message(Message('You spot a {0} and stop exploring.'
+                                                .format(seen_monsters[0]), libtcod.yellow))
+                return True
+    return False

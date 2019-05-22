@@ -1,10 +1,8 @@
 import math
-from time import sleep
 from stairs import Stairs
 from random_utils import from_dungeon_level, random_choice_from_dict
 from monster_dict import *
 from item_dict import *
-from render_functions import entities_in_fov
 
 
 class GameMap:
@@ -353,9 +351,6 @@ class GameMap:
 
         if closest_coord:
             my_map = libtcod.map_new(self.width, self.height)
-
-            if entities_in_fov(entities, my_map, message_log):
-                return False
 
             for y in range(self.height):
                 for x in range(self.width):

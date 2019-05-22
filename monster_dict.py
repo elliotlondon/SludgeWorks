@@ -1,4 +1,4 @@
-import tcod as libtcod
+from random import choice
 from fighter import Fighter
 from ai import *
 from entity import Entity
@@ -33,9 +33,9 @@ def hunchback(x, y):
                                 strength=4, agility=0, vitality=1, intellect=1, perception=1, xp=125)
     ai_component = Aggressive()
     return Entity(x, y, 'H', libtcod.brass, 'Hunchback',
-                  'A stunted and broken humanoid draped in tattered linen stained with the characteristic ochre'
-                  'of dried blood. It\'s face is completely concealed by a tapered hood, and the glint of a wicked '
-                  'kirpan scatters the all nearby light. Echoes of guttural chanting reverberate off the cave '
+                  'A stunted and broken humanoid draped in tattered linen stained with the characteristic ochre '
+                  'of dried blood. It\'s face is completely concealed by a tapered hood; the glint of a wicked '
+                  'kirpan scatters all nearby light. Echoes of guttural chanting reverberate off the cave '
                   'walls as it glacially stumbles forward towards its next target.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component,
                   ai=ai_component, faction='Horrors')
@@ -47,8 +47,8 @@ def moire_beast(x, y):
     ai_component = Aggressive()
     return Entity(x, y, 'M', libtcod.light_grey, 'Moire Beast',
                   'The hide of this squat quadruped is an affront to the senses; dense and intricate greyscale '
-                  'patterns constantly shift epileptically upon the beast\'s surface like a zebra beyond all '
-                  'imagination. The gleam of it\'s fluorescent yellow, feline irises serve as the only ubiquitous '
+                  'patterns constantly shift epileptically upon the beast\'s surface like a hyperbolically interpolated'
+                  'zebra. The gleam of it\'s fluorescent yellow, feline irises serve as the only ubiquitous '
                   'reference point on this monster\'s migraine-inducing form.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component,
                   ai=ai_component, faction='Scavengers')
@@ -59,7 +59,7 @@ def thresher(x, y):
                                     strength=5, agility=4, vitality=1, intellect=1, perception=1, xp=225)
         ai_component = Aggressive()
         return Entity(x, y, 'T', libtcod.dark_azure, 'Thresher',
-                      'A colossal ogre-like ape covered in patches of matted hair and littered with scars. This '
+                      'A colossal ogre-like hominid covered in patches of matted hair and littered with scars. This '
                       'creature tirelessly searches it\'s surroundings for new objects to smash together with a '
                       'joyous, childlike expression.',
                       blocks=True, fighter=fighter_component, render_order=RenderOrder.ACTOR, ai=ai_component,

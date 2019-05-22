@@ -1,5 +1,5 @@
 import custrender
-from random import randint
+from random import randint, choice
 from death_functions import kill_monster, kill_player
 from entity import get_blocking_entities_at_location
 from fov_functions import *
@@ -349,6 +349,12 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
         if game_state == GameStates.ENEMY_TURN:
             for entity in entities:
+                if entity.name == 'Moire Beast':
+                    # Cause the Moire beast to change colour every turn
+                    moire_colour = [libtcod.light_grey, libtcod.lighter_grey, libtcod.lightest_gray, libtcod.grey,
+                                    libtcod.dark_grey,
+                                    libtcod.darkest_gray]
+                    entity.colour = choice(moire_colour)
                 if entity.ai:
                     # Heal-over time effect for enemies
                     if turn_number % 4 == 0:

@@ -16,10 +16,10 @@ Welcome to the SludgeWorks; adapt or be adapted.
 - Biome: Broken Halls
 - D&D Diceroll combat
 - Adaptive stat attributes
+- Auto-explore
 
 # TODO
 - Look menu
-- Auto-explore
 - Mutations
 - Purity factor (how mutated is your character?)
 - Character-stat UI

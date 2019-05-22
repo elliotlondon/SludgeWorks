@@ -99,7 +99,7 @@ class Fighter:
 
         # Roll to see if hit
         attack_roll = random.randint(1, 20) + self.total_strength
-        defence_roll = random.randint(1, 20) - target.fighter.total_agility
+        defence_roll = random.randint(1, 20) + target.fighter.total_agility
         damage = self.damage
 
         if attack_roll > defence_roll:
@@ -107,6 +107,10 @@ class Fighter:
                 results.append({'message': Message('{0} attacks {1} for {2} hit points. ([{3} vs. {4}])'.format(
                     self.owner.name.capitalize(), target.name, str(damage), attack_roll, defence_roll), libtcod.white)})
                 results.extend(target.fighter.take_damage(damage))
+                # Debug to see enemy HP
+                if target.name != 'Player':
+                    results.append({'message': Message('{0} has hit {1} points left.'.format(
+                        target.name.capitalize(), target.fighter.current_hp), libtcod.orange)})
             else:
                 results.append({'message': Message('{0} attacks {1} but does no damage. ([{2} vs. {3}])'.format(
                     self.owner.name.capitalize(), target.name, attack_roll, defence_roll), libtcod.grey)})

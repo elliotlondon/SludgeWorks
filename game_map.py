@@ -76,7 +76,7 @@ class GameMap:
             self.place_entities(entire_dungeon, entities)
 
     def place_entities(self, room, entities):
-        max_monsters = from_dungeon_level([[50, 1], [75, 2], [100, 4], [125, 6]], self.dungeon_level)
+        max_monsters = from_dungeon_level([[50, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
         max_plants = from_dungeon_level([[25, 1], [35, 3], [50, 4], [35, 6]], self.dungeon_level)
         max_items = from_dungeon_level([[20, 1], [25, 3], [30, 4]], self.dungeon_level)
         # Get a random number of monsters
@@ -95,12 +95,18 @@ class GameMap:
         # Item dictionary
         item_chances = {
             'healing_potion': 35,
-            'iron_longsword': from_dungeon_level([[10, 0]], self.dungeon_level),
-            'iron_helmet': from_dungeon_level([[5, 0], [10, 3]], self.dungeon_level),
-            'iron_buckler': from_dungeon_level([[10, 0]], self.dungeon_level),
-            'lightning_scroll': from_dungeon_level([[25, 4]], self.dungeon_level),
-            'fireball_scroll': from_dungeon_level([[25, 6]], self.dungeon_level),
-            'confusion_scroll': from_dungeon_level([[10, 2]], self.dungeon_level)
+            'iron_longsword': from_dungeon_level([[10, 1], [5, 3], [0, 4]], self.dungeon_level),
+            'steel_dagger': from_dungeon_level([[5, 1], [10, 3], [5, 4], [0, 5]], self.dungeon_level),
+            'steel_mace': from_dungeon_level([[5, 3], [10, 4], [15, 5], [0, 6]], self.dungeon_level),
+            'symbiotic_hatchet': from_dungeon_level([[1, 4], [5, 5], [3, 6], [0, 7]], self.dungeon_level),
+            'iron_buckler': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
+            'steel_greatshield': from_dungeon_level([[5, 2], [10, 3], [5, 5], [0, 6]], self.dungeon_level),
+            'iron_helmet': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
+            'steel_bascinet': from_dungeon_level([[1, 2], [5, 3], [10, 4], [5, 5], [0, 6]], self.dungeon_level),
+            'steel_cuirass': from_dungeon_level([[1, 3], [5, 5], [10, 6], [5, 7], [0, 8]], self.dungeon_level),
+            'lightning_scroll': from_dungeon_level([[5, 3], [10, 4], [15, 6]], self.dungeon_level),
+            'fireball_scroll': from_dungeon_level([[5, 4], [10, 6]], self.dungeon_level),
+            'confusion_scroll': from_dungeon_level([[5, 2], [10, 4]], self.dungeon_level)
         }
 
         # Place stationary monsters (plants) independent of monster number
@@ -126,6 +132,8 @@ class GameMap:
                     entities.append(thresher(x, y))
                 elif monster_choice == 'Moire Beast':
                     entities.append(moire_beast(x, y))
+                elif monster_choice == 'Bloodseeker':
+                    entities.append(bloodseeker(x, y))
 
         # Place items
         for i in range(number_of_items):
@@ -138,12 +146,24 @@ class GameMap:
                 # Weapons and shields (main-hand and off-hand)
                 if item_choice == 'iron_longsword':
                     entities.append(iron_longsword(x, y))
+                elif item_choice == 'steel_dagger':
+                    entities.append(steel_dagger(x, y))
+                elif item_choice == 'steel_mace':
+                    entities.append(steel_mace(x, y))
+                elif item_choice == 'symbiotic_hatchet':
+                    entities.append(symbiotic_hatchet(x, y))
                 elif item_choice == 'iron_buckler':
                     entities.append(iron_buckler(x, y))
+                elif item_choice == 'steel_greatshield':
+                    entities.append(steel_greatshield(x, y))
 
                 # Armour
                 elif item_choice == 'iron_helmet':
                     entities.append(iron_helmet(x, y))
+                elif item_choice == 'steel_bascinet':
+                    entities.append(steel_bascinet(x, y))
+                elif item_choice == 'steel_cuirass':
+                    entities.append(steel_cuirass(x, y))
 
                 # Consumables
                 elif item_choice == 'healing_potion':

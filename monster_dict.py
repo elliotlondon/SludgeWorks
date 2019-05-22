@@ -42,8 +42,8 @@ def hunchback(x, y):
 
 
 def moire_beast(x, y):
-    fighter_component = Fighter(current_hp=18, max_hp=18, damage_dice=3, damage_sides=3,
-                                strength=3, agility=8, vitality=1, intellect=1, perception=1, xp=325)
+    fighter_component = Fighter(current_hp=18, max_hp=18, damage_dice=3, damage_sides=2,
+                                strength=3, agility=7, vitality=1, intellect=1, perception=1, xp=325)
     ai_component = Aggressive()
     return Entity(x, y, 'M', libtcod.light_grey, 'Moire Beast',
                   'The hide of this squat quadruped is an affront to the senses; dense and intricate greyscale '

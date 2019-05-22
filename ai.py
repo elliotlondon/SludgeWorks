@@ -8,10 +8,8 @@ class Aggressive:
         results = []
 
         if libtcod.map_is_in_fov(fov_map, self.owner.x, self.owner.y):
-
             if self.owner.distance_to(target) >= 2:
                 self.owner.move_astar(target, entities, game_map)
-
             elif target.fighter.current_hp > 0:
                 attack_results = self.owner.fighter.attack(target)
                 results.extend(attack_results)
@@ -49,6 +47,7 @@ class ConfusedMonster:
                 self.owner.move_towards(random_x, random_y, game_map, entities)
 
             self.number_of_turns -= 1
+
         else:
             self.owner.ai = self.previous_ai
             results.append({'message': Message('The {0} is no longer confused!'.format(self.owner.name), libtcod.red)})

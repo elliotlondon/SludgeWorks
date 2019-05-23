@@ -261,8 +261,13 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 player_turn_results.append({'targeting_cancelled': True})
 
         if esc_menu:
-            previous_game_state = game_state
-            game_state = GameStates.ESC_MENU
+            if exploring:
+                exploring = False
+                previous_game_state = game_state
+                message_log.add_message(Message('Autoexploration cancelled.', libtcod.yellow))
+            else:
+                previous_game_state = game_state
+                game_state = GameStates.ESC_MENU
 
         if help:
             game_state = GameStates.HELP_MENU

@@ -21,7 +21,7 @@ def iron_longsword(x, y):
 def steel_dagger(x, y):
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
                                       damage_dice=1, damage_sides=4,
-                                      strength_bonus=1, agility_bonus=1)
+                                      strength_bonus=2, agility_bonus=1)
     return Entity(x, y, '-', libtcod.lighter_grey, 'Steel Dagger',
                   'A wicked, slightly curved steel dagger with an ivory hilt embezzled with eastern filigree. Although'
                   'not as dangerous as a longsword, you feel more able to avoid attacks when wielding this weapon.',
@@ -32,18 +32,18 @@ def steel_mace(x, y):
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
                                       damage_dice=2, damage_sides=3,
                                       strength_bonus=4)
-    return Entity(x, y, 'φ', libtcod.lighter_grey, 'Steel Mace',
+    return Entity(x, y, '*', libtcod.lighter_grey, 'Steel Mace',
                   'A heavy, flanged steel mace half as long as you are tall. Designed for use against heavily armoured'
                   'opponents, a square hit from this behemoth is enough to dent chestpieces, ribcages and all '
                   'manner of mutated chitin',
                   equippable=equippable_component)
 
 
-def symbiotic_hatchet(x, y):
+def influenced_hatchet(x, y):
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
                                       damage_dice=3, damage_sides=3,
                                       strength_bonus=3, agility_bonus=2)
-    return Entity(x, y, 'Γ', libtcod.light_lime, 'Symbiotic Hatchet',
+    return Entity(x, y, '¬', libtcod.light_lime, 'Influenced Hatchet',
                   'Undeniably tainted by the SludgeWorks, what used to be a woodsman\'s tool for chopping wood (or,'
                   'perhaps, the local writhing vegetation) has began to turn into a part of the scenery in its own'
                   'right. Vines trail from a bundled counterweight at the hilt of the weapon, and the axe\'s edge'
@@ -54,7 +54,7 @@ def symbiotic_hatchet(x, y):
 
 def iron_buckler(x, y):
     equippable_component = Equippable(EquipmentSlots.OFF_HAND, agility_bonus=1)
-    return Entity(x, y, 'Θ', libtcod.light_grey, 'Iron Buckler',
+    return Entity(x, y, ']', libtcod.light_grey, 'Iron Buckler',
                   'A small buckler that can be attached to the arm and used to deflect attacks.',
                   equippable=equippable_component)
 
@@ -77,7 +77,7 @@ def iron_helmet(x, y):
 
 
 def steel_bascinet(x, y):
-    equippable_component = Equippable(EquipmentSlots.HEAD, agility_bonus=3)
+    equippable_component = Equippable(EquipmentSlots.HEAD, agility_bonus=2)
     return Entity(x, y, '^', libtcod.lighter_grey, 'Steel Bascinet',
                   'A crescent-moon shaped slot is cut into the front of this helmet made of interlocking plate. The '
                   'front of the faceguard protrudes confidently in the assurance that all but the most mortal of wounds'
@@ -86,8 +86,8 @@ def steel_bascinet(x, y):
 
 
 def steel_cuirass(x, y):
-    equippable_component = Equippable(EquipmentSlots.HEAD, agility_bonus=3)
-    return Entity(x, y, ']', libtcod.lighter_grey, 'Steel Cuirass',
+    equippable_component = Equippable(EquipmentSlots.TORSO, agility_bonus=3)
+    return Entity(x, y, ']', libtcod.white, 'Steel Cuirass',
                   'A medieval steel chestplate, frayed with rust and various unusual discolourations. Despite the'
                   'moderate lack of structural integrity, this will still provide ample protection against most'
                   'conventional weaponry.',

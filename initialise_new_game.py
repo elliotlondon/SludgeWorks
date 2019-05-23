@@ -1,5 +1,4 @@
 import tcod as libtcod
-
 from equipment import Equipment, Equippable
 from fighter import Fighter
 from inventory import Inventory
@@ -31,7 +30,7 @@ def get_constants():
 
     fov_algorithm = 0
     fov_light_walls = True
-    fov_radius = 8
+    fov_radius = 6
 
     max_monsters_per_room = 4
     max_items_per_room = 2
@@ -80,10 +79,10 @@ def get_game_variables(constants):
     entities = [player]
 
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
-                                      damage_dice=1, damage_sides=4,
-                                      strength_bonus=2)
-    dagger = Entity(0, 0, '-', libtcod.sky,
-                    'Dagger (1d4)', 'A short blade ideal for swift stabbing attacks. ' + '+2 STR, [1d4]',
+                                      damage_dice=1, damage_sides=2,
+                                      strength_bonus=1, agility_bonus=1)
+    dagger = Entity(0, 0, '-', libtcod.light_grey,
+                    'Iron Dagger', 'A short blade ideal for swift stabbing attacks. ' + '+2 STR, [1d4]',
                     equippable=equippable_component, faction='Purists')
     player.inventory.add_item(dagger)
     player.equipment.toggle_equip(dagger)

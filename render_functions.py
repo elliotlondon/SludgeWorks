@@ -33,6 +33,16 @@ def get_names_under_char(player, entities, fov_map):
     return names.capitalize()
 
 
+def get_names_at_look(look_cursor, entities, fov_map):
+    (x, y) = (look_cursor.x, look_cursor.y)
+
+    names = [entity.name for entity in entities if entity.x == x and entity.y == y
+             and libtcod.map_is_in_fov(fov_map, entity.x, entity.y)]
+    names = ', '.join(names)
+
+    return names.capitalize()
+
+
 def render_bar(panel, x, y, total_width, name, value, maximum, bar_colour, back_colour):
     bar_width = int(float(value) / maximum * total_width)
 

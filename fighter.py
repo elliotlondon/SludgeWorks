@@ -26,17 +26,12 @@ class Fighter:
 
         return self.base_max_hp + bonus
 
-    # TODO: Implement diceroll function which can be called for combat. Current method gives an even distribution,
-    # TODO: whereas real dice as skewed towards the mean value of the total roll. This will also make it easier to
-    # TODO: calculate things like hit dice.
-
     @property
     def damage(self):
         if self.owner and self.owner.equipment:
-            damage = random.randint(self.owner.equipment.damage_dice,
-                                    self.owner.equipment.damage_dice * self.owner.equipment.damage_sides)
+            damage = roll_dice(self.owner.equipment.damage_dice, self.owner.equipment.damage_sides)
         else:
-            damage = random.randint(self.damage_dice, self.damage_dice * self.damage_sides)
+            damage = roll_dice(self.damage_dice, self.damage_sides)
 
         return damage
 
@@ -98,8 +93,8 @@ class Fighter:
         results = []
 
         # Roll to see if hit
-        attack_roll = random.randint(1, 20) + self.total_strength
-        defence_roll = random.randint(1, 20) + target.fighter.total_agility
+        attack_roll = roll_dice(1, 20) + self.total_strength
+        defence_roll = roll_dice(1, 20) + target.fighter.total_agility
         damage = self.damage
 
         if attack_roll > defence_roll:
@@ -107,10 +102,10 @@ class Fighter:
                 results.append({'message': Message('{0} attacks {1} for {2} hit points. ([{3} vs. {4}])'.format(
                     self.owner.name.capitalize(), target.name, str(damage), attack_roll, defence_roll), libtcod.white)})
                 results.extend(target.fighter.take_damage(damage))
-                # Debug to see enemy HP
-                if target.name != 'Player':
-                    results.append({'message': Message('{0} has hit {1} points left.'.format(
-                        target.name.capitalize(), target.fighter.current_hp), libtcod.orange)})
+                # # Debug to see enemy HP
+                # if target.name != 'Player':
+                #     results.append({'message': Message('{0} has hit {1} points left.'.format(
+                #         target.name.capitalize(), target.fighter.current_hp), libtcod.orange)})
             else:
                 results.append({'message': Message('{0} attacks {1} but does no damage. ([{2} vs. {3}])'.format(
                     self.owner.name.capitalize(), target.name, attack_roll, defence_roll), libtcod.grey)})
@@ -128,4 +123,3 @@ def roll_dice(num, dice):  # rolls dice, returns the sum of all rolls
         roll = roll + n
 
     return roll
-

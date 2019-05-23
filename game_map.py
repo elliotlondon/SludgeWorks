@@ -109,31 +109,31 @@ class GameMap:
             'confusion_scroll': from_dungeon_level([[5, 2], [10, 4]], self.dungeon_level)
         }
 
-        # Place stationary monsters (plants) independent of monster number
-        for i in range(number_of_plants):
-            x = randint(room.x1 + 1, room.x2 - 1)
-            y = randint(room.y1 + 1, room.y2 - 1)
-            if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
-                    and not self.is_blocked(x, y):
-                    entities.append(whip_vine(x, y))
+        # # Place stationary monsters (plants) independent of monster number
+        # for i in range(number_of_plants):
+        #     x = randint(room.x1 + 1, room.x2 - 1)
+        #     y = randint(room.y1 + 1, room.y2 - 1)
+        #     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
+        #             and not self.is_blocked(x, y):
+        #             entities.append(whip_vine(x, y))
 
         # Place monsters with random spawning chances
-        for i in range(number_of_monsters):
-            x = randint(room.x1 + 1, room.x2 - 1)
-            y = randint(room.y1 + 1, room.y2 - 1)
-            if not any([entity for entity in entities if entity.x == x and entity.y == y])\
-                    and not self.is_blocked(x, y):
-                monster_choice = random_choice_from_dict(monster_chances)
-                if monster_choice == 'Wretch':
-                    entities.append(wretch(x, y))
-                elif monster_choice == 'Hunchback':
-                    entities.append(hunchback(x, y))
-                elif monster_choice == 'Thresher':
-                    entities.append(thresher(x, y))
-                elif monster_choice == 'Moire Beast':
-                    entities.append(moire_beast(x, y))
-                elif monster_choice == 'Bloodseeker':
-                    entities.append(bloodseeker(x, y))
+        # for i in range(number_of_monsters):
+        #     x = randint(room.x1 + 1, room.x2 - 1)
+        #     y = randint(room.y1 + 1, room.y2 - 1)
+        #     if not any([entity for entity in entities if entity.x == x and entity.y == y])\
+        #             and not self.is_blocked(x, y):
+        #         monster_choice = random_choice_from_dict(monster_chances)
+        #         if monster_choice == 'Wretch':
+        #             entities.append(wretch(x, y))
+        #         elif monster_choice == 'Hunchback':
+        #             entities.append(hunchback(x, y))
+        #         elif monster_choice == 'Thresher':
+        #             entities.append(thresher(x, y))
+        #         elif monster_choice == 'Moire Beast':
+        #             entities.append(moire_beast(x, y))
+        #         elif monster_choice == 'Bloodseeker':
+        #             entities.append(bloodseeker(x, y))
 
         # Place items
         for i in range(number_of_items):
@@ -150,7 +150,7 @@ class GameMap:
                     entities.append(steel_dagger(x, y))
                 elif item_choice == 'steel_mace':
                     entities.append(steel_mace(x, y))
-                elif item_choice == 'symbiotic_hatchet':
+                elif item_choice == 'influenced_hatchet':
                     entities.append(symbiotic_hatchet(x, y))
                 elif item_choice == 'iron_buckler':
                     entities.append(iron_buckler(x, y))
@@ -353,7 +353,7 @@ class GameMap:
                     unexplored_coords.append((y, x))
 
         if len(unexplored_coords) == 0:
-            message_log.add_message(Message('There is nowhere else to explore.', libtcod.orange))
+            message_log.add_message(Message('There is nowhere else to explore.', libtcod.yellow))
             return False
 
         # Find the nearest unexplored coords

@@ -93,8 +93,8 @@ def risen_sacrifice(x, y):
     return Entity(x, y, 'r', libtcod.lightest_fuchsia, 'Risen Sacrifice',
                   'For those who have never encountered them, it is very easy to dismiss the Cult of Eternity as '
                   'a sect of aimless madmen with an obsessive focus upon human sacrifice. Those who have seen the '
-                  'radiant bodies of the recently sacrificed reanimating joyfully with blood still flowing from a '
-                  'mortal wound would however strongly disagree with this statement.',
+                  'radiant bodies of the recently sacrificed reanimating joyfully, with blood still flowing from their '
+                  'mortal wounds would strongly disagree with this statement.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
                   faction='Cultists')
 

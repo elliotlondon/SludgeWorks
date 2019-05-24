@@ -3,13 +3,12 @@ from random import Random, choice
 from game_states import GameStates
 from menus import *
 from game_messages import Message
-from random_utils import random_choice_from_dict
 
 
 class RenderOrder(Enum):
-    STAIRS = auto()
     CORPSE = auto()
     ITEM = auto()
+    STAIRS = auto()
     PLANT = auto()
     ACTOR = auto()
 
@@ -78,7 +77,6 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
                         libtcod.console_put_char_ex(con, x, y, ord('▓'.encode('cp437')), colours.get('light_wall'),
                                                     colours.get('dark_ground'))
                         game_map.tiles[x][y].explored = True
-
                     else:
                         libtcod.console_put_char_ex(con, x, y, floor_char, colours.get('light_ground'),
                                                     colours.get('dark_ground'))
@@ -166,7 +164,7 @@ def clear_entity(con, entity):
     libtcod.console_put_char(con, entity.x, entity.y, ' ', libtcod.BKGND_NONE)
 
 
-def entity_in_fov(game_map, entities, fov_map):
+def entity_in_fov(entities, fov_map):
     for entity in entities:
         if entity.ai and entity.name != 'Player':
             if libtcod.map_is_in_fov(fov_map, entity.x, entity.y):

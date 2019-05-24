@@ -1,5 +1,4 @@
 from random import randint
-import numpy as np
 
 
 def from_dungeon_level(table, dungeon_level):

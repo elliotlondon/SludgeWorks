@@ -89,12 +89,26 @@ class GameMap:
         }
 
         monster_chances = {
+            # Scavengers
             'Wretch': from_dungeon_level([[50, 1], [35, 4], [20, 6], [20, 8]], self.dungeon_level),
-            'Hunchback': from_dungeon_level([[10, 2], [30, 4], [50, 6], [40, 8]], self.dungeon_level),
-            'Moire Beast': from_dungeon_level([[10, 2], [20, 4], [40, 6], [20, 8]], self.dungeon_level),
+            'Sludge Fiend': from_dungeon_level([[35, 1], [50, 4], [35, 6], [20, 8]], self.dungeon_level),
             'Thresher': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
-            'Bloodseeker': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level)
+            # Beasts
+            'Moire Beast': from_dungeon_level([[10, 2], [20, 4], [40, 6], [20, 8]], self.dungeon_level),
+            'Bloodseeker': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level),
+            # Horrors
+            'Hunchback': from_dungeon_level([[10, 2], [30, 4], [50, 6], [40, 8]], self.dungeon_level),
+            # Cultists
+            'Risen Sacrifice': from_dungeon_level([[10, 1], [25, 3], [30, 6], [15, 7]], self.dungeon_level),
+            'Eternal Kidnapper': from_dungeon_level([[10, 2], [20, 4], [40, 6], [20, 8]], self.dungeon_level),
+            # Cleansing Hand
+            'Cleansing Hand Crusader': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
+            # Minibosses
+            'Alfonrice, the Spinning Blade': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level)
         }
+
+        # Keep track of uniques
+        alfonrice_counter = 1
 
         # Item dictionary
         item_chances = {
@@ -134,14 +148,25 @@ class GameMap:
                 monster_choice = random_choice_from_dict(monster_chances)
                 if monster_choice == 'Wretch':
                     entities.append(wretch(x, y))
-                elif monster_choice == 'Hunchback':
-                    entities.append(hunchback(x, y))
+                elif monster_choice == 'Sludge Fiend':
+                    entities.append(sludge_fiend(x, y))
                 elif monster_choice == 'Thresher':
                     entities.append(thresher(x, y))
                 elif monster_choice == 'Moire Beast':
                     entities.append(moire_beast(x, y))
                 elif monster_choice == 'Bloodseeker':
                     entities.append(bloodseeker(x, y))
+                elif monster_choice == 'Hunchback':
+                    entities.append(hunchback(x, y))
+                elif monster_choice == 'Risen Sacrifice':
+                    entities.append(risen_sacrifice(x, y))
+                elif monster_choice == 'Eternal Kidnapper':
+                    entities.append(eternal_kidnapper(x, y))
+                elif monster_choice == 'Cleansing Hand Crusader':
+                    entities.append(cleansing_hand_crusader(x, y))
+                elif monster_choice == 'Alfonrice, the Spinning Blade' and alfonrice_counter != 0:
+                    entities.append(alfonrice(x, y))
+                    alfonrice_counter = 0
 
         # Place items
         for i in range(number_of_items):

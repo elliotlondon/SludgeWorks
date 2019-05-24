@@ -185,7 +185,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
         elif rest and game_state == GameStates.PLAYERS_TURN:
             if player.fighter.current_hp == player.fighter.base_max_hp:
                 message_log.add_message(Message('You are already at full health.', libtcod.yellow))
-            elif entity_in_fov(game_map, entities, fov_map):
+            elif entity_in_fov(entities, fov_map):
                 message_log.add_message(Message('You cannot rest when enemies are nearby.', libtcod.yellow))
             else:
                 start_turn = turn_number
@@ -234,9 +234,8 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 if entity.stairs and entity.x == player.x and entity.y == player.y:
                     entities = game_map.next_floor(player, constants)
                     fov_map = initialize_fov(game_map)
-                    # TODO: Display a message so that the player knows which level they're on
-                    # message_log.add_message(Message('You descend to level {0}.'
-                    #                                 .format(constants['from_dungeon_level']), libtcod.yellow))
+                    message_log.add_message(Message('You descend to level {0} of the SludgeWorks...'
+                                                    .format(game_map.dungeon_level), libtcod.yellow))
                     break
             else:
                 message_log.add_message(Message('There are no stairs here.', libtcod.yellow))

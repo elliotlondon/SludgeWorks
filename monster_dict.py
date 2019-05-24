@@ -10,15 +10,27 @@ COMMON ENEMIES
 
 # PLANTS
 def whip_vine(x, y):
-    # Whip Vine
-    fighter_component = Fighter(current_hp=8, max_hp=8, damage_dice=1, damage_sides=2,
-                                strength=3, agility=1, vitality=1, intellect=1, perception=1, xp=25)
+    fighter_component = Fighter(current_hp=4, max_hp=4, damage_dice=1, damage_sides=2,
+                                strength=3, agility=0, vitality=1, intellect=1, perception=1, xp=25)
     ai_component = Stationary()
     return Entity(x, y, 'V', libtcod.light_grey, 'Whip Vine',
                   'What at first appears to be no more than a dead, waist-height bush in actuality '
                   'represents a highly specialized carnivorous plant that flays the skin off any creature '
                   'that wanders into its path.',
-                  blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
+                  blocks=True, render_order=RenderOrder.PLANT, fighter=fighter_component, ai=ai_component,
+                  faction='Plants')
+
+
+def phosphorescent_dahlia(x, y):
+    fighter_component = Fighter(current_hp=1, max_hp=1, damage_dice=0, damage_sides=0,
+                                strength=0, agility=0, vitality=1, intellect=1, perception=3, xp=0)
+    ai_component = PassiveStationary()
+    return Entity(x, y, 'd', libtcod.light_azure, 'Phosphorescent Dahlia',
+                  'A common but perplexing sight within the SludgeWorks is to observe a brilliant flash of blue light, '
+                  'instantaneously illuminating an entire cave section like a flash of lightning. The phosphorescent '
+                  'dahlia is a well-known source of such flashes in this spectral region; a delicate plant which has '
+                  'developed what some consider a visually offensive method of attracting pollinators.',
+                  blocks=False, render_order=RenderOrder.PLANT, fighter=fighter_component, ai=ai_component,
                   faction='Plants')
 
 

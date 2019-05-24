@@ -30,10 +30,7 @@ def get_constants():
 
     fov_algorithm = 0
     fov_light_walls = True
-    fov_radius = 6
-
-    max_monsters_per_room = 4
-    max_items_per_room = 2
+    fov_radius = 5
 
     colours = {
         'dark_wall': libtcod.dark_grey,
@@ -57,8 +54,6 @@ def get_constants():
         'fov_algorithm': fov_algorithm,
         'fov_light_walls': fov_light_walls,
         'fov_radius': fov_radius,
-        'max_monsters_per_room': max_monsters_per_room,
-        'max_items_per_room': max_items_per_room,
         'colours': colours
     }
 

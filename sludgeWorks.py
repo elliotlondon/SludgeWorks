@@ -14,7 +14,7 @@ from render_functions import clear_all, render_all, entity_in_fov, entities_in_f
 
 
 def main():
-    libtcod.sys_set_fps(60)
+    libtcod.sys_set_fps(30)
     constants = get_constants()
 
     player = None
@@ -102,16 +102,14 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
         if fov_recompute:
             recompute_fov(fov_map, player.x, player.y, constants['fov_radius'], constants['fov_light_walls'],
                           constants['fov_algorithm'])
-
-        render_all(root_console, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
-                   constants['screen_width'], constants['screen_height'], constants['bar_width'],
-                   constants['panel_height'], constants['panel_y'], constants['colours'], game_state, turn_number)
-
-        fov_recompute = False
-        custrender.clear((0, 0, 0))
-        custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))
-        custrender.present()
-        clear_all(root_console, entities)
+            render_all(root_console, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
+                       constants['screen_width'], constants['screen_height'], constants['bar_width'],
+                       constants['panel_height'], constants['panel_y'], constants['colours'], game_state, turn_number)
+            fov_recompute = False
+            custrender.clear((0, 0, 0))
+            custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))
+            custrender.present()
+            clear_all(root_console, entities)
 
         action = handle_keys(key, game_state)
         mouse_action = handle_mouse(mouse)
@@ -145,6 +143,10 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
             root_console.clear(fg=(255, 255, 255))
 
         if move and game_state == GameStates.PLAYERS_TURN:
+            if exploring:
+                exploring = False
+                previous_game_state = game_state
+                message_log.add_message(Message('Autoexploration cancelled.', libtcod.yellow))
             dx, dy = move
             destination_x = player.x + dx
             destination_y = player.y + dy
@@ -161,7 +163,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
         if auto_explore and game_state == GameStates.PLAYERS_TURN:
             if entities_in_fov(entities, fov_map, message_log):
                 game_state = GameStates.PLAYERS_TURN
-            elif GameMap.explore(game_map, player, entities, message_log) is True:
+            elif GameMap.explore(game_map, player, message_log) is True:
                 game_state = GameStates.ENEMY_TURN
                 exploring = True
             else:
@@ -171,7 +173,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
             if entities_in_fov(entities, fov_map, message_log):
                 game_state = GameStates.PLAYERS_TURN
                 exploring = False
-            elif GameMap.explore(game_map, player, entities, message_log) is True:
+            elif GameMap.explore(game_map, player, message_log) is True:
                 game_state = GameStates.ENEMY_TURN
                 exploring = True
             else:
@@ -232,6 +234,9 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 if entity.stairs and entity.x == player.x and entity.y == player.y:
                     entities = game_map.next_floor(player, constants)
                     fov_map = initialize_fov(game_map)
+                    # TODO: Display a message so that the player knows which level they're on
+                    # message_log.add_message(Message('You descend to level {0}.'
+                    #                                 .format(constants['from_dungeon_level']), libtcod.yellow))
                     break
             else:
                 message_log.add_message(Message('There are no stairs here.', libtcod.yellow))
@@ -354,12 +359,10 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
         if game_state == GameStates.ENEMY_TURN:
             for entity in entities:
-                if entity.name == 'Moire Beast':
-                    # Cause the Moire beast to change colour every turn
-                    moire_colour = [libtcod.light_grey, libtcod.lighter_grey, libtcod.lightest_gray, libtcod.grey,
-                                    libtcod.dark_grey,
-                                    libtcod.darkest_gray]
-                    entity.colour = choice(moire_colour)
+                if entity.name == 'Phosphorescent Dahlia':
+                    # Cycle through colours for the phosphorescent dahlia
+                    dahlia_colour = [libtcod.light_azure, libtcod.azure, libtcod.dark_azure]
+                    entity.colour = choice(dahlia_colour)
                 if entity.ai:
                     # Heal-over time effect for enemies
                     if turn_number % 4 == 0:

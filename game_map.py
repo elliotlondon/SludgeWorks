@@ -79,10 +79,14 @@ class GameMap:
         max_monsters = from_dungeon_level([[50, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
         max_plants = from_dungeon_level([[25, 1], [35, 3], [50, 4], [35, 6]], self.dungeon_level)
         max_items = from_dungeon_level([[20, 1], [25, 3], [30, 4]], self.dungeon_level)
-        # Get a random number of monsters
         number_of_monsters = randint(round(max_monsters*0.75), max_monsters)
         number_of_plants = randint(round(max_plants*0.75), max_plants)
         number_of_items = randint(round(max_items*0.75), max_items)
+
+        plant_chances = {
+            'Whip Vine': from_dungeon_level([[50, 1], [35, 4], [20, 6], [20, 8]], self.dungeon_level),
+            'Phosphorescent Dahlia': from_dungeon_level([[50, 1], [35, 4], [20, 6], [20, 8]], self.dungeon_level)
+        }
 
         monster_chances = {
             'Wretch': from_dungeon_level([[50, 1], [35, 4], [20, 6], [20, 8]], self.dungeon_level),
@@ -109,31 +113,35 @@ class GameMap:
             'confusion_scroll': from_dungeon_level([[5, 2], [10, 4]], self.dungeon_level)
         }
 
-        # # Place stationary monsters (plants) independent of monster number
-        # for i in range(number_of_plants):
-        #     x = randint(room.x1 + 1, room.x2 - 1)
-        #     y = randint(room.y1 + 1, room.y2 - 1)
-        #     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
-        #             and not self.is_blocked(x, y):
-        #             entities.append(whip_vine(x, y))
+        # Place stationary monsters (plants) independent of monster number
+        for i in range(number_of_plants):
+            x = randint(room.x1 + 1, room.x2 - 1)
+            y = randint(room.y1 + 1, room.y2 - 1)
+            if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
+                    and not self.is_blocked(x, y):
+                plant_choice = random_choice_from_dict(plant_chances)
+                if plant_choice == 'Whip Vine':
+                    entities.append(whip_vine(x, y))
+                elif plant_choice == 'Phosphorescent Dahlia':
+                    entities.append(phosphorescent_dahlia(x, y))
 
         # Place monsters with random spawning chances
-        # for i in range(number_of_monsters):
-        #     x = randint(room.x1 + 1, room.x2 - 1)
-        #     y = randint(room.y1 + 1, room.y2 - 1)
-        #     if not any([entity for entity in entities if entity.x == x and entity.y == y])\
-        #             and not self.is_blocked(x, y):
-        #         monster_choice = random_choice_from_dict(monster_chances)
-        #         if monster_choice == 'Wretch':
-        #             entities.append(wretch(x, y))
-        #         elif monster_choice == 'Hunchback':
-        #             entities.append(hunchback(x, y))
-        #         elif monster_choice == 'Thresher':
-        #             entities.append(thresher(x, y))
-        #         elif monster_choice == 'Moire Beast':
-        #             entities.append(moire_beast(x, y))
-        #         elif monster_choice == 'Bloodseeker':
-        #             entities.append(bloodseeker(x, y))
+        for i in range(number_of_monsters):
+            x = randint(room.x1 + 1, room.x2 - 1)
+            y = randint(room.y1 + 1, room.y2 - 1)
+            if not any([entity for entity in entities if entity.x == x and entity.y == y])\
+                    and not self.is_blocked(x, y):
+                monster_choice = random_choice_from_dict(monster_chances)
+                if monster_choice == 'Wretch':
+                    entities.append(wretch(x, y))
+                elif monster_choice == 'Hunchback':
+                    entities.append(hunchback(x, y))
+                elif monster_choice == 'Thresher':
+                    entities.append(thresher(x, y))
+                elif monster_choice == 'Moire Beast':
+                    entities.append(moire_beast(x, y))
+                elif monster_choice == 'Bloodseeker':
+                    entities.append(bloodseeker(x, y))
 
         # Place items
         for i in range(number_of_items):
@@ -151,7 +159,7 @@ class GameMap:
                 elif item_choice == 'steel_mace':
                     entities.append(steel_mace(x, y))
                 elif item_choice == 'influenced_hatchet':
-                    entities.append(symbiotic_hatchet(x, y))
+                    entities.append(influenced_hatchet(x, y))
                 elif item_choice == 'iron_buckler':
                     entities.append(iron_buckler(x, y))
                 elif item_choice == 'steel_greatshield':
@@ -343,7 +351,7 @@ class GameMap:
 
     # This function uses a dijkstra map to navigate the player towards the nearest unexplored tile. Interrupted by
     # monsters entering FoV.
-    def explore(self, player, entities, message_log):
+    def explore(self, player, message_log):
         unexplored_coords = []
 
         # Loop over the map to find all unexplored tiles

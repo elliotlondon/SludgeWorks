@@ -30,6 +30,14 @@ class Stationary:
         return results
 
 
+class PassiveStationary:
+    # Monster which neither moves nor attacks
+    def take_turn(self, target, fov_map, game_map, entities):
+        results = []
+        # Plants are friends :)
+        return results
+
+
 class ConfusedMonster:
     # Enemy which wanders around (able to attack) until the confusion has worn off
     def __init__(self, previous_ai, number_of_turns=10):

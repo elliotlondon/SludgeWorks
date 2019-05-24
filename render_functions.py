@@ -1,14 +1,16 @@
 from enum import Enum, auto
-from random import Random
+from random import Random, choice
 from game_states import GameStates
 from menus import *
 from game_messages import Message
+from random_utils import random_choice_from_dict
 
 
 class RenderOrder(Enum):
     STAIRS = auto()
     CORPSE = auto()
     ITEM = auto()
+    PLANT = auto()
     ACTOR = auto()
 
 
@@ -95,6 +97,11 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
 
     # Draw all entities in the list
     for entity in entities_in_render_order:
+        if entity.name == 'Moire Beast':
+            moire_colour = [libtcod.light_grey, libtcod.lighter_grey, libtcod.lightest_gray, libtcod.grey,
+                            libtcod.dark_grey,
+                            libtcod.darkest_gray]
+            entity.colour = choice(moire_colour)
         draw_entity(con, entity, fov_map, game_map)
 
     libtcod.console_set_default_foreground(con, libtcod.white)
@@ -170,7 +177,8 @@ def entity_in_fov(game_map, entities, fov_map):
 def entities_in_fov(entities, fov_map, message_log):
     seen_monsters = []
     for entity in entities:
-        if entity.ai and entity.name != 'Player':
+        if entity.ai and entity.name != 'Player' \
+                and not entity.fighter.damage_dice == 0:    # Harmless enemies do not interrupt autoexplore
             if libtcod.map_is_in_fov(fov_map, entity.x, entity.y):
                 seen_monsters.append(entity.name)
                 message_log.add_message(Message('You spot a {0} and stop exploring.'

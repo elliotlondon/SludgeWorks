@@ -11,5 +11,6 @@ class GameStates(Enum):
     TARGETING = auto()
     LEVEL_UP = auto()
     CHARACTER_SCREEN = auto()
+    ABILITY_SCREEN = auto()
     ESC_MENU = auto()
     HELP_MENU = auto()

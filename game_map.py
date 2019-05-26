@@ -312,7 +312,7 @@ class GameMap:
 
         if num_rooms > 0:
             stairs_component = Stairs(self.dungeon_level + 1)
-            down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', libtcod.white, 'Stairs',
+            down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', libtcod.white, 'Down Stairs',
                                  'There\'s a dark chasm here which will allow you to take a one-way trip to'
                                  'the next chamber of the SludgeWorks.',
                                  render_order=RenderOrder.STAIRS, stairs=stairs_component)
@@ -432,6 +432,64 @@ class GameMap:
                 else:
                     player.x = x
                     player.y = y
+
+        return True
+
+    # TODO: Work out why this doesn't work?????
+    def to_down_stairs(self, player, entities, message_log):
+        # Create an A* path to navigate the player to the down stairs (if visible)
+        stairs_coords = []
+        for entity in entities:
+            if entity.name == 'Down Stairs':
+                if self.tiles[entity.x][entity.y].explored:
+                    stairs_coords.append((entity.y, entity.x))
+
+                    # Find the nearest unexplored coords
+                    starting_distance = 100000
+                    closest_coord = None
+
+                    for y, x in stairs_coords:
+                        new_distance = math.hypot(x - player.x, y - player.y)
+
+                        if new_distance < starting_distance:
+                            starting_distance = new_distance
+                            closest_coord = (x, y)
+
+                    path_to_stairs = []
+
+                    if closest_coord:
+                        my_map = libtcod.map_new(self.width, self.height)
+
+                        for y in range(self.height):
+                            for x in range(self.width):
+                                if self.tiles[x][y].blocked:
+                                    libtcod.map_set_properties(my_map, x, y, True, True)
+
+                        dij_pather = libtcod.dijkstra_new(my_map)
+                        libtcod.dijkstra_compute(dij_pather, player.x, player.y)
+                        libtcod.dijkstra_path_set(dij_pather, closest_coord[0], closest_coord[1])
+
+                        if not libtcod.dijkstra_is_empty(dij_pather):
+                            x, y = libtcod.dijkstra_path_walk(dij_pather)
+                            path_to_stairs.append((x, y))
+
+                            # Move player along the path
+                            if not path_to_stairs:
+                                message_log.add_message(
+                                    Message('You cannot safely reach the next set of down stairs from here.',
+                                            libtcod.yellow))
+                                return False
+                            else:
+                                player.x = x
+                                player.y = y
+                                return True
+                        else:
+                            message_log.add_message(Message('Path to stairs does not exist.', libtcod.yellow))
+                            return False
+                else:
+                    message_log.add_message(Message('You have not yet discovered the path to the next floor.',
+                                                    libtcod.yellow))
+                    return False
 
         return True
 

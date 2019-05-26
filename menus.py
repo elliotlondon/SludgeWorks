@@ -110,6 +110,18 @@ def character_screen(con, player, menu_width, menu_height, screen_width, screen_
     libtcod.console_blit(window, 0, 0, menu_width, menu_height, con, x, y, 1, 1)
 
 
+def ability_screen(con, player, menu_width, menu_height, screen_width, screen_height):
+    window = libtcod.console_new(menu_width, menu_height)
+    libtcod.console_set_default_foreground(window, libtcod.white)
+
+    libtcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Placeholder until abilities are implemented!')
+
+    x = screen_width // 2 - menu_width // 2
+    y = screen_height // 2 - menu_height // 2
+    libtcod.console_blit(window, 0, 0, menu_width, menu_height, con, x, y, 1, 1)
+
+
 def esc_menu(con, menu_width, menu_height, screen_width, screen_height, turn_number):
     window = libtcod.console_new(menu_width, menu_height)
     libtcod.console_set_default_foreground(window, libtcod.white)
@@ -143,25 +155,27 @@ def help_menu(con, menu_width, menu_height, screen_width, screen_height):
                                   libtcod.LEFT, 'Move around using either the arrow keys,')
     libtcod.console_print_rect_ex(window, 0, 4, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, 'or y u i, h j k l, b n m.')
-    libtcod.console_print_rect_ex(window, 0, 5, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Commands:')
     libtcod.console_print_rect_ex(window, 0, 6, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'g: Get')
+                                  libtcod.LEFT, 'Commands:')
     libtcod.console_print_rect_ex(window, 0, 7, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'i: Inventory')
+                                  libtcod.LEFT, 'g: Get')
     libtcod.console_print_rect_ex(window, 0, 8, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'd: Drop')
+                                  libtcod.LEFT, 'i: Inventory')
     libtcod.console_print_rect_ex(window, 0, 9, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'c: Character Info')
+                                  libtcod.LEFT, 'd: Drop')
     libtcod.console_print_rect_ex(window, 0, 10, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'c: Character Info')
+    libtcod.console_print_rect_ex(window, 0, 11, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, '>: Use Stairs')
-    libtcod.console_print_rect_ex(window, 0, 11, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, '.: Wait 1 turn')
-    libtcod.console_print_rect_ex(window, 0, 11, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, ';: Rest until healed')
     libtcod.console_print_rect_ex(window, 0, 12, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Press F11 at any time to toggle fullscreen mode.')
+                                  libtcod.LEFT, '.: Wait 1 turn')
     libtcod.console_print_rect_ex(window, 0, 13, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, ';: Rest until healed')
+    libtcod.console_print_rect_ex(window, 0, 14, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, '#: Autoexplore the map (interrupted by enemies)')
+    libtcod.console_print_rect_ex(window, 0, 16, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Press F11 at any time to toggle fullscreen mode.')
+    libtcod.console_print_rect_ex(window, 0, 17, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, 'Press Escape to leave this menu.')
 
     x = screen_width // 2 - menu_width // 2

@@ -95,6 +95,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
     targeting_item = None
     exploring = False
+    to_down_stairs = False
 
     while True:
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
@@ -125,6 +126,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
         take_stairs = action.get('take_stairs')
         level_up = action.get('level_up')
         show_character_screen = action.get('show_character_screen')
+        show_ability_screen = action.get('show_ability_screen')
         esc_menu = action.get('esc_menu')
         help = action.get('help')
         exit = action.get('exit')
@@ -238,7 +240,22 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                                                     .format(game_map.dungeon_level), libtcod.yellow))
                     break
             else:
-                message_log.add_message(Message('There are no stairs here.', libtcod.yellow))
+                if entities_in_fov(entities, fov_map, message_log):
+                    game_state = GameStates.PLAYERS_TURN
+                elif GameMap.to_down_stairs(game_map, player, entities, message_log) is True:
+                    game_state = GameStates.ENEMY_TURN
+                    to_down_stairs = True
+
+        # Currently not working
+        if to_down_stairs and game_state == GameStates.PLAYERS_TURN:
+            if entities_in_fov(entities, fov_map, message_log):
+                game_state = GameStates.PLAYERS_TURN
+                to_down_stairs = False
+            elif GameMap.to_down_stairs(game_map, player, entities, message_log) is True:
+                game_state = GameStates.ENEMY_TURN
+                to_down_stairs = True
+            else:
+                to_down_stairs = False
 
         if level_up:
             if level_up == 'hp':
@@ -254,6 +271,10 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
         if show_character_screen:
             previous_game_state = game_state
             game_state = GameStates.CHARACTER_SCREEN
+
+        if show_ability_screen:
+            previous_game_state = game_state
+            game_state = GameStates.ABILITY_SCREEN
 
         if game_state == GameStates.TARGETING:
             if left_click:

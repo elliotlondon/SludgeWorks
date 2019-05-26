@@ -141,11 +141,14 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
     elif game_state == GameStates.CHARACTER_SCREEN:
         character_screen(con, player, 30, 10, screen_width, screen_height)
 
+    elif game_state == GameStates.ABILITY_SCREEN:
+        ability_screen(con, player, 30, 10, screen_width, screen_height)
+
     elif game_state == GameStates.ESC_MENU:
         esc_menu(con, 40, 10, screen_width, screen_height, turn_number)
 
     elif game_state == GameStates.HELP_MENU:
-        help_menu(con, 50, 10, screen_width, screen_height)
+        help_menu(con, screen_width, screen_height, screen_width, screen_height)
 
 
 def clear_all(con, entities):
@@ -166,7 +169,8 @@ def clear_entity(con, entity):
 
 def entity_in_fov(entities, fov_map):
     for entity in entities:
-        if entity.ai and entity.name != 'Player':
+        if entity.ai and entity.name != 'Player' \
+                and not entity.fighter.damage_dice == 0:
             if libtcod.map_is_in_fov(fov_map, entity.x, entity.y):
                 return True
     return False

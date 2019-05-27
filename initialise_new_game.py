@@ -61,9 +61,10 @@ def get_constants():
 
 
 def get_game_variables(constants):
-    fighter_component = Fighter(current_hp=100, max_hp=100,
+    fighter_component = Fighter(current_hp=20, max_hp=20,
                                 damage_dice=1, damage_sides=2,
-                                strength=1, agility=1, vitality=1, intellect=1, perception=1)
+                                strength=12, dexterity=12, vitality=10, intellect=10, perception=10,
+                                level=1)
     inventory_component = Inventory(26)
     level_component = Level()
     slot = ()
@@ -75,7 +76,7 @@ def get_game_variables(constants):
 
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
                                       damage_dice=1, damage_sides=2,
-                                      strength_bonus=1, agility_bonus=1)
+                                      strength_bonus=1, dexterity_bonus=1)
     dagger = Entity(0, 0, '-', libtcod.light_grey,
                     'Iron Dagger', 'A short blade ideal for swift stabbing attacks. ' + '+2 STR, [1d4]',
                     equippable=equippable_component, faction='Purists')

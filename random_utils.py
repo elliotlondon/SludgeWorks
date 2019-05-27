@@ -1,4 +1,5 @@
 from random import randint
+from math import floor
 
 
 def from_dungeon_level(table, dungeon_level):
@@ -28,3 +29,17 @@ def random_choice_from_dict(choice_dict):
 
     return choices[random_choice_index(chances)]
 
+
+def roll_dice(num, dice):  # rolls dice, returns the sum of all rolls
+    roll = 0
+    for x in range(0, num):
+        n = randint(1, dice)
+        roll = roll + n
+
+    return roll
+
+
+def dnd_bonus_calc(value):
+    bonus = floor((value - 10)/2)
+
+    return bonus

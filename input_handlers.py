@@ -173,8 +173,6 @@ def handle_level_up_menu(key):
             return {'level_up': 'str'}
         elif key_char == 'b':
             return {'level_up': 'agi'}
-        elif key_char == 'c':
-            return {'level_up': 'hp'}
 
     if key.vk == libtcod.KEY_F11:
         return {'fullscreen': True}

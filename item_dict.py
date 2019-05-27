@@ -21,7 +21,7 @@ def iron_longsword(x, y):
 def steel_dagger(x, y):
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
                                       damage_dice=1, damage_sides=4,
-                                      strength_bonus=2, agility_bonus=1)
+                                      strength_bonus=2, dexterity_bonus=1)
     return Entity(x, y, '-', libtcod.lighter_grey, 'Steel Dagger',
                   'A wicked, slightly curved steel dagger with an ivory hilt embezzled with eastern filigree. Although'
                   'not as dangerous as a longsword, you feel more able to avoid attacks when wielding this weapon.',
@@ -42,7 +42,7 @@ def steel_mace(x, y):
 def influenced_hatchet(x, y):
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
                                       damage_dice=3, damage_sides=3,
-                                      strength_bonus=3, agility_bonus=2)
+                                      strength_bonus=3, dexterity_bonus=2)
     return Entity(x, y, '¬', libtcod.light_lime, 'Influenced Hatchet',
                   'Undeniably tainted by the SludgeWorks, what used to be a woodsman\'s tool for chopping wood (or,'
                   'perhaps, the local writhing vegetation) has began to turn into a part of the scenery in its own'
@@ -53,14 +53,14 @@ def influenced_hatchet(x, y):
 
 
 def iron_buckler(x, y):
-    equippable_component = Equippable(EquipmentSlots.OFF_HAND, agility_bonus=1)
+    equippable_component = Equippable(EquipmentSlots.OFF_HAND, dexterity_bonus=1)
     return Entity(x, y, ']', libtcod.light_grey, 'Iron Buckler',
                   'A small buckler that can be attached to the arm and used to deflect attacks.',
                   equippable=equippable_component)
 
 
 def steel_greatshield(x, y):
-    equippable_component = Equippable(EquipmentSlots.OFF_HAND, agility_bonus=3)
+    equippable_component = Equippable(EquipmentSlots.OFF_HAND, dexterity_bonus=3)
     return Entity(x, y, ')', libtcod.lighter_grey, 'Steel Heraldic Greatshield',
                   'A steel greatshield once emblazoned with the heraldry of an ancient house. Although the image is'
                   'mostly concealed by time, you are still able to make out what appears to be a crowned, upright'
@@ -70,14 +70,14 @@ def steel_greatshield(x, y):
 
 # Armour
 def iron_helmet(x, y):
-    equippable_component = Equippable(EquipmentSlots.HEAD, agility_bonus=1)
+    equippable_component = Equippable(EquipmentSlots.HEAD, dexterity_bonus=1)
     return Entity(x, y, '^', libtcod.light_grey, 'Iron Helmet',
                   'An iron helmet designed to help minimise head wounds.',
                   equippable=equippable_component)
 
 
 def steel_bascinet(x, y):
-    equippable_component = Equippable(EquipmentSlots.HEAD, agility_bonus=2)
+    equippable_component = Equippable(EquipmentSlots.HEAD, dexterity_bonus=2)
     return Entity(x, y, '^', libtcod.lighter_grey, 'Steel Bascinet',
                   'A crescent-moon shaped slot is cut into the front of this helmet made of interlocking plate. The '
                   'front of the faceguard protrudes confidently in the assurance that all but the most mortal of wounds'
@@ -86,7 +86,7 @@ def steel_bascinet(x, y):
 
 
 def steel_cuirass(x, y):
-    equippable_component = Equippable(EquipmentSlots.TORSO, agility_bonus=3)
+    equippable_component = Equippable(EquipmentSlots.TORSO, dexterity_bonus=3)
     return Entity(x, y, ']', libtcod.white, 'Steel Cuirass',
                   'A medieval steel chestplate, frayed with rust and various unusual discolourations. Despite the'
                   'moderate lack of structural integrity, this will still provide ample protection against most'

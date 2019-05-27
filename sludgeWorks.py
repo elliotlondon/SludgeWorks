@@ -1,5 +1,5 @@
 import custrender
-from random import randint, choice
+from random import choice
 from death_functions import kill_monster, kill_player
 from entity import get_blocking_entities_at_location
 from fov_functions import *
@@ -11,6 +11,7 @@ from initialise_new_game import get_constants, get_game_variables
 from data_loaders import load_game, save_game
 from menus import main_menu, message_box
 from render_functions import clear_all, render_all, entity_in_fov, entities_in_fov
+from random_utils import roll_dice
 
 
 def main():
@@ -95,6 +96,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
     targeting_item = None
     exploring = False
+    resting = False
     to_down_stairs = False
 
     while True:
@@ -133,14 +135,13 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
         quit = action.get('quit')
         fullscreen = action.get('fullscreen')
         auto_explore = action.get('auto_explore')
-
         left_click = mouse_action.get('left_click')
         right_click = mouse_action.get('right_click')
 
         player_turn_results = []
 
         # For all actions that do not return to the main menu, recompute fov (prevents off-screen window drawing errors)
-        if action != quit and action != fullscreen:
+        if action != quit and action != fullscreen and not resting:
             fov_recompute = True
             root_console.clear(fg=(255, 255, 255))
 
@@ -149,10 +150,14 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 exploring = False
                 previous_game_state = game_state
                 message_log.add_message(Message('Autoexploration cancelled.', libtcod.yellow))
+            if resting:
+                resting = False
+                previous_game_state = game_state
+                message_log.add_message(Message('You stop resting.', libtcod.yellow))
+
             dx, dy = move
             destination_x = player.x + dx
             destination_y = player.y + dy
-
             if not game_map.is_blocked(destination_x, destination_y):
                 target = get_blocking_entities_at_location(entities, destination_x, destination_y)
                 if target:
@@ -189,17 +194,26 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 message_log.add_message(Message('You are already at full health.', libtcod.yellow))
             elif entity_in_fov(entities, fov_map):
                 message_log.add_message(Message('You cannot rest when enemies are nearby.', libtcod.yellow))
-            else:
+            elif player.fighter.current_hp < player.fighter.base_max_hp:
+                game_state = GameStates.ENEMY_TURN
+                resting = True
                 start_turn = turn_number
-                while player.fighter.current_hp < player.fighter.base_max_hp:
-                    if turn_number % 4 == 0:
-                        player.fighter.current_hp += 1
-                        turn_number += 1
-                    else:
-                        turn_number += 1
-                turns_passed = turn_number - start_turn
+            else:
+                resting = False
+
+        if resting and game_state == GameStates.PLAYERS_TURN:
+            if player.fighter.current_hp == player.fighter.base_max_hp:
+                resting = False
                 message_log.add_message(Message('You rest for {0} turns, returning to max HP.'.format(turns_passed),
                                                 libtcod.yellow))
+            elif entities_in_fov(entities, fov_map, message_log):
+                message_log.add_message(Message('You rested for a total of {0} turns.'.format(turns_passed),
+                                                libtcod.yellow))
+                resting = False
+                fov_recompute = True
+            else:
+                turns_passed = turn_number - start_turn
+                game_state = GameStates.ENEMY_TURN
 
         elif pickup and game_state == GameStates.PLAYERS_TURN:
             for entity in entities:
@@ -258,14 +272,13 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 to_down_stairs = False
 
         if level_up:
-            if level_up == 'hp':
-                hit_dice_roll = randint(0, round(player.fighter.base_vitality/4))
-                player.fighter.base_max_hp += 10 + hit_dice_roll
-                player.fighter.current_hp += 10 + hit_dice_roll
-            elif level_up == 'str':
+            hit_dice = roll_dice(1, 8)
+            player.fighter.level += 1
+            player.fighter.base_max_hp += roll_dice(player.fighter.level, hit_dice + player.fighter.vitality_modifier)
+            if level_up == 'str':
                 player.fighter.base_strength += 1
             elif level_up == 'agi':
-                player.fighter.base_agility += 1
+                player.fighter.base_dexterity += 1
             game_state = previous_game_state
 
         if show_character_screen:
@@ -290,6 +303,10 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 exploring = False
                 previous_game_state = game_state
                 message_log.add_message(Message('Autoexploration cancelled.', libtcod.yellow))
+            elif resting:
+                resting = False
+                previous_game_state = game_state
+                message_log.add_message(Message('You stop resting.', libtcod.yellow))
             else:
                 previous_game_state = game_state
                 game_state = GameStates.ESC_MENU
@@ -379,15 +396,16 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
         if game_state == GameStates.ENEMY_TURN:
             for entity in entities:
-                if entity.name == 'Phosphorescent Dahlia':
+                if entity.name == 'Phosphorescent Dahlia' and entity_in_fov(entities, fov_map):
                     # Cycle through colours for the phosphorescent dahlia
                     dahlia_colour = [libtcod.light_azure, libtcod.azure, libtcod.dark_azure]
                     entity.colour = choice(dahlia_colour)
                 if entity.ai:
-                    # Heal-over time effect for enemies
-                    if turn_number % 4 == 0:
-                        if entity.fighter.current_hp < entity.fighter.base_max_hp:
-                            entity.fighter.current_hp += 1
+                    if entity.regenerates:
+                        # Heal-over time effect for enemies that regenerate
+                        if turn_number % 4 == 0:
+                            if entity.fighter.current_hp < entity.fighter.base_max_hp:
+                                entity.fighter.current_hp += 1
                     enemy_turn_results = entity.ai.take_turn(player, fov_map, game_map, entities)
 
                     for enemy_turn_result in enemy_turn_results:
@@ -407,9 +425,9 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
                             if game_state == GameStates.PLAYER_DEAD:
                                 break
-
                     if game_state == GameStates.PLAYER_DEAD:
                         break
+
             else:
                 # Heal-over time effect for the player
                 if turn_number % 4 == 0:

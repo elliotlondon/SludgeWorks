@@ -8,7 +8,8 @@ from item import Item
 class Entity:
     def __init__(self, x, y, char, colour, name, description, blocks=False, render_order=RenderOrder.CORPSE,
                  fighter=None, ai=None, item=None, inventory=None, stairs=None, level=None, equipment=None,
-                 equippable=None, damage_dice=None, damage_sides=None, faction=None, erraticity=None):
+                 equippable=None, damage_dice=None, damage_sides=None, regenerates=False, faction=None,
+                 erraticity=None):
         self.x = x
         self.y = y
         self.char = char
@@ -28,6 +29,7 @@ class Entity:
         self.equippable = equippable
         self.damage_dice = damage_dice
         self.damage_sides = damage_sides
+        self.regenerates = regenerates
         self.faction = faction
         self.erraticity = erraticity
 
@@ -127,12 +129,12 @@ class Entity:
         libtcod.path_delete(my_path)
 
     def distance(self, x, y):
-        return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
+        return math.hypot((x - self.x), (y - self.y))
 
     def distance_to(self, other):
         dx = other.x - self.x
         dy = other.y - self.y
-        return math.sqrt(dx ** 2 + dy ** 2)
+        return math.hypot(dx, dy)
 
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):

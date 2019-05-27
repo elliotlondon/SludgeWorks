@@ -58,27 +58,27 @@ class Equipment:
         return bonus
 
     @property
-    def agility_bonus(self):
+    def dexterity_bonus(self):
         bonus = 0
 
         if self.main_hand and self.main_hand.equippable:
-            bonus += self.main_hand.equippable.agility_bonus
+            bonus += self.main_hand.equippable.dexterity_bonus
         if self.off_hand and self.off_hand.equippable:
-            bonus += self.off_hand.equippable.agility_bonus
+            bonus += self.off_hand.equippable.dexterity_bonus
         if self.head and self.head.equippable:
-            bonus += self.head.equippable.agility_bonus
+            bonus += self.head.equippable.dexterity_bonus
         if self.torso and self.torso.equippable:
-            bonus += self.torso.equippable.agility_bonus
+            bonus += self.torso.equippable.dexterity_bonus
         if self.hands and self.hands.equippable:
-            bonus += self.main_hand.equippable.agility_bonus
+            bonus += self.main_hand.equippable.dexterity_bonus
         if self.legs and self.legs.equippable:
-            bonus += self.legs.equippable.agility_bonus
+            bonus += self.legs.equippable.dexterity_bonus
         if self.feet and self.feet.equippable:
-            bonus += self.feet.equippable.agility_bonus
+            bonus += self.feet.equippable.dexterity_bonus
         if self.left_hand and self.left_hand.equippable:
-            bonus += self.left_hand.equippable.agility_bonus
+            bonus += self.left_hand.equippable.dexterity_bonus
         if self.right_hand and self.right_hand.equippable:
-            bonus += self.right_hand.equippable.agility_bonus
+            bonus += self.right_hand.equippable.dexterity_bonus
 
         return bonus
 
@@ -257,12 +257,12 @@ class Equipment:
 
 class Equippable:
     def __init__(self, slot, damage_dice=0, damage_sides=0,
-                 strength_bonus=0, agility_bonus=0, vitality_bonus=0, intellect_bonus=0, perception_bonus=0):
+                 strength_bonus=0, dexterity_bonus=0, vitality_bonus=0, intellect_bonus=0, perception_bonus=0):
         self.slot = slot
         self.damage_dice = damage_dice
         self.damage_sides = damage_sides
         self.strength_bonus = strength_bonus
-        self.agility_bonus = agility_bonus
+        self.dexterity_bonus = dexterity_bonus
         self.vitality_bonus = vitality_bonus
         self.intellect_bonus = intellect_bonus
         self.perception_bonus = perception_bonus

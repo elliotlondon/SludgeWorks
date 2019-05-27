@@ -79,8 +79,7 @@ def level_up_menu(con, header, player, menu_width, screen_width, screen_height):
     libtcod.console_set_default_background(window, libtcod.black)
 
     options = ['Strength (+1 attack, from {0})'.format(player.fighter.base_strength),
-               'Agility (+1 defense, from {0})'.format(player.fighter.base_agility),
-               'Vitality (+10 HP, from {0})'.format(player.fighter.max_hp)]
+               'Dexterity (+1 defense, from {0})'.format(player.fighter.base_dexterity)]
 
     menu(con, header, options, menu_width, screen_width, screen_height)
 
@@ -101,9 +100,11 @@ def character_screen(con, player, menu_width, menu_height, screen_width, screen_
     libtcod.console_print_rect_ex(window, 0, 6, menu_width, menu_height, libtcod.BKGND_NONE,
                                   libtcod.LEFT, 'Maximum HP: {0}'.format(player.fighter.max_hp))
     libtcod.console_print_rect_ex(window, 0, 7, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Attack: {0}'.format(player.fighter.total_strength))
+                                  libtcod.LEFT, 'Strength: {0} [+{1}]'.format(player.fighter.base_strength,
+                                                                              player.fighter.strength_modifier))
     libtcod.console_print_rect_ex(window, 0, 8, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Defence: {0}'.format(player.fighter.total_agility))
+                                  libtcod.LEFT, 'Defence: {0} [+{1}]'.format(player.fighter.base_dexterity,
+                                                                             player.fighter.dexterity_modifier))
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height // 2

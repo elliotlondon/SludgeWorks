@@ -180,10 +180,10 @@ def entities_in_fov(entities, fov_map, message_log):
     seen_monsters = []
     for entity in entities:
         if entity.ai and entity.name != 'Player' \
-                and not entity.fighter.damage_dice == 0:    # Harmless enemies do not interrupt autoexplore
+                and not entity.fighter.damage_dice == 0:    # Harmless enemies do not interrupt continuous actions
             if libtcod.map_is_in_fov(fov_map, entity.x, entity.y):
                 seen_monsters.append(entity.name)
-                message_log.add_message(Message('You spot a {0} and stop exploring.'
+                message_log.add_message(Message('You spot a {0} and stop your current action.'
                                                 .format(seen_monsters[0]), libtcod.yellow))
                 return True
     return False

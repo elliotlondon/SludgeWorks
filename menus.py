@@ -78,8 +78,8 @@ def level_up_menu(con, header, player, menu_width, screen_width, screen_height):
     libtcod.console_set_default_foreground(window, libtcod.white)
     libtcod.console_set_default_background(window, libtcod.black)
 
-    options = ['Strength (+1 attack, from {0})'.format(player.fighter.base_strength),
-               'Dexterity (+1 defense, from {0})'.format(player.fighter.base_dexterity)]
+    options = ['Strength (+1 attack, currently {0})'.format(player.fighter.base_strength),
+               'Dexterity (+1 defense, currently {0})'.format(player.fighter.base_dexterity)]
 
     menu(con, header, options, menu_width, screen_width, screen_height)
 
@@ -98,13 +98,22 @@ def character_screen(con, player, menu_width, menu_height, screen_width, screen_
                                   libtcod.LEFT, 'Experience to Level: {0}'
                                   .format(player.level.experience_to_next_level))
     libtcod.console_print_rect_ex(window, 0, 6, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Maximum HP: {0}'.format(player.fighter.max_hp))
+                                  libtcod.LEFT, 'Strength: \t{0} [+{1}]'.format(player.fighter.base_strength,
+                                                                                player.fighter.strength_modifier))
     libtcod.console_print_rect_ex(window, 0, 7, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Strength: {0} [+{1}]'.format(player.fighter.base_strength,
-                                                                              player.fighter.strength_modifier))
+                                  libtcod.LEFT, 'Dexterity: \t{0} [+{1}]'.format(player.fighter.base_dexterity,
+                                                                                 player.fighter.dexterity_modifier))
     libtcod.console_print_rect_ex(window, 0, 8, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Defence: {0} [+{1}]'.format(player.fighter.base_dexterity,
-                                                                             player.fighter.dexterity_modifier))
+                                  libtcod.LEFT, 'Vitality: \t{0} [+{1}]'.format(player.fighter.base_vitality,
+                                                                                player.fighter.vitality_modifier))
+    libtcod.console_print_rect_ex(window, 0, 9, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Intellect: \t{0} [+{1}]'.format(player.fighter.base_intellect,
+                                                                                 player.fighter.intellect_modifier))
+    libtcod.console_print_rect_ex(window, 0, 10, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Perception: \t{0} [+{1}]'.format(player.fighter.base_perception,
+                                                                                  player.fighter.perception_modifier))
+    libtcod.console_print_rect_ex(window, 0, 12, menu_width, menu_height, libtcod.BKGND_NONE,
+                                  libtcod.LEFT, 'Armour Rating: \t{0}'.format(player.fighter.armour_total))
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height // 2

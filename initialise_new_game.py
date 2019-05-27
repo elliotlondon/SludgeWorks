@@ -63,8 +63,8 @@ def get_constants():
 def get_game_variables(constants):
     fighter_component = Fighter(current_hp=20, max_hp=20,
                                 damage_dice=1, damage_sides=2,
-                                strength=12, dexterity=12, vitality=10, intellect=10, perception=10,
-                                level=1)
+                                strength=12, dexterity=12, vitality=12, intellect=12, perception=12,
+                                level=1, armour=0, dodges=True)
     inventory_component = Inventory(26)
     level_component = Level()
     slot = ()
@@ -75,10 +75,9 @@ def get_game_variables(constants):
     entities = [player]
 
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
-                                      damage_dice=1, damage_sides=2,
-                                      strength_bonus=1, dexterity_bonus=1)
+                                      damage_dice=1, damage_sides=3)
     dagger = Entity(0, 0, '-', libtcod.light_grey,
-                    'Iron Dagger', 'A short blade ideal for swift stabbing attacks. ' + '+2 STR, [1d4]',
+                    'Iron Dagger', 'A short blade ideal for swift stabbing attacks.',
                     equippable=equippable_component, faction='Purists')
     player.inventory.add_item(dagger)
     player.equipment.toggle_equip(dagger)

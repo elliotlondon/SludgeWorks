@@ -136,10 +136,10 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
         inventory_menu(con, inventory_title, player, 50, screen_width, screen_height)
 
     elif game_state == GameStates.LEVEL_UP:
-        level_up_menu(con, 'Choose a stat to increase:', player, 40, screen_width, screen_height)
+        level_up_menu(con, 'Choose a stat to increase:', player, 50, screen_width, screen_height)
 
     elif game_state == GameStates.CHARACTER_SCREEN:
-        character_screen(con, player, 30, 10, screen_width, screen_height)
+        character_screen(con, player, 30, 15, screen_width, screen_height)
 
     elif game_state == GameStates.ABILITY_SCREEN:
         ability_screen(con, player, 30, 10, screen_width, screen_height)

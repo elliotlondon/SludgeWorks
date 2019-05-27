@@ -157,6 +157,31 @@ class Equipment:
 
         return bonus
 
+    @property
+    def armour_bonus(self):
+        bonus = 0
+
+        if self.main_hand and self.main_hand.equippable:
+            bonus += self.main_hand.equippable.armour_bonus
+        if self.off_hand and self.off_hand.equippable:
+            bonus += self.off_hand.equippable.armour_bonus
+        if self.head and self.head.equippable:
+            bonus += self.head.equippable.armour_bonus
+        if self.torso and self.torso.equippable:
+            bonus += self.torso.equippable.armour_bonus
+        if self.hands and self.hands.equippable:
+            bonus += self.main_hand.equippable.armour_bonus
+        if self.legs and self.legs.equippable:
+            bonus += self.legs.equippable.armour_bonus
+        if self.feet and self.feet.equippable:
+            bonus += self.feet.equippable.armour_bonus
+        if self.left_hand and self.left_hand.equippable:
+            bonus += self.left_hand.equippable.armour_bonus
+        if self.right_hand and self.right_hand.equippable:
+            bonus += self.right_hand.equippable.armour_bonus
+
+        return bonus
+
     def toggle_equip(self, equippable_entity):
         results = []
 
@@ -257,7 +282,8 @@ class Equipment:
 
 class Equippable:
     def __init__(self, slot, damage_dice=0, damage_sides=0,
-                 strength_bonus=0, dexterity_bonus=0, vitality_bonus=0, intellect_bonus=0, perception_bonus=0):
+                 strength_bonus=0, dexterity_bonus=0, vitality_bonus=0, intellect_bonus=0, perception_bonus=0,
+                 armour_bonus=0):
         self.slot = slot
         self.damage_dice = damage_dice
         self.damage_sides = damage_sides
@@ -266,3 +292,4 @@ class Equippable:
         self.vitality_bonus = vitality_bonus
         self.intellect_bonus = intellect_bonus
         self.perception_bonus = perception_bonus
+        self.armour_bonus = armour_bonus

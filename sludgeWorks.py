@@ -274,7 +274,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
         if level_up:
             hit_dice = roll_dice(1, 8)
             player.fighter.level += 1
-            player.fighter.base_max_hp += roll_dice(player.fighter.level, hit_dice + player.fighter.vitality_modifier)
+            player.fighter.base_max_hp += roll_dice(1, hit_dice + player.fighter.vitality_modifier)
             if level_up == 'str':
                 player.fighter.base_strength += 1
             elif level_up == 'agi':

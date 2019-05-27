@@ -5,7 +5,7 @@ from game_messages import Message
 
 class Fighter:
     def __init__(self, current_hp, max_hp, damage_dice, damage_sides, strength, dexterity, vitality, intellect,
-                 perception, xp=0, level=1):
+                 perception, armour, xp=0, level=1, dodges=False):
         self.base_max_hp = max_hp
         self.current_hp = current_hp
         self.damage_dice = damage_dice
@@ -15,8 +15,10 @@ class Fighter:
         self.base_vitality = vitality
         self.base_intellect = intellect
         self.base_perception = perception
+        self.base_armour = armour
         self.xp = xp
         self.level = level
+        self.dodges = dodges
 
     @property
     def max_hp(self):
@@ -77,11 +79,19 @@ class Fighter:
     def perception_modifier(self):
         bonus = 0
         if self.owner and self.owner.equipment:
-            bonus = self.owner.equipment.perception_bonus
+            bonus += self.owner.equipment.perception_bonus
 
         perception_bonus = dnd_bonus_calc(self.base_perception)
 
         return perception_bonus + bonus
+
+    @property
+    def armour_total(self):
+        bonus = 0
+        if self.owner and self.owner.equipment:
+            bonus += self.owner.equipment.armour_bonus
+
+        return self.base_armour + bonus
 
     def take_damage(self, amount):
         results = []
@@ -101,24 +111,36 @@ class Fighter:
         results = []
 
         # Roll to see if hit
-        attack_roll = roll_dice(1, 20) + self.strength_modifier
-        defence_roll = roll_dice(1, 20) + target.fighter.dexterity_modifier
-        damage = self.damage
+        attack_roll = roll_dice(1, 20) + self.dexterity_modifier
+        if target.fighter.dodges:
+            dodge_roll = roll_dice(1, 20) + target.fighter.dexterity_modifier
+        else:
+            dodge_roll = 0
 
-        if attack_roll > defence_roll:
-            if damage > 0:
-                results.append({'message': Message('{0} attacks {1} for {2} hit points. ([{3} vs. {4}])'.format(
-                    self.owner.name.capitalize(), target.name, str(damage), attack_roll, defence_roll), libtcod.white)})
-                results.extend(target.fighter.take_damage(damage))
-                # Debug to see enemy HP
-                # if target.name == 'Risen Sacrifice':
-                #     results.append({'message': Message('{0} has hit {1} points left.'.format(
-                #         target.name.capitalize(), target.fighter.current_hp), libtcod.orange)})
+        if attack_roll > dodge_roll:    # Attack hits
+            # Calculate strength-weighted damage roll
+            damage_roll = self.damage + self.strength_modifier
+            if target.fighter.armour_total > 0:
+                defence_roll = roll_dice(1, target.fighter.armour_total)
             else:
-                results.append({'message': Message('{0} attacks {1} but does no damage. ([{2} vs. {3}])'.format(
-                    self.owner.name.capitalize(), target.name, attack_roll, defence_roll), libtcod.grey)})
+                defence_roll = 0
+
+            if (damage_roll - defence_roll) > 0:
+                damage = self.damage - defence_roll
+                if damage > 0:
+                    results.append({'message': Message('{0} attacks {1} for {2} hit points.'.
+                                    format(self.owner.name.capitalize(), target.name, str(damage)), libtcod.white)})
+                    results.extend(target.fighter.take_damage(damage))
+                    # Debug to see enemy HP
+                    # if target.name == 'Risen Sacrifice':
+                    #     results.append({'message': Message('{0} has hit {1} points left.'.format(
+                    #         target.name.capitalize(), target.fighter.current_hp), libtcod.orange)})
+                else:
+                    results.append({'message': Message('{0} attacks {1} but does no damage.'.
+                                                       format(self.owner.name.capitalize(), target.name),
+                                                       libtcod.grey)})
         else:
             results.append({'message': Message('{0} attacks {1} and misses. ([{2} vs. {3}])'.format(
-                self.owner.name.capitalize(), target.name, attack_roll, defence_roll), libtcod.grey)})
+                self.owner.name.capitalize(), target.name, attack_roll, dodge_roll), libtcod.grey)})
 
         return results

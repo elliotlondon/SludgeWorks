@@ -100,7 +100,7 @@ class GameMap:
             'Hunchback': from_dungeon_level([[10, 2], [30, 4], [50, 6], [40, 8]], self.dungeon_level),
             # Cultists
             'Risen Sacrifice': from_dungeon_level([[10, 1], [25, 3], [30, 6], [15, 7]], self.dungeon_level),
-            'Eternal Kidnapper': from_dungeon_level([[10, 2], [20, 4], [40, 6], [20, 8]], self.dungeon_level),
+            'Eternal Cult Kidnapper': from_dungeon_level([[10, 2], [20, 4], [40, 6], [20, 8]], self.dungeon_level),
             # Cleansing Hand
             'Cleansing Hand Crusader': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
             # Minibosses
@@ -160,7 +160,7 @@ class GameMap:
                     entities.append(hunchback(x, y))
                 elif monster_choice == 'Risen Sacrifice':
                     entities.append(risen_sacrifice(x, y))
-                elif monster_choice == 'Eternal Kidnapper':
+                elif monster_choice == 'Eternal Cult Kidnapper':
                     entities.append(eternal_kidnapper(x, y))
                 elif monster_choice == 'Cleansing Hand Crusader':
                     entities.append(cleansing_hand_crusader(x, y))

@@ -34,7 +34,7 @@ def main():
     main_menu_background_image = libtcod.image_load('sludge2.png')
 
     with libtcod.console_init_root(constants['screen_width'], constants['screen_height'],
-                                   constants['window_title'], True, libtcod.RENDERER_SDL2) as root_console:
+                                   constants['window_title'], True, libtcod.RENDERER_SDL2, vsync=True) as root_console:
         while True:
             libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
 
@@ -71,7 +71,7 @@ def main():
                     except FileNotFoundError:
                         show_load_error_message = True
                 elif exit_game:
-                    break
+                    raise SystemExit()
 
             else:
                 root_console.clear(fg=(255, 255, 255))

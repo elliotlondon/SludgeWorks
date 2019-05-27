@@ -17,6 +17,22 @@ class Aggressive:
         return results
 
 
+class AimlessWanderer:
+    def take_turn(self, target, fov_map, game_map, entities):
+        results = []
+
+        if libtcod.map_is_in_fov(fov_map, self.owner.x, self.owner.y):
+            if self.owner.distance_to(target) >= 2:
+                self.owner.move_astar(target, entities, game_map)
+            elif target.fighter.current_hp > 0:
+                attack_results = self.owner.fighter.attack(target)
+                results.extend(attack_results)
+        else:
+            self.owner.move_random(game_map)
+
+        return results
+
+
 class Stationary:
     # Monster which does not move, but attacks when enemies are in range
     def take_turn(self, target, fov_map, game_map, entities):

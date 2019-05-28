@@ -1,6 +1,7 @@
 import tcod as libtcod
 from random_utils import roll_dice, dnd_bonus_calc
 from game_messages import Message
+from math import floor
 
 
 class Fighter:
@@ -32,6 +33,15 @@ class Fighter:
             damage = roll_dice(self.owner.equipment.damage_dice, self.owner.equipment.damage_sides)
         else:
             damage = roll_dice(self.damage_dice, self.damage_sides)
+
+        return damage
+
+    @property
+    def crit_damage(self):
+        if self.owner and self.owner.equipment:
+            damage = roll_dice(2*self.owner.equipment.damage_dice, self.owner.equipment.damage_sides)
+        else:
+            damage = roll_dice(2*self.damage_dice, self.damage_sides)
 
         return damage
 
@@ -109,6 +119,9 @@ class Fighter:
 
     def attack(self, target):
         results = []
+        damage = None
+        crit = False
+        crit_chance = 0.05   # Critical hit chance in %
 
         # Roll to see if hit
         attack_roll = roll_dice(1, 20) + self.dexterity_modifier
@@ -125,20 +138,59 @@ class Fighter:
             else:
                 defence_roll = 0
 
+            # Check if entity penetrates target's armour
+            penetration_int = abs(damage_roll - defence_roll)
             if (damage_roll - defence_roll) > 0:
-                damage = self.damage - defence_roll
-                if damage > 0:
+
+                # Calculate modified (positive) crit chance
+                while penetration_int > 0:
+                    crit_chance += 0.01
+                    penetration_int -= 1
+
+                # Check if crit
+                if roll_dice(1, floor(1/crit_chance)) == floor(1/crit_chance):
+                    crit = True
+                    damage = self.crit_damage - defence_roll
+                else:
+                    damage = self.damage - defence_roll
+
+            # Crits can penetrate otherwise impervious armour!
+            elif (damage_roll - defence_roll) <= 0:
+
+                # Calculate modified (negative) crit chance
+                while penetration_int > 0 and crit_chance > 0:
+                    crit_chance -= 0.01
+                    penetration_int -= 1
+
+                # Check if crit
+                if crit_chance == 0:
+                    damage = 0
+                else:
+                    if roll_dice(1, floor(1 / crit_chance)) == floor(1 / crit_chance):
+                        crit = True
+                        damage = self.crit_damage - defence_roll
+                    else:
+                        damage = 0
+
+            # Check for damage and display chat messages
+            if damage > 0:
+                if crit:
+                    results.append({'message': Message('{0} attacks {1} for {2} hit points. *Critical Hit!*'.
+                                                       format(self.owner.name.capitalize(), target.name,
+                                                              str(damage)), libtcod.white)})
+                    results.extend(target.fighter.take_damage(damage))
+                else:
                     results.append({'message': Message('{0} attacks {1} for {2} hit points.'.
                                     format(self.owner.name.capitalize(), target.name, str(damage)), libtcod.white)})
                     results.extend(target.fighter.take_damage(damage))
-                    # Debug to see enemy HP
-                    # if target.name == 'Risen Sacrifice':
-                    #     results.append({'message': Message('{0} has hit {1} points left.'.format(
-                    #         target.name.capitalize(), target.fighter.current_hp), libtcod.orange)})
-                else:
-                    results.append({'message': Message('{0} attacks {1} but does no damage.'.
-                                                       format(self.owner.name.capitalize(), target.name),
-                                                       libtcod.grey)})
+                # Debug to see enemy HP
+                # if target.name == 'Risen Sacrifice':
+                #     results.append({'message': Message('{0} has hit {1} points left.'.format(
+                #         target.name.capitalize(), target.fighter.current_hp), libtcod.orange)})
+            else:
+                results.append({'message': Message('{0} attacks {1} but does no damage.'.
+                                                   format(self.owner.name.capitalize(), target.name),
+                                                   libtcod.grey)})
         else:
             results.append({'message': Message('{0} attacks {1} and misses. ([{2} vs. {3}])'.format(
                 self.owner.name.capitalize(), target.name, attack_roll, dodge_roll), libtcod.grey)})

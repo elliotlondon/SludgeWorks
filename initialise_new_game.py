@@ -78,9 +78,17 @@ def get_game_variables(constants):
                                       damage_dice=1, damage_sides=3)
     dagger = Entity(0, 0, '-', libtcod.light_grey,
                     'Iron Dagger', 'A short blade ideal for swift stabbing attacks.',
-                    equippable=equippable_component, faction='Purists')
+                    equippable=equippable_component)
+    equippable_component = Equippable(EquipmentSlots.TORSO,
+                                      armour_bonus=1)
+    leather_armour = Entity(0, 0, '-', libtcod.light_grey,
+                            'Leather Armour', 'Basic leather armour covering the torso, providing modest protection. '
+                                              'This was the best you could find...',
+                            equippable=equippable_component)
     player.inventory.add_item(dagger)
+    player.inventory.add_item(leather_armour)
     player.equipment.toggle_equip(dagger)
+    player.equipment.toggle_equip(leather_armour)
 
     game_map = GameMap(constants['map_width'], constants['map_height'])
     game_map.make_map(constants['map_width'], constants['map_height'], player, entities)

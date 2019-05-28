@@ -56,15 +56,15 @@ def sludge_fiend(x, y):
     ai_component = AimlessWanderer()
     return Entity(x, y, 'f', libtcod.red, 'Sludge Fiend',
                   'The irony of attempting to retain one\'s humanity whilst simultaneously seeking to consume '
-                  'all mutagenic material in one\'s path seems to be lost on this creature. Tattered clothing '
-                  'flows off this mutant\'s twisted form like a bullet-shredded cape, with obsidian spikes protruding '
-                  'in clusters from its gaunt, discoloured body.',
+                  'all mutagenic material in one\'s path seems to be lost on this poor unfortunate. Tattered clothing '
+                  'drips off this mutant\'s twisted form like a bullet-shredded cape; obsidian spikes protrude '
+                  'in clusters from its emaciated and discoloured torso.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
                   regenerates=True, faction='Scavengers', erraticity=50)
 
 
 def thresher(x, y):
-        fighter_component = Fighter(current_hp=26, max_hp=26, damage_dice=3, damage_sides=5, armour=3,
+        fighter_component = Fighter(current_hp=26, max_hp=26, damage_dice=2, damage_sides=6, armour=3,
                                     strength=20, dexterity=12, vitality=12, intellect=5, perception=8, xp=275,
                                     dodges=True)
         ai_component = AimlessWanderer()
@@ -78,7 +78,7 @@ def thresher(x, y):
 
 # BEASTS
 def moire_beast(x, y):
-    fighter_component = Fighter(current_hp=14, max_hp=14, damage_dice=3, damage_sides=2, armour=2,
+    fighter_component = Fighter(current_hp=14, max_hp=14, damage_dice=3, damage_sides=2, armour=1,
                                 strength=12, dexterity=16, vitality=12, intellect=10, perception=10, xp=200,
                                 dodges=True)
     ai_component = Aggressive()
@@ -89,6 +89,19 @@ def moire_beast(x, y):
                   'ubiquitous reference point on this beast\'s wildly fluctuating, migraine-inducing form.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
                   regenerates=True, faction='Beasts')
+
+
+def lupine_terror(x, y):
+    fighter_component = Fighter(current_hp=19, max_hp=19, damage_dice=5, damage_sides=2, armour=1,
+                                strength=16, dexterity=14, vitality=10, intellect=6, perception=14, xp=200,
+                                dodges=True)
+    ai_component = AimlessWanderer()
+    return Entity(x, y, 'L', libtcod.light_grey, 'Lupine Terror',
+                  'Evolutionary forces have twisted what must undeniably once have been a feral wolf into a horrific '
+                  'vision of fangs and matted, grey fur. This monstrosity walks upright in emulation of nature\'s most '
+                  'infamous apex predators as blood-tinged saliva hangs from it\'s constantly masticating jaws.',
+                  blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
+                  regenerates=True, faction='Beasts', erraticity=50)
 
 
 def bloodseeker(x, y):
@@ -120,6 +133,20 @@ def risen_sacrifice(x, y):
                   faction='Cultists', erraticity=34)
 
 
+def eternal_celebrant(x, y):
+    fighter_component = Fighter(current_hp=8, max_hp=8, damage_dice=2, damage_sides=2, armour=1,
+                                strength=8, dexterity=12, vitality=18, intellect=16, perception=10, xp=160,
+                                dodges=True)
+    ai_component = AimlessWanderer()
+    return Entity(x, y, 'c', libtcod.light_purple, 'Eternal Cult Celebrant',
+                  'The celebrant\'s dour, puckered form desperately hauls itself through the scratch-marked tunnels '
+                  'towards the blissful murmurs of his newly-risen flock. \"Sweet children, where are you?\" he cries '
+                  'out; a worn, sacrificial dagger trembles within his hand, piercing the suffocating darkness in '
+                  'search of replies.',
+                  blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
+                  faction='Cultists', erraticity=100)
+
+
 def eternal_kidnapper(x, y):
     fighter_component = Fighter(current_hp=10, max_hp=10, damage_dice=2, damage_sides=4, armour=2,
                                 strength=18, dexterity=10, vitality=12, intellect=10, perception=18, xp=200,
@@ -149,6 +176,21 @@ def cleansing_hand_crusader(x, y):
                   'to hold their own against many daily challenges experienced within the SludgeWorks.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
                   regenerates=True, faction='Cleansing Hand', erraticity=67)
+
+
+def cleansing_hand_purifier(x, y):
+    fighter_component = Fighter(current_hp=32, max_hp=32, damage_dice=2, damage_sides=6, armour=4,
+                                strength=24, dexterity=14, vitality=16, intellect=10, perception=14, xp=425,
+                                dodges=True)
+    ai_component = AimlessWanderer()
+    return Entity(x, y, 'P', libtcod.dark_yellow, 'Cleansing Hand Purifier',
+                  'The purifier breathes deeply and calmly as his mail-clad fists tighten around the hilt of his '
+                  'terrifying, studded morningstar. Although you cannot see any human flesh underneath his plated and '
+                  'visored form you can be assured that what lies within is utterly untouched by the corrupting '
+                  'influence of the SludgeWorks, and utterly devoted to preventing further horrific incursions into '
+                  'Cleansing Hand territory. Never again will the last bastion of purity be defiled by such entropy.',
+                  blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
+                  regenerates=True, faction='Cleansing Hand', erraticity=14)
 
 
 # HORRORS
@@ -183,3 +225,33 @@ def alfonrice(x, y):
                   'anxious to cut down the next prospective entrant to the Most Holy Bastion.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
                   regenerates=True, faction='Cleansing Hand', erraticity=50)
+
+
+def teague(x, y):
+    fighter_component = Fighter(current_hp=64, max_hp=64, damage_dice=4, damage_sides=4, armour=0,
+                                strength=20, dexterity=20, vitality=20, intellect=20, perception=20, xp=2500)
+    ai_component = Aggressive()
+    return Entity(x, y, 'T', libtcod.darkest_yellow, 'Teague the Martyr',
+                  'The remnants of a dust-drenched, threadbare robe cling desperately to Teague\'s gaunt form '
+                  'as he turns his gaze towards you. Despite decades of imprisonment, his skin is unblemished and pure '
+                  'like that of a newborn child, and he calmly stares you down with unabashed superiority. One could '
+                  'say that his entire life has been building up to this moment, and you are all that stands in the '
+                  'way between him and complete control of the Bastion. The crusader\'s greatest shame and most '
+                  'defiled heiromonk bows elegantly, politely inviting you to be cleansed by his own hands.',
+                  blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
+                  regenerates=True, faction='Cleansing Hand')
+
+
+# CULTISTS
+def dymacia(x, y):
+    fighter_component = Fighter(current_hp=48, max_hp=48, damage_dice=1, damage_sides=6, armour=2,
+                                strength=20, dexterity=20, vitality=24, intellect=30, perception=26, xp=2000)
+    ai_component = Aggressive()
+    return Entity(x, y, 'D', libtcod.darkest_fuchsia, 'Dymacia, Effigy of Perfection',
+                  'Lovingly adorned with countless rosaries, letters of worship and symbolic mirrors, Dymanikos '
+                  'effortlessly demonstrates her ability to command unfaltering loyalty in her followers. At least '
+                  'eight feet tall, her towering stature is coupled with an inhumanly soothing voice that fills the '
+                  'cathedral with pure, monotone chant. This woman appears to be wholly unarmed, but you are not so '
+                  'easily deceived to think this she has ascended to a position of such power due to her weaknesses.',
+                  blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
+                  regenerates=True, faction='Cultists')

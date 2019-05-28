@@ -94,15 +94,18 @@ class GameMap:
             'Sludge Fiend': from_dungeon_level([[35, 1], [50, 4], [35, 6], [20, 8]], self.dungeon_level),
             'Thresher': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
             # Beasts
-            'Moire Beast': from_dungeon_level([[10, 2], [20, 4], [40, 6], [20, 8]], self.dungeon_level),
+            'Moire Beast': from_dungeon_level([[5, 2], [10, 3], [20, 4], [30, 6], [20, 8]], self.dungeon_level),
+            'Lupine Terror': from_dungeon_level([[1, 2], [5, 3], [10, 4], [25, 6], [30, 8]], self.dungeon_level),
             'Bloodseeker': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level),
             # Horrors
             'Hunchback': from_dungeon_level([[10, 2], [30, 4], [50, 6], [40, 8]], self.dungeon_level),
             # Cultists
             'Risen Sacrifice': from_dungeon_level([[10, 1], [25, 3], [30, 6], [15, 7]], self.dungeon_level),
+            'Eternal Celebrant': from_dungeon_level([[10, 2], [25, 3], [30, 6], [15, 7]], self.dungeon_level),
             'Eternal Cult Kidnapper': from_dungeon_level([[10, 2], [20, 4], [40, 6], [20, 8]], self.dungeon_level),
             # Cleansing Hand
             'Cleansing Hand Crusader': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
+            'Cleansing Hand Purifier': from_dungeon_level([[5, 4], [10, 6], [20, 8], [35, 10]], self.dungeon_level),
             # Minibosses
             'Alfonrice, the Spinning Blade': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level)
         }
@@ -154,16 +157,22 @@ class GameMap:
                     entities.append(thresher(x, y))
                 elif monster_choice == 'Moire Beast':
                     entities.append(moire_beast(x, y))
+                elif monster_choice == 'Lupine Terror':
+                    entities.append(lupine_terror(x, y))
                 elif monster_choice == 'Bloodseeker':
                     entities.append(bloodseeker(x, y))
                 elif monster_choice == 'Hunchback':
                     entities.append(hunchback(x, y))
                 elif monster_choice == 'Risen Sacrifice':
                     entities.append(risen_sacrifice(x, y))
+                elif monster_choice == 'Eternal Celebrant':
+                    entities.append(eternal_celebrant(x, y))
                 elif monster_choice == 'Eternal Cult Kidnapper':
                     entities.append(eternal_kidnapper(x, y))
                 elif monster_choice == 'Cleansing Hand Crusader':
                     entities.append(cleansing_hand_crusader(x, y))
+                elif monster_choice == 'Cleansing Hand Purifier':
+                    entities.append(cleansing_hand_purifier(x, y))
                 elif monster_choice == 'Alfonrice, the Spinning Blade' and alfonrice_counter != 0:
                     entities.append(alfonrice(x, y))
                     alfonrice_counter = 0

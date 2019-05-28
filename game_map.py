@@ -76,8 +76,8 @@ class GameMap:
             self.place_entities(entire_dungeon, entities)
 
     def place_entities(self, room, entities):
-        max_monsters = from_dungeon_level([[50, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
-        max_plants = from_dungeon_level([[25, 1], [35, 3], [50, 4], [35, 6]], self.dungeon_level)
+        max_monsters = from_dungeon_level([[0, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
+        max_plants = from_dungeon_level([[0, 1], [35, 3], [50, 4], [35, 6]], self.dungeon_level)
         max_items = from_dungeon_level([[20, 1], [25, 3], [30, 4]], self.dungeon_level)
         number_of_monsters = randint(round(max_monsters*0.75), max_monsters)
         number_of_plants = randint(round(max_plants*0.75), max_plants)
@@ -435,63 +435,51 @@ class GameMap:
 
         return True
 
-    # TODO: Work out why this doesn't work?????
     def to_down_stairs(self, player, entities, message_log):
-        # Create an A* path to navigate the player to the down stairs (if visible)
-        stairs_coords = []
+        # Create a Dijkstra path to the down stairs. Dijkstra was chosen over A* because libtcod's built-in dijkstra
+        # seems much faster
+        stairs_found = False
         for entity in entities:
             if entity.name == 'Down Stairs':
                 if self.tiles[entity.x][entity.y].explored:
-                    stairs_coords.append((entity.y, entity.x))
+                    stairs_x = entity.x
+                    stairs_y = entity.y
+                    stairs_found = True
 
-                    # Find the nearest unexplored coords
-                    starting_distance = 100000
-                    closest_coord = None
+        if stairs_found:
+            my_map = libtcod.map_new(self.width, self.height)
 
-                    for y, x in stairs_coords:
-                        new_distance = math.hypot(x - player.x, y - player.y)
+            for y in range(self.height):
+                for x in range(self.width):
+                    libtcod.map_set_properties(my_map, x, y, not self.tiles[x][y].block_sight,
+                                               not self.tiles[x][y].blocked)
 
-                        if new_distance < starting_distance:
-                            starting_distance = new_distance
-                            closest_coord = (x, y)
+            dij_path = libtcod.dijkstra_new(my_map)
+            libtcod.dijkstra_compute(dij_path, player.x, player.y)
+            libtcod.dijkstra_path_set(dij_path, stairs_x, stairs_y)
 
-                    path_to_stairs = []
+            if not libtcod.dijkstra_is_empty(dij_path):
+                x, y = libtcod.dijkstra_path_walk(dij_path)
 
-                    if closest_coord:
-                        my_map = libtcod.map_new(self.width, self.height)
-
-                        for y in range(self.height):
-                            for x in range(self.width):
-                                if self.tiles[x][y].blocked:
-                                    libtcod.map_set_properties(my_map, x, y, True, True)
-
-                        dij_pather = libtcod.dijkstra_new(my_map)
-                        libtcod.dijkstra_compute(dij_pather, player.x, player.y)
-                        libtcod.dijkstra_path_set(dij_pather, closest_coord[0], closest_coord[1])
-
-                        if not libtcod.dijkstra_is_empty(dij_pather):
-                            x, y = libtcod.dijkstra_path_walk(dij_pather)
-                            path_to_stairs.append((x, y))
-
-                            # Move player along the path
-                            if not path_to_stairs:
-                                message_log.add_message(
-                                    Message('You cannot safely reach the next set of down stairs from here.',
-                                            libtcod.yellow))
-                                return False
-                            else:
-                                player.x = x
-                                player.y = y
-                                return True
-                        else:
-                            message_log.add_message(Message('Path to stairs does not exist.', libtcod.yellow))
-                            return False
-                else:
-                    message_log.add_message(Message('You have not yet discovered the path to the next floor.',
-                                                    libtcod.yellow))
+                # Move player along the path
+                if not x and not y:
+                    message_log.add_message(
+                        Message('You cannot safely reach the next set of down stairs from here.',
+                                libtcod.yellow))
                     return False
-
-        return True
+                else:
+                    player.x = x
+                    player.y = y
+                    return True
+            elif player.x == stairs_x and player.y == stairs_y:
+                return False
+            else:
+                message_log.add_message(Message('Path to stairs does not exist.', libtcod.yellow))
+                return False
+        else:
+            message_log.add_message(Message('You have not yet discovered the path to the next floor.',
+                                            libtcod.yellow))
+            return False
 
 
 class Tile:

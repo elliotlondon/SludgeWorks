@@ -260,14 +260,12 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                     game_state = GameStates.ENEMY_TURN
                     to_down_stairs = True
 
-        # Currently not working
         if to_down_stairs and game_state == GameStates.PLAYERS_TURN:
             if entities_in_fov(entities, fov_map, message_log):
                 game_state = GameStates.PLAYERS_TURN
                 to_down_stairs = False
             elif GameMap.to_down_stairs(game_map, player, entities, message_log) is True:
                 game_state = GameStates.ENEMY_TURN
-                to_down_stairs = True
             else:
                 to_down_stairs = False
 

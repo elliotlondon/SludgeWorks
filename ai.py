@@ -1,6 +1,7 @@
 import tcod as libtcod
 from random import randint
 from game_messages import Message
+from math import sqrt
 
 
 class Aggressive:
@@ -39,7 +40,7 @@ class Stationary:
         results = []
 
         if libtcod.map_is_in_fov(fov_map, self.owner.x, self.owner.y):
-            if (target.fighter.current_hp > 0) and (self.owner.distance_to(target) == 1):
+            if (target.fighter.current_hp > 0) and (self.owner.distance_to(target) <= sqrt(2)):
                 attack_results = self.owner.fighter.attack(target)
                 results.extend(attack_results)
 

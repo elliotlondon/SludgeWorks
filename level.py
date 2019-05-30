@@ -8,7 +8,7 @@ class Level:
 
     @property
     def experience_to_next_level(self):
-        return math.floor(100*self.current_level*math.exp(1)/2)
+        return math.floor(100*2*self.current_level*math.exp(1)/3 + self.current_level*math.exp(1))
 
     def add_xp(self, xp):
         self.current_xp += xp

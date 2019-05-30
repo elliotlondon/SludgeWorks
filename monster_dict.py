@@ -79,7 +79,7 @@ def thresher(x, y):
 # BEASTS
 def moire_beast(x, y):
     fighter_component = Fighter(current_hp=14, max_hp=14, damage_dice=3, damage_sides=2, armour=1,
-                                strength=12, dexterity=16, vitality=12, intellect=10, perception=10, xp=200,
+                                strength=10, dexterity=16, vitality=12, intellect=10, perception=10, xp=200,
                                 dodges=True)
     ai_component = Aggressive()
     return Entity(x, y, 'M', libtcod.light_grey, 'Moire Beast',
@@ -92,11 +92,11 @@ def moire_beast(x, y):
 
 
 def lupine_terror(x, y):
-    fighter_component = Fighter(current_hp=19, max_hp=19, damage_dice=5, damage_sides=2, armour=1,
-                                strength=16, dexterity=14, vitality=10, intellect=6, perception=14, xp=200,
+    fighter_component = Fighter(current_hp=16, max_hp=16, damage_dice=4, damage_sides=2, armour=1,
+                                strength=8, dexterity=14, vitality=10, intellect=6, perception=14, xp=200,
                                 dodges=True)
     ai_component = AimlessWanderer()
-    return Entity(x, y, 'L', libtcod.light_grey, 'Lupine Terror',
+    return Entity(x, y, 'L', libtcod.dark_grey, 'Lupine Terror',
                   'Evolutionary forces have twisted what must undeniably once have been a feral wolf into a horrific '
                   'vision of fangs and matted, grey fur. This monstrosity walks upright in emulation of nature\'s most '
                   'infamous apex predators as blood-tinged saliva hangs from it\'s constantly masticating jaws.',
@@ -138,7 +138,7 @@ def eternal_celebrant(x, y):
                                 strength=8, dexterity=12, vitality=18, intellect=16, perception=10, xp=160,
                                 dodges=True)
     ai_component = AimlessWanderer()
-    return Entity(x, y, 'c', libtcod.light_purple, 'Eternal Cult Celebrant',
+    return Entity(x, y, 'c', libtcod.lightest_purple, 'Eternal Cult Celebrant',
                   'The celebrant\'s dour, puckered form desperately hauls itself through the scratch-marked tunnels '
                   'towards the blissful murmurs of his newly-risen flock. \"Sweet children, where are you?\" he cries '
                   'out; a worn, sacrificial dagger trembles within his hand, piercing the suffocating darkness in '

@@ -122,6 +122,7 @@ class Fighter:
         damage = None
         crit = False
         crit_chance = 0.05   # Critical hit chance in %
+        max_crit_chance = 0.25  # Define max chance to stop overflows!
 
         # Roll to see if hit
         attack_roll = roll_dice(1, 20) + self.dexterity_modifier
@@ -143,7 +144,7 @@ class Fighter:
             if (damage_roll - defence_roll) > 0:
 
                 # Calculate modified (positive) crit chance
-                while penetration_int > 0:
+                while penetration_int > 0 and crit_chance <= max_crit_chance:
                     crit_chance += 0.01
                     penetration_int -= 1
 
@@ -163,7 +164,7 @@ class Fighter:
                     penetration_int -= 1
 
                 # Check if crit
-                if crit_chance == 0:
+                if crit_chance <= 0:
                     damage = 0
                 else:
                     if roll_dice(1, floor(1 / crit_chance)) == floor(1 / crit_chance):

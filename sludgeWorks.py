@@ -8,7 +8,7 @@ from game_states import GameStates
 from game_map import GameMap
 from input_handlers import handle_keys, handle_mouse, handle_main_menu
 from initialise_new_game import get_constants, get_game_variables
-from data_loaders import load_game, save_game
+from data_loaders import load_game, save_game, delete_char_save
 from menus import main_menu, message_box
 from render_functions import clear_all, render_all, entity_in_fov, entities_in_fov
 from random_utils import roll_dice
@@ -92,6 +92,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
 
     game_state = GameStates.PLAYERS_TURN
     turn_number = 0
+    turns_passed = 0
     previous_game_state = game_state
 
     targeting_item = None
@@ -319,8 +320,11 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
             else:
                 game_state = previous_game_state
 
-        if quit:
+        if quit and not game_state == GameStates.PLAYER_DEAD:
             save_game(player, entities, game_map, message_log, game_state)
+            return True
+        elif quit:
+            delete_char_save()
             return True
 
         if fullscreen:

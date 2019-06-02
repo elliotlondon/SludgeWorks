@@ -83,9 +83,8 @@ def main():
 
 def play_game(player, entities, game_map, message_log, game_state, root_console, panel, constants):
     root_console.clear(fg=(255, 255, 255))
-    fov_recompute = True
-
     fov_map = initialize_fov(game_map)
+    fov_recompute = True
 
     key = libtcod.Key()
     mouse = libtcod.Mouse()
@@ -106,9 +105,10 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
         if fov_recompute:
             recompute_fov(fov_map, player.x, player.y, constants['fov_radius'], constants['fov_light_walls'],
                           constants['fov_algorithm'])
-            render_all(root_console, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
-                       constants['screen_width'], constants['screen_height'], constants['bar_width'],
-                       constants['panel_height'], constants['panel_y'], constants['colours'], game_state, turn_number)
+            render_all(root_console, panel, entities, player, game_map, fov_map, message_log,
+                       constants['screen_width'], constants['screen_height'], constants['camera_width'],
+                       constants['camera_height'], constants['bar_width'], constants['panel_height'],
+                       constants['panel_y'], constants['colours'], game_state, turn_number)
             fov_recompute = False
             custrender.clear((0, 0, 0))
             custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))

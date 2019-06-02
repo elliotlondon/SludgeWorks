@@ -15,18 +15,21 @@ def get_constants():
     window_title = 'SludgeWorks'
 
     screen_width = 80
-    screen_height = 45
+    screen_height = 46
 
-    bar_width = int(screen_width / 4)
-    panel_height = round(screen_height / 8)
-    panel_y = screen_height - panel_height
+    bar_width = 20
+    panel_height = 8
+    panel_y = 38
 
-    message_x = int(bar_width + 2)
-    message_width = screen_width - bar_width - 2
-    message_height = panel_height - 1
+    message_x = 22
+    message_width = 58
+    message_height = panel_height
 
-    map_width = int(screen_width)
-    map_height = int(screen_height - panel_height)
+    camera_width = screen_width
+    camera_height = screen_height
+
+    map_width = 80
+    map_height = 80
 
     fov_algorithm = 0
     fov_light_walls = True
@@ -51,6 +54,8 @@ def get_constants():
         'message_height': message_height,
         'map_width': map_width,
         'map_height': map_height,
+        'camera_width': camera_width,
+        'camera_height': camera_height,
         'fov_algorithm': fov_algorithm,
         'fov_light_walls': fov_light_walls,
         'fov_radius': fov_radius,

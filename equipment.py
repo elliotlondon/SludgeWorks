@@ -184,8 +184,8 @@ class Equipment:
 
     def toggle_equip(self, equippable_entity):
         results = []
-
         slot = equippable_entity.equippable.slot
+
         if slot == EquipmentSlots.MAIN_HAND:
             if self.main_hand == equippable_entity:
                 self.main_hand = None
@@ -206,6 +206,7 @@ class Equipment:
 
                 self.off_hand = equippable_entity
                 results.append({'equipped': equippable_entity})
+
         elif slot == EquipmentSlots.HEAD:
             if self.head == equippable_entity:
                 self.head = None
@@ -216,6 +217,7 @@ class Equipment:
 
                 self.head = equippable_entity
                 results.append({'equipped': equippable_entity})
+
         elif slot == EquipmentSlots.TORSO:
             if self.torso == equippable_entity:
                 self.torso = None
@@ -226,6 +228,7 @@ class Equipment:
 
                 self.torso = equippable_entity
                 results.append({'equipped': equippable_entity})
+
         elif slot == EquipmentSlots.HANDS:
             if self.hands == equippable_entity:
                 self.hands = None
@@ -236,6 +239,7 @@ class Equipment:
 
                 self.hands = equippable_entity
                 results.append({'equipped': equippable_entity})
+
         elif slot == EquipmentSlots.LEGS:
             if self.legs == equippable_entity:
                 self.legs = None
@@ -246,6 +250,7 @@ class Equipment:
 
                 self.legs = equippable_entity
                 results.append({'equipped': equippable_entity})
+
         elif slot == EquipmentSlots.FEET:
             if self.feet == equippable_entity:
                 self.feet = None
@@ -256,6 +261,7 @@ class Equipment:
 
                 self.feet = equippable_entity
                 results.append({'equipped': equippable_entity})
+
         elif slot == EquipmentSlots.LEFT_HAND:
             if self.left_hand == equippable_entity:
                 self.left_hand = None
@@ -266,6 +272,7 @@ class Equipment:
 
                 self.left_hand = equippable_entity
                 results.append({'equipped': equippable_entity})
+
         elif slot == EquipmentSlots.RIGHT_HAND:
             if self.right_hand == equippable_entity:
                 self.right_hand = None
@@ -276,6 +283,23 @@ class Equipment:
 
                 self.right_hand = equippable_entity
                 results.append({'equipped': equippable_entity})
+
+        # Couldn't get this to work...
+
+        # for x in vars(EquipmentSlots):
+        #     if getattr(EquipmentSlots, x) == slot:
+        #         for y in vars(Equipment):
+        #             if getattr(self, y) == equippable_entity:
+        #                 setattr(self, y, None)
+        #                 results.append({'dequipped': equippable_entity})
+        #
+        #             else:
+        #                 if getattr(self, y) == equippable_entity:
+        #                     results.append({'dequipped': equippable_entity})
+        #
+        #                 setattr(self, y, equippable_entity)
+        #                 results.append({'equipped': equippable_entity})
+        #                 break
 
         return results
 

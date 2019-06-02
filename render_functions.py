@@ -59,37 +59,41 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_colour, back_
                              '{0}: {1}/{2}'.format(name, value, maximum))
 
 
-def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height,
-               bar_width, panel_height, panel_y, colours, game_state, turn_number):
-    seed = Random(1337)  # Randomise randint yourself to prevent d&d roll changes
-    if fov_recompute:
-        for y in range(game_map.height):
-            for x in range(game_map.width):
-                visible = libtcod.map_is_in_fov(fov_map, x, y)
-                wall = game_map.tiles[x][y].block_sight
+def render_all(con, panel, entities, player, game_map, fov_map, message_log, screen_width, screen_height,
+               camera_width, camera_height, bar_width, panel_height, panel_y, colours, game_state, turn_number):
+    seed = Random(1337)  # Randomise randint to prevent d&d roll changes
 
-                # Using randint without seed here causes a 'disco' effect. Great for hallucinations!!!
-                floor_char = [' ', '.', ',', '`']
-                floor_char = floor_char[Random.randint(seed, 0, len(floor_char)-1)]
+    camera_x, camera_y = move_camera(player, game_map, screen_width, screen_height)
 
-                if visible:
-                    if wall:
-                        libtcod.console_put_char_ex(con, x, y, ord('▓'.encode('cp437')), colours.get('light_wall'),
-                                                    colours.get('dark_ground'))
-                        game_map.tiles[x][y].explored = True
-                    else:
-                        libtcod.console_put_char_ex(con, x, y, floor_char, colours.get('light_ground'),
-                                                    colours.get('dark_ground'))
-                        game_map.tiles[x][y].explored = True
+    for y in range(camera_height):
+        for x in range(camera_width):
+            map_x = int(camera_x + x)
+            map_y = int(camera_y + y)
+            visible = libtcod.map_is_in_fov(fov_map, map_x, map_y)
+            wall = game_map.tiles[map_x][map_y].block_sight
 
-                elif game_map.tiles[x][y].explored:
-                    if wall:
-                        libtcod.console_put_char_ex(con, x, y, ord('▒'.encode('cp437')), colours.get('dark_wall'),
-                                                    colours.get('dark_ground'))
-                        game_map.tiles[x][y].blocks_sight = True
-                    else:
-                        libtcod.console_put_char_ex(con, x, y, ord('.'.encode('cp437')), colours.get('dark_ground'),
-                                                    colours.get('dark_ground'))
+            # Using randint without seed here causes a 'disco' effect. Great for hallucinations!!!
+            floor_char = [' ', '.', ',', '`']
+            floor_char = floor_char[Random.randint(seed, 0, len(floor_char)-1)]
+
+            if visible:
+                if wall:
+                    libtcod.console_put_char_ex(con, x, y, ord('▓'.encode('cp437')), colours.get('light_wall'),
+                                                colours.get('dark_ground'))
+                    game_map.tiles[map_x][map_y].explored = True
+                else:
+                    libtcod.console_put_char_ex(con, x, y, floor_char, colours.get('light_ground'),
+                                                colours.get('dark_ground'))
+                    game_map.tiles[map_x][map_y].explored = True
+
+            elif game_map.tiles[map_x][map_y].explored:
+                if wall:
+                    libtcod.console_put_char_ex(con, x, y, ord('▒'.encode('cp437')), colours.get('dark_wall'),
+                                                colours.get('dark_ground'))
+                    game_map.tiles[map_x][map_y].blocks_sight = True
+                else:
+                    libtcod.console_put_char_ex(con, x, y, ord('.'.encode('cp437')), colours.get('dark_ground'),
+                                                colours.get('dark_ground'))
 
     entities_in_render_order = sorted(entities, key=lambda z: z.render_order.value)
 
@@ -100,7 +104,7 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
                             libtcod.dark_grey,
                             libtcod.darkest_gray]
             entity.colour = choice(moire_colour)
-        draw_entity(con, entity, fov_map, game_map)
+        draw_entity(con, entity, fov_map, game_map, camera_x, camera_y, camera_width, camera_height)
 
     libtcod.console_set_default_foreground(con, libtcod.white)
     libtcod.console_print_ex(con, 1, screen_height - 2, libtcod.BKGND_NONE, libtcod.LEFT,
@@ -156,11 +160,41 @@ def clear_all(con, entities):
         clear_entity(con, entity)
 
 
-def draw_entity(con, entity, fov_map, game_map):
+def move_camera(player, game_map, screen_width, screen_height):
+    if player.x < int(screen_width / 2):
+        camera_x = 0
+    elif player.x >= game_map.width - int(screen_width / 2):
+        camera_x = game_map.width - screen_width
+    else:
+        camera_x = player.x - screen_width / 2
+
+    if player.y < screen_height / 2:
+        camera_y = 0
+    elif player.y >= game_map.height - int(screen_height / 2):
+        camera_y = game_map.height - screen_height
+    else:
+        camera_y = player.y - int(screen_height / 2)
+
+    return camera_x, camera_y
+
+
+def to_camera_coordinates(x, y, camera_x, camera_y, camera_width, camera_height):
+    x = int(x - camera_x)
+    y = int(y - camera_y)
+
+    if x < 0 or y < 0 or x >= camera_width or y >= camera_height:
+        return None, None
+
+    return x, y
+
+
+def draw_entity(con, entity, fov_map, game_map, camera_x, camera_y, camera_width, camera_height):
     if libtcod.map_is_in_fov(fov_map, entity.x, entity.y) or (entity.stairs and
                                                               game_map.tiles[entity.x][entity.y].explored):
-        libtcod.console_set_default_foreground(con, entity.colour)
-        libtcod.console_put_char(con, entity.x, entity.y, entity.char, libtcod.BKGND_NONE)
+        x, y = to_camera_coordinates(entity.x, entity.y, camera_x, camera_y, camera_width, camera_height)
+        if x is not None and y is not None:
+            libtcod.console_set_default_foreground(con, entity.colour)
+            libtcod.console_put_char(con, x, y, entity.char, libtcod.BKGND_NONE)
 
 
 def clear_entity(con, entity):

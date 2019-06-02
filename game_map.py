@@ -76,8 +76,8 @@ class GameMap:
             self.place_entities(entire_dungeon, entities)
 
     def place_entities(self, room, entities):
-        max_monsters = from_dungeon_level([[50, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
-        max_plants = from_dungeon_level([[25, 1], [35, 3], [50, 4], [35, 6]], self.dungeon_level)
+        max_monsters = from_dungeon_level([[0, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
+        max_plants = from_dungeon_level([[0, 1], [35, 3], [50, 4], [35, 6]], self.dungeon_level)
         max_items = from_dungeon_level([[20, 1], [25, 3], [30, 4]], self.dungeon_level)
         number_of_monsters = randint(round(max_monsters*0.75), max_monsters)
         number_of_plants = randint(round(max_plants*0.75), max_plants)
@@ -90,8 +90,8 @@ class GameMap:
 
         monster_chances = {
             # Scavengers
-            'Wretch': from_dungeon_level([[50, 1], [35, 4], [20, 6], [20, 8]], self.dungeon_level),
-            'Sludge Fiend': from_dungeon_level([[35, 1], [50, 4], [35, 6], [20, 8]], self.dungeon_level),
+            'Wretch': from_dungeon_level([[50, 1], [35, 4], [20, 6], [10, 8], [0, 10]], self.dungeon_level),
+            'Sludge Fiend': from_dungeon_level([[35, 1], [50, 4], [35, 6], [10, 8], [0, 10]], self.dungeon_level),
             'Thresher': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
             # Beasts
             'Moire Beast': from_dungeon_level([[5, 2], [10, 3], [20, 4], [30, 6], [20, 8]], self.dungeon_level),
@@ -105,7 +105,8 @@ class GameMap:
             'Eternal Cult Kidnapper': from_dungeon_level([[10, 2], [20, 4], [40, 6], [20, 8]], self.dungeon_level),
             # Cleansing Hand
             'Cleansing Hand Crusader': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
-            'Cleansing Hand Purifier': from_dungeon_level([[5, 4], [10, 6], [20, 8], [35, 10]], self.dungeon_level),
+            'Cleansing Hand Purifier': from_dungeon_level([[5, 5], [10, 6], [20, 8], [50, 10]], self.dungeon_level),
+            'Cleansing Hand Duelist': from_dungeon_level([[5, 5], [10, 7], [25, 8], [50, 10]], self.dungeon_level),
             # Minibosses
             'Alfonrice, the Spinning Blade': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level)
         }
@@ -248,6 +249,9 @@ class GameMap:
         entities = [player]
 
         self.tiles = self.initialize_tiles()
+
+        # Define variable floor size here!
+        # self.make_map(constants['map_width'], constants['map_height']/2, player, entities)
         self.make_map(constants['map_width'], constants['map_height'], player, entities)
 
         # Heal on change of floors?

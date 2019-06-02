@@ -4,7 +4,7 @@ import shutil
 
 
 def save_game(player, entities, game_map, message_log, game_state):
-    if not os.path.isfile('savegames'):
+    if not os.path.isfile('savegames\savegame.dat'):
         os.makedirs('savegames')
 
     with shelve.open('savegames/savegame', 'n') as data_file:
@@ -31,7 +31,7 @@ def load_game():
     return player, entities, game_map, message_log, game_state
 
 def delete_char_save():
-    if not os.path.isfile('savegames/savegame.dat'):
+    if not os.path.isdir('savegames'):
         return
     
     shutil.rmtree('savegames')

@@ -58,12 +58,12 @@ class Inventory:
 
         for i in vars(self.owner.equipment):                # Get a list of all attributes in the object
             if getattr(self.owner.equipment, i) == item:    # Check if attr. == item
-                print(vars(item))
                 self.owner.equipment.toggle_equip(item)     # Dequip
-                item.x = self.owner.x
-                item.y = self.owner.y
-                self.remove_item(item)
-                results.append({'item_dropped': item, 'message': Message('{0} dropped'.format(item.name),
-                                                                         libtcod.yellow)})
+
+        item.x = self.owner.x
+        item.y = self.owner.y
+        self.remove_item(item)
+        results.append({'item_dropped': item, 'message': Message('{0} dropped'.format(item.name),
+                                                                 libtcod.yellow)})
 
         return results

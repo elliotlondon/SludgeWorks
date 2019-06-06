@@ -107,7 +107,7 @@ def steel_cuirass(x, y):
 
 
 def trickster_gloves(x, y):
-    equippable_component = Equippable(EquipmentSlots.LEGS, armour_bonus=1, dexterity_bonus=2)
+    equippable_component = Equippable(EquipmentSlots.HANDS, armour_bonus=1, dexterity_bonus=2)
     return Entity(x, y, ')', libtcod.darker_orange, 'Trickster\'s Gloves',
                   'These dark, leather gloves which extend to the elbow not only provide safety against any intruding '
                   'fangs, but cause you to question whether the nagging sense of kleptomania you are experiencing '

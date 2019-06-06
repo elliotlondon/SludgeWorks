@@ -48,23 +48,27 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_colour, back_
     bar_width = int(float(value) / maximum * total_width)
 
     libtcod.console_set_default_background(panel, back_colour)
-    libtcod.console_rect(panel, x, y, total_width, 1, False, libtcod.BKGND_SCREEN)
+    libtcod.console_rect(panel, x, y, total_width, 1, False, libtcod.BKGND_OVERLAY)
 
     libtcod.console_set_default_background(panel, bar_colour)
     if bar_width > 0:
         libtcod.console_rect(panel, x, y, bar_width, 1, False, libtcod.BKGND_SCREEN)
 
     libtcod.console_set_default_foreground(panel, libtcod.white)
-    libtcod.console_print_ex(panel, int(x + total_width / 4), y, libtcod.BKGND_NONE, libtcod.LEFT,
+    libtcod.console_print_ex(panel, int(total_width / 2), y, libtcod.BKGND_NONE, libtcod.CENTER,
                              '{0}: {1}/{2}'.format(name, value, maximum))
 
 
-def render_all(con, panel, entities, player, game_map, fov_map, message_log, screen_width, screen_height,
-               camera_width, camera_height, bar_width, panel_height, panel_y, colours, game_state, turn_number):
+def render_all(con, panel, hp_bar, xp_bar, entities, player, game_map, fov_map, message_log, root_width, root_height,
+               game_window_width, game_window_height, panel_width, panel_height, stat_bar_width,
+               stat_bar_height, fx_panel_width, fx_panel_height, camera_width, camera_height, colours,
+               game_state, turn_number):
     seed = Random(1337)  # Randomise randint to prevent d&d roll changes
 
-    camera_x, camera_y = move_camera(player, game_map, screen_width, screen_height)
-
+    '''
+    Render the game window area
+    '''
+    camera_x, camera_y = move_camera(player, game_map, game_window_width, game_window_height)
     for y in range(camera_height):
         for x in range(camera_width):
             map_x = int(camera_x + x)
@@ -106,30 +110,37 @@ def render_all(con, panel, entities, player, game_map, fov_map, message_log, scr
             entity.colour = choice(moire_colour)
         draw_entity(con, entity, fov_map, game_map, camera_x, camera_y, camera_width, camera_height)
 
+    # Display the selected item
     libtcod.console_set_default_foreground(con, libtcod.white)
-    libtcod.console_print_ex(con, 1, screen_height - 2, libtcod.BKGND_NONE, libtcod.LEFT,
-                             'HP: {0:02}/{1:02}'.format(player.fighter.current_hp, player.fighter.max_hp))
+    libtcod.console_print_ex(con, 0, game_window_height - 1, libtcod.BKGND_NONE, libtcod.LEFT,
+                             get_names_under_char(player, entities, fov_map))
+    libtcod.console_blit(con, 0, 0, root_width, root_height, con, 0, 0)
 
-    libtcod.console_blit(con, 0, 0, screen_width, screen_height, con, 0, 0)
-
-    libtcod.console_set_default_background(panel, libtcod.black)
+    '''
+    Render all of the panels here
+    '''
     panel.clear(fg=(255, 255, 255))
+    hp_bar.clear(fg=(255, 255, 255))
+    xp_bar.clear(fg=(255, 255, 255))
 
     # Print the game messages, one line at a time
-    y = 1
+    y = 0   # Start at zero for no empty space between message log and HP/XP bars.
     for message in message_log.messages:
         libtcod.console_set_default_foreground(panel, message.colour)
         libtcod.console_print_ex(panel, message_log.x, y, libtcod.BKGND_NONE, libtcod.LEFT, message.text)
         y += 1
 
-    render_bar(panel, 1, 1, bar_width, 'HP', player.fighter.current_hp, player.fighter.max_hp,
-               libtcod.light_red, libtcod.darker_red)
+    libtcod.console_blit(panel, 0, 0, panel_width, panel_height, con, 0, root_height - panel_height)
 
-    libtcod.console_set_default_foreground(panel, libtcod.light_gray)
-    libtcod.console_print_ex(panel, 1, 0, libtcod.BKGND_NONE, libtcod.LEFT,
-                             get_names_under_char(player, entities, fov_map))
+    # HP bar
+    render_bar(hp_bar, 0, 0, stat_bar_width, 'HP', player.fighter.current_hp, player.fighter.max_hp,
+               libtcod.light_red, libtcod.darkest_red)
+    libtcod.console_blit(hp_bar, 0, 0, stat_bar_width, stat_bar_height, con, 0, root_height - panel_height - 2)
 
-    libtcod.console_blit(panel, 0, 0, screen_width, panel_height, con, 0, panel_y)
+    # XP bar
+    render_bar(xp_bar, 0, 0, stat_bar_width, 'XP', player.level.current_xp, player.level.experience_to_next_level,
+               libtcod.amber, libtcod.black)
+    libtcod.console_blit(xp_bar, 0, 0, stat_bar_width, stat_bar_height, con, 0, root_height - panel_height - 1)
 
     if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):
         if game_state == GameStates.SHOW_INVENTORY:
@@ -137,22 +148,18 @@ def render_all(con, panel, entities, player, game_map, fov_map, message_log, scr
         else:
             inventory_title = 'Press the key next to an item to drop it, or Esc to cancel.\n'
 
-        inventory_menu(con, inventory_title, player, 50, screen_width, screen_height)
+        inventory_menu(con, inventory_title, player, 50, game_window_width, game_window_height)
 
     elif game_state == GameStates.LEVEL_UP:
-        level_up_menu(con, 'Choose a stat to increase:', player, 50, screen_width, screen_height)
-
+        level_up_menu(con, 'Choose a stat to increase:', player, 50, game_window_width, game_window_height)
     elif game_state == GameStates.CHARACTER_SCREEN:
-        character_screen(con, player, 30, 15, screen_width, screen_height)
-
+        character_screen(con, player, 30, 15, game_window_width, game_window_height)
     elif game_state == GameStates.ABILITY_SCREEN:
-        ability_screen(con, player, 30, 10, screen_width, screen_height)
-
+        ability_screen(con, player, 30, 10, game_window_width, game_window_height)
     elif game_state == GameStates.ESC_MENU:
-        esc_menu(con, 40, 10, screen_width, screen_height, turn_number)
-
+        esc_menu(con, 40, 10, root_width, root_height, turn_number)
     elif game_state == GameStates.HELP_MENU:
-        help_menu(con, screen_width, screen_height, screen_width, screen_height)
+        help_menu(con, root_width, root_height, root_width, root_height)
 
 
 def clear_all(con, entities):
@@ -160,20 +167,20 @@ def clear_all(con, entities):
         clear_entity(con, entity)
 
 
-def move_camera(player, game_map, screen_width, screen_height):
-    if player.x < int(screen_width / 2):
+def move_camera(player, game_map, game_window_width, game_window_height):
+    if player.x < int(game_window_width / 2):
         camera_x = 0
-    elif player.x >= game_map.width - int(screen_width / 2):
-        camera_x = game_map.width - screen_width
+    elif player.x >= game_map.width - int(game_window_width / 2):
+        camera_x = game_map.width - game_window_width
     else:
-        camera_x = player.x - screen_width / 2
+        camera_x = player.x - game_window_width / 2
 
-    if player.y < screen_height / 2:
+    if player.y < game_window_height / 2:
         camera_y = 0
-    elif player.y >= game_map.height - int(screen_height / 2):
-        camera_y = game_map.height - screen_height
+    elif player.y >= game_map.height - int(game_window_height / 2):
+        camera_y = game_map.height - game_window_height
     else:
-        camera_y = player.y - int(screen_height / 2)
+        camera_y = player.y - int(game_window_height / 2)
 
     return camera_x, camera_y
 

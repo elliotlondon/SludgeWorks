@@ -76,8 +76,8 @@ class GameMap:
             self.place_entities(entire_dungeon, entities)
 
     def place_entities(self, room, entities):
-        max_monsters = from_dungeon_level([[0, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
-        max_plants = from_dungeon_level([[0, 1], [35, 3], [50, 4], [35, 6]], self.dungeon_level)
+        max_monsters = from_dungeon_level([[50, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
+        max_plants = from_dungeon_level([[25, 1], [35, 3], [50, 4], [35, 6]], self.dungeon_level)
         max_items = from_dungeon_level([[20, 1], [25, 3], [30, 4]], self.dungeon_level)
         number_of_monsters = randint(round(max_monsters*0.75), max_monsters)
         number_of_plants = randint(round(max_plants*0.75), max_plants)
@@ -110,9 +110,6 @@ class GameMap:
             # Minibosses
             'Alfonrice, the Spinning Blade': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level)
         }
-
-        # Keep track of uniques
-        alfonrice_counter = 1
 
         # Item dictionary
         item_chances = {
@@ -180,9 +177,9 @@ class GameMap:
                     entities.append(cleansing_hand_crusader(x, y))
                 elif monster_choice == 'Cleansing Hand Purifier':
                     entities.append(cleansing_hand_purifier(x, y))
-                elif monster_choice == 'Alfonrice, the Spinning Blade' and alfonrice_counter != 0:
+                elif monster_choice == 'Alfonrice, the Spinning Blade':
                     entities.append(alfonrice(x, y))
-                    alfonrice_counter = 0
+                    monster_chances.update({'Alfonrice, the Spinning Blade': 0})
 
         # Place items
         for i in range(number_of_items):
@@ -221,6 +218,7 @@ class GameMap:
                     entities.append(steel_platelegs(x, y))
                 elif item_choice == 'wax_coated_ring':
                     entities.append(wax_coated_ring(x, y))
+                    item_chances.update({'wax_coated_ring:': 0})
 
                 # Consumables
                 elif item_choice == 'healing_potion':

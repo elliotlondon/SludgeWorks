@@ -14,22 +14,38 @@ from render_functions import RenderOrder
 def get_constants():
     window_title = 'SludgeWorks'
 
-    screen_width = 80
-    screen_height = 46
+    # Define the size for the game window as a whole
+    root_width = 80
+    root_height = 48
 
-    bar_width = 20
-    panel_height = 8
-    panel_y = 38
+    # Define the size of the stat bar (HP and XP)
+    stat_bar_width = root_width
+    stat_bar_height = 1
 
-    message_x = 22
-    message_width = 58
-    message_height = panel_height
+    # Define the size of the comments panel
+    comments_width = 50
+    comments_height = 8
+    comments_x = root_width - comments_width
 
-    camera_width = screen_width
-    camera_height = screen_height
+    # Define the size of the status effects panel
+    fx_panel_width = root_width - comments_width
+    fx_panel_height = comments_height
 
+    # Define the size of all of the combined panels
+    panel_width = root_width
+    panel_height = comments_height
+
+    # Define the size of the game_window area of the root console
+    game_window_width = root_width
+    game_window_height = root_height - panel_height - 2*stat_bar_height
+
+    # Camera width and height should be identical to the game window size
+    camera_width = game_window_width
+    camera_height = game_window_height
+
+    # TODO: Have this change depending upon what the dungeon level is and the dungeon level structure
     map_width = 80
-    map_height = 80
+    map_height = 42
 
     fov_algorithm = 0
     fov_light_walls = True
@@ -44,14 +60,19 @@ def get_constants():
 
     constants = {
         'window_title': window_title,
-        'screen_width': screen_width,
-        'screen_height': screen_height,
-        'bar_width': bar_width,
+        'root_width': root_width,
+        'root_height': root_height,
+        'game_window_width': game_window_width,
+        'game_window_height': game_window_height,
+        'panel_width': panel_width,
         'panel_height': panel_height,
-        'panel_y': panel_y,
-        'message_x': message_x,
-        'message_width': message_width,
-        'message_height': message_height,
+        'stat_bar_width': stat_bar_width,
+        'stat_bar_height': stat_bar_height,
+        'comments_width': comments_width,
+        'comments_height': comments_height,
+        'comments_x': comments_x,
+        'fx_panel_width': fx_panel_width,
+        'fx_panel_height': fx_panel_height,
         'map_width': map_width,
         'map_height': map_height,
         'camera_width': camera_width,
@@ -98,7 +119,7 @@ def get_game_variables(constants):
     game_map = GameMap(constants['map_width'], constants['map_height'])
     game_map.make_map(constants['map_width'], constants['map_height'], player, entities)
 
-    message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])
+    message_log = MessageLog(constants['comments_x'], constants['comments_width'], constants['comments_height'])
 
     game_state = GameStates.PLAYERS_TURN
 

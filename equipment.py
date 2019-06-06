@@ -286,6 +286,8 @@ class Equipment:
 
         # Couldn't get this to work...
 
+        # enumerate() ???
+
         # for x in vars(EquipmentSlots):
         #     if getattr(EquipmentSlots, x) == slot:
         #         for y in vars(Equipment):

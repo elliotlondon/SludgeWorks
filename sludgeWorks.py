@@ -22,7 +22,6 @@ def main():
     entities = []
     game_map = None
     message_log = None
-    game_state = None
     show_main_menu = True
     show_load_error_message = False
 
@@ -31,21 +30,23 @@ def main():
 
     libtcod.console_set_custom_font('Fonts/terminal8x8_gs_ro.png', libtcod.FONT_TYPE_GRAYSCALE |
                                     libtcod.FONT_LAYOUT_ASCII_INROW)
-    panel = libtcod.console.Console(constants['screen_width'], constants['panel_height'])
+    hp_bar = libtcod.console.Console(constants['stat_bar_width'], constants['stat_bar_height'])
+    xp_bar = libtcod.console.Console(constants['stat_bar_width'], constants['stat_bar_height'])
+    panel = libtcod.console.Console(constants['panel_width'], constants['panel_height'])
     main_menu_background_image = libtcod.image_load('sludge2.png')
 
-    with libtcod.console_init_root(constants['screen_width'], constants['screen_height'],
+    with libtcod.console_init_root(constants['root_width'], constants['root_height'],
                                    constants['window_title'], True, libtcod.RENDERER_SDL2, vsync=True) as root_console:
         while True:
             libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
 
             if show_main_menu:
-                main_menu(root_console, main_menu_background_image, constants['screen_width'],
-                          constants['screen_height'])
+                main_menu(root_console, main_menu_background_image, constants['root_width'],
+                          constants['root_height'])
 
                 if show_load_error_message:
-                    message_box(root_console, 'No save game to load', 50, constants['screen_width'],
-                                constants['screen_height'])
+                    message_box(root_console, 'No save game to load', 50, constants['root_width'],
+                                constants['root_height'])
 
                 custrender.clear((0, 0, 0))
                 custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))
@@ -75,13 +76,12 @@ def main():
                     raise SystemExit()
 
             else:
-                root_console.clear(fg=(255, 255, 255))
-                play_game(player, entities, game_map, message_log, game_state, root_console, panel, constants)
+                play_game(player, entities, game_map, message_log, root_console, panel, hp_bar, xp_bar, constants)
 
                 show_main_menu = True
 
 
-def play_game(player, entities, game_map, message_log, game_state, root_console, panel, constants):
+def play_game(player, entities, game_map, message_log, root_console, panel, hp_bar, xp_bar, constants):
     root_console.clear(fg=(255, 255, 255))
     fov_map = initialize_fov(game_map)
     fov_recompute = True
@@ -92,6 +92,7 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
     game_state = GameStates.PLAYERS_TURN
     turn_number = 0
     turns_passed = 0
+    start_turn = 0
     previous_game_state = game_state
 
     targeting_item = None
@@ -105,10 +106,12 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
         if fov_recompute:
             recompute_fov(fov_map, player.x, player.y, constants['fov_radius'], constants['fov_light_walls'],
                           constants['fov_algorithm'])
-            render_all(root_console, panel, entities, player, game_map, fov_map, message_log,
-                       constants['screen_width'], constants['screen_height'], constants['camera_width'],
-                       constants['camera_height'], constants['bar_width'], constants['panel_height'],
-                       constants['panel_y'], constants['colours'], game_state, turn_number)
+            render_all(root_console, panel, hp_bar, xp_bar, entities, player, game_map, fov_map, message_log,
+                       constants['root_width'], constants['root_height'], constants['game_window_width'],
+                       constants['game_window_height'], constants['panel_width'], constants['panel_height'],
+                       constants['stat_bar_width'], constants['stat_bar_height'], constants['fx_panel_width'],
+                       constants['fx_panel_height'], constants['camera_width'], constants['camera_height'],
+                       constants['colours'], game_state, turn_number)
             fov_recompute = False
             custrender.clear((0, 0, 0))
             custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))
@@ -151,10 +154,14 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 exploring = False
                 previous_game_state = game_state
                 message_log.add_message(Message('Autoexploration cancelled.', libtcod.yellow))
-            if resting:
+            elif resting:
                 resting = False
                 previous_game_state = game_state
                 message_log.add_message(Message('You stop resting.', libtcod.yellow))
+            elif to_down_stairs:
+                to_down_stairs = False
+                previous_game_state = game_state
+                message_log.add_message(Message('You stop heading towards the stairs.', libtcod.yellow))
 
             dx, dy = move
             destination_x = player.x + dx
@@ -306,6 +313,10 @@ def play_game(player, entities, game_map, message_log, game_state, root_console,
                 resting = False
                 previous_game_state = game_state
                 message_log.add_message(Message('You stop resting.', libtcod.yellow))
+            elif to_down_stairs:
+                to_down_stairs = False
+                previous_game_state = game_state
+                message_log.add_message(Message('You stop heading towards the stairs.', libtcod.yellow))
             else:
                 previous_game_state = game_state
                 game_state = GameStates.ESC_MENU

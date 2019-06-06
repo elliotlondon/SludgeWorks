@@ -1,5 +1,4 @@
 import tcod as libtcod
-
 from game_messages import Message
 
 
@@ -32,9 +31,7 @@ class Inventory:
         item_component = item_entity.item
 
         if item_component.use_function is None:
-            equippable_component = item_entity.equippable
-
-            if equippable_component:
+            if item_entity.equippable.slot is not None:
                 results.append({'equip': item_entity})
             else:
                 results.append({'message': Message('The {0} cannot be used'.format(item_entity.name), libtcod.yellow)})
@@ -59,12 +56,12 @@ class Inventory:
     def drop_item(self, item):
         results = []
 
-        if self.owner.equipment.main_hand == item or self.owner.equipment.off_hand == item:
-            self.owner.equipment.toggle_equip(item)
+        for i in vars(self.owner.equipment):                # Get a list of all attributes in the object
+            if getattr(self.owner.equipment, i) == item:    # Check if attr. == item
+                self.owner.equipment.toggle_equip(item)     # Dequip
 
         item.x = self.owner.x
         item.y = self.owner.y
-
         self.remove_item(item)
         results.append({'item_dropped': item, 'message': Message('{0} dropped'.format(item.name),
                                                                  libtcod.yellow)})

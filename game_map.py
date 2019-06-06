@@ -90,8 +90,8 @@ class GameMap:
 
         monster_chances = {
             # Scavengers
-            'Wretch': from_dungeon_level([[50, 1], [35, 4], [20, 6], [20, 8]], self.dungeon_level),
-            'Sludge Fiend': from_dungeon_level([[35, 1], [50, 4], [35, 6], [20, 8]], self.dungeon_level),
+            'Wretch': from_dungeon_level([[50, 1], [35, 4], [20, 6], [10, 8], [0, 10]], self.dungeon_level),
+            'Sludge Fiend': from_dungeon_level([[35, 1], [50, 4], [35, 6], [10, 8], [0, 10]], self.dungeon_level),
             'Thresher': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
             # Beasts
             'Moire Beast': from_dungeon_level([[5, 2], [10, 3], [20, 4], [30, 6], [20, 8]], self.dungeon_level),
@@ -105,26 +105,30 @@ class GameMap:
             'Eternal Cult Kidnapper': from_dungeon_level([[10, 2], [20, 4], [40, 6], [20, 8]], self.dungeon_level),
             # Cleansing Hand
             'Cleansing Hand Crusader': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
-            'Cleansing Hand Purifier': from_dungeon_level([[5, 4], [10, 6], [20, 8], [35, 10]], self.dungeon_level),
+            'Cleansing Hand Purifier': from_dungeon_level([[5, 5], [10, 6], [20, 8], [50, 10]], self.dungeon_level),
+            'Cleansing Hand Duelist': from_dungeon_level([[5, 5], [10, 7], [25, 8], [50, 10]], self.dungeon_level),
             # Minibosses
             'Alfonrice, the Spinning Blade': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level)
         }
-
-        # Keep track of uniques
-        alfonrice_counter = 1
 
         # Item dictionary
         item_chances = {
             'healing_potion': 35,
             'iron_longsword': from_dungeon_level([[10, 1], [5, 3], [0, 4]], self.dungeon_level),
+            'steel_longsword': from_dungeon_level([[5, 2], [10, 3], [15, 4], [10, 5], [5, 6], [0, 7]],
+                                                  self.dungeon_level),
             'steel_dagger': from_dungeon_level([[5, 1], [10, 3], [5, 4], [0, 5]], self.dungeon_level),
             'steel_mace': from_dungeon_level([[5, 3], [10, 4], [15, 5], [0, 6]], self.dungeon_level),
-            'symbiotic_hatchet': from_dungeon_level([[1, 4], [5, 5], [3, 6], [0, 7]], self.dungeon_level),
+            'influenced_hatchet': from_dungeon_level([[1, 4], [5, 5], [3, 6], [10, 7]], self.dungeon_level),
             'iron_buckler': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
             'steel_greatshield': from_dungeon_level([[5, 2], [10, 3], [5, 5], [0, 6]], self.dungeon_level),
             'iron_helmet': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
             'steel_bascinet': from_dungeon_level([[1, 2], [5, 3], [10, 4], [5, 5], [0, 6]], self.dungeon_level),
             'steel_cuirass': from_dungeon_level([[1, 3], [5, 5], [10, 6], [5, 7], [0, 8]], self.dungeon_level),
+            'trickster_gloves': from_dungeon_level([[3, 1], [5, 2], [10, 3], [5, 4], [0, 5]], self.dungeon_level),
+            'steel_platelegs': from_dungeon_level([[3, 3], [5, 4], [10, 5], [5, 6], [1, 7], [0, 8]],
+                                                  self.dungeon_level),
+            'wax_coated_ring': from_dungeon_level([[1, 0]], self.dungeon_level),
             'lightning_scroll': from_dungeon_level([[5, 3], [10, 4], [15, 6]], self.dungeon_level),
             'fireball_scroll': from_dungeon_level([[5, 4], [10, 6]], self.dungeon_level),
             'confusion_scroll': from_dungeon_level([[5, 2], [10, 4]], self.dungeon_level)
@@ -173,9 +177,9 @@ class GameMap:
                     entities.append(cleansing_hand_crusader(x, y))
                 elif monster_choice == 'Cleansing Hand Purifier':
                     entities.append(cleansing_hand_purifier(x, y))
-                elif monster_choice == 'Alfonrice, the Spinning Blade' and alfonrice_counter != 0:
+                elif monster_choice == 'Alfonrice, the Spinning Blade':
                     entities.append(alfonrice(x, y))
-                    alfonrice_counter = 0
+                    monster_chances.update({'Alfonrice, the Spinning Blade': 0})
 
         # Place items
         for i in range(number_of_items):
@@ -188,6 +192,8 @@ class GameMap:
                 # Weapons and shields (main-hand and off-hand)
                 if item_choice == 'iron_longsword':
                     entities.append(iron_longsword(x, y))
+                elif item_choice == 'steel_longsword':
+                    entities.append(steel_longsword(x, y))
                 elif item_choice == 'steel_dagger':
                     entities.append(steel_dagger(x, y))
                 elif item_choice == 'steel_mace':
@@ -206,6 +212,13 @@ class GameMap:
                     entities.append(steel_bascinet(x, y))
                 elif item_choice == 'steel_cuirass':
                     entities.append(steel_cuirass(x, y))
+                elif item_choice == 'trickster_gloves':
+                    entities.append(trickster_gloves(x, y))
+                elif item_choice == 'steel_platelegs':
+                    entities.append(steel_platelegs(x, y))
+                elif item_choice == 'wax_coated_ring':
+                    entities.append(wax_coated_ring(x, y))
+                    item_chances.update({'wax_coated_ring:': 0})
 
                 # Consumables
                 elif item_choice == 'healing_potion':
@@ -234,6 +247,9 @@ class GameMap:
         entities = [player]
 
         self.tiles = self.initialize_tiles()
+
+        # Define variable floor size here!
+        # self.make_map(constants['map_width'], constants['map_height']/2, player, entities)
         self.make_map(constants['map_width'], constants['map_height'], player, entities)
 
         # Heal on change of floors?

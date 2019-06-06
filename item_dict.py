@@ -19,6 +19,17 @@ def iron_longsword(x, y):
                   equippable=equippable_component)
 
 
+def steel_longsword(x, y):
+    equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
+                                      damage_dice=1, damage_sides=6,
+                                      strength_bonus=1)
+    return Entity(x, y, '/', libtcod.lighter_grey, 'Steel Longsword',
+                  'A highly polished, sharp steel longsword with an engraved hilt made of bone. Judging by the chirped '
+                  'chevrons processing up the blade\'s body, this is undoubtedly a weapon belonging to the Cleansing '
+                  'Hand, discarded either as a result of a hasty slaughter or the gentle caress of insanity.',
+                  equippable=equippable_component)
+
+
 def steel_dagger(x, y):
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
                                       damage_dice=1, damage_sides=3,
@@ -44,7 +55,7 @@ def influenced_hatchet(x, y):
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
                                       damage_dice=3, damage_sides=3,
                                       strength_bonus=3, dexterity_bonus=3)
-    return Entity(x, y, '¬', libtcod.light_lime, 'Influenced Hatchet',
+    return Entity(x, y, '|', libtcod.light_lime, 'Influenced Hatchet',
                   'Undeniably tainted by the SludgeWorks, what used to be a woodsman\'s tool for chopping wood (or,'
                   'perhaps, the local writhing vegetation) has began to turn into a part of the scenery in its own'
                   'right. Vines trail from a bundled counterweight at the hilt of the weapon, and the axe\'s edge'
@@ -92,6 +103,33 @@ def steel_cuirass(x, y):
                   'A medieval steel chestplate, frayed with rust and various unusual discolourations. Despite the'
                   'moderate lack of structural integrity, this will still provide ample protection against most'
                   'conventional weaponry.',
+                  equippable=equippable_component)
+
+
+def trickster_gloves(x, y):
+    equippable_component = Equippable(EquipmentSlots.HANDS, armour_bonus=1, dexterity_bonus=2)
+    return Entity(x, y, ')', libtcod.darker_orange, 'Trickster\'s Gloves',
+                  'These dark, leather gloves which extend to the elbow not only provide safety against any intruding '
+                  'fangs, but cause you to question whether the nagging sense of kleptomania you are experiencing '
+                  'has always been an inherent aspect of your personality.',
+                  equippable=equippable_component)
+
+
+def steel_platelegs(x, y):
+    equippable_component = Equippable(EquipmentSlots.LEGS, armour_bonus=2)
+    return Entity(x, y, '}', libtcod.white, 'Steel Platelegs',
+                  'All the components of a solid, medieval-style set of plated leg armour stand before you; tassets, '
+                  'cuisses and greaves all made from dented, but reasonable quality steel.',
+                  equippable=equippable_component)
+
+
+def wax_coated_ring(x, y):
+    equippable_component = Equippable(EquipmentSlots.LEFT_HAND, dexterity_bonus=2, vitality_bonus=2)
+    return Entity(x, y, '.', libtcod.dark_yellow, 'Wax-Coated Ring',
+                  'A ring completely covered in a darkened yellow wax which is impossible to remove. You surmise that '
+                  'this material exists not to prevent damage to the ring, but to impart permanence to the inherent '
+                  'power within this object and protect it from the natural corruption of the SludgeWorks. Just by '
+                  'holding the ring, the impending doom of your certain demise feels slightly lifted.',
                   equippable=equippable_component)
 
 

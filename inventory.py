@@ -11,15 +11,17 @@ class Inventory:
         results = []
 
         if len(self.items) >= self.capacity:
-            results.append({
-                'item_added': None,
-                'message': Message('You cannot carry any more, your inventory is full', libtcod.yellow)
-            })
+            if self.owner.name == 'Player':
+                results.append({
+                    'item_added': None,
+                    'message': Message('You cannot carry any more, your inventory is full', libtcod.yellow)
+                })
         else:
-            results.append({
-                'item_added': item,
-                'message': Message('You pick up the {0}!'.format(item.name), libtcod.blue)
-            })
+            if self.owner.name == 'Player':
+                results.append({
+                    'item_added': item,
+                    'message': Message('You pick up the {0}!'.format(item.name), libtcod.blue)
+                })
 
             self.items.append(item)
 
@@ -53,17 +55,31 @@ class Inventory:
     def remove_item(self, item):
         self.items.remove(item)
 
-    def drop_item(self, item):
+    def drop_item(self, item, entity):
         results = []
 
-        for i in vars(self.owner.equipment):                # Get a list of all attributes in the object
-            if getattr(self.owner.equipment, i) == item:    # Check if attr. == item
-                self.owner.equipment.toggle_equip(item)     # Dequip
+        if entity.equipment:
+            for i in vars(entity.equipment):                # Get a list of all attributes in the object
+                if getattr(entity.equipment, i) == item:    # Check if attr. == item
+                    entity.equipment.toggle_equip(item)     # Dequip
 
-        item.x = self.owner.x
-        item.y = self.owner.y
+        item.x = entity.x
+        item.y = entity.y
         self.remove_item(item)
-        results.append({'item_dropped': item, 'message': Message('{0} dropped'.format(item.name),
-                                                                 libtcod.yellow)})
+
+        if entity.name == 'Player':
+            results.append({'item_dropped': item, 'message': Message('{0} dropped'.format(item.name),
+                                                                     libtcod.yellow)})
 
         return results
+
+    def drop_all(self, entities):
+        for item in self.items:
+            if self.owner.equipment:
+                for i in vars(self.owner.equipment):                # Get a list of all attributes in the object
+                    if getattr(self.owner.equipment, i) == item:    # Check if attr. == item
+                        self.owner.equipment.toggle_equip(item)     # Dequip
+
+            item.x = self.owner.x
+            item.y = self.owner.y
+            entities.append(item)

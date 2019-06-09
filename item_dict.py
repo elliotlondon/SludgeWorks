@@ -8,6 +8,14 @@ from random import randint
 
 
 # Weapons and shields (main-hand and off-hand)
+def iron_dagger(x, y):
+    equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
+                                      damage_dice=1, damage_sides=3)
+    return Entity(x, y, '-', libtcod.light_grey,
+                    'Iron Dagger', 'A short blade ideal for swift stabbing attacks.',
+                    equippable=equippable_component)
+
+
 def iron_longsword(x, y):
     equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
                                       damage_dice=1, damage_sides=4,
@@ -94,6 +102,14 @@ def steel_bascinet(x, y):
                   'A crescent-moon shaped slot is cut into the front of this helmet made of interlocking plate. The '
                   'front of the faceguard protrudes confidently in the assurance that all but the most mortal of wounds'
                   'will simply glance off harmlessly.',
+                  equippable=equippable_component)
+
+
+def leather_armour(x, y):
+    equippable_component = Equippable(EquipmentSlots.TORSO, armour_bonus=1)
+    return Entity(x, y, ']', libtcod.dark_orange, 'Leather Armour',
+                  'Basic leather armour covering the torso, providing modest protection. This was the best you could '
+                  'find...',
                   equippable=equippable_component)
 
 

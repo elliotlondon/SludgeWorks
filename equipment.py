@@ -196,6 +196,7 @@ class Equipment:
 
                 self.main_hand = equippable_entity
                 results.append({'equipped': equippable_entity})
+
         elif slot == EquipmentSlots.OFF_HAND:
             if self.off_hand == equippable_entity:
                 self.off_hand = None

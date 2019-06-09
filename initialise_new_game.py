@@ -116,8 +116,10 @@ def get_game_variables(constants):
     player.equipment.toggle_equip(dagger)
     player.equipment.toggle_equip(leather_armour)
 
+    # Create the first floor map
     game_map = GameMap(constants['map_width'], constants['map_height'])
     game_map.make_map(constants['map_width'], constants['map_height'], player, entities)
+    game_map.place_entities(constants['map_width'], constants['map_height'], entities)
 
     message_log = MessageLog(constants['comments_x'], constants['comments_width'], constants['comments_height'])
 

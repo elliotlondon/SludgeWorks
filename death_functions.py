@@ -1,5 +1,4 @@
 import tcod as libtcod
-
 from entity import Entity
 from game_messages import Message
 from game_states import GameStates
@@ -10,7 +9,7 @@ def kill_player(player):
     player.char = '%'
     player.colour = libtcod.white
 
-    return Message('YOU DIED', libtcod.red), GameStates.PLAYER_DEAD
+    return Message('YOU DIED', libtcod.red), GameStates.PLAYER_DEAD     # What is this, dark souls? Pwned
 
 
 def kill_monster(monster, entities):
@@ -35,6 +34,10 @@ def kill_monster(monster, entities):
                       'The grotesque remains of an unfortunate inhabitant of the SludgeWorks.',
                       render_order=RenderOrder.ITEM, item=item_component)
         entities.append(item)
+
+    # If the entity has items in its inventory, drop them at the spot where they died
+    if monster.inventory and monster.inventory.items:
+        monster.inventory.drop_all(entities)
 
     monster.render_order = RenderOrder.CORPSE
     entities.remove(monster)

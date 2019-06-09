@@ -23,7 +23,6 @@ class GameMap:
 
     def make_map(self, map_width, map_height, player, entities):
         # Generate each floor's map by calling the appropriate chamber creation function.
-        entire_dungeon = Rect(0, 0, map_width, map_height)
         if self.dungeon_level == 1:
             # Chamber 1: Large, straightforward (barely eroded) rooms
             max_rooms = 50
@@ -32,7 +31,6 @@ class GameMap:
             self.rooms_chamber(max_rooms, min_room_size, max_room_size, map_width, map_height, player,
                                entities)
             self.erode(map_width, map_height, 1)
-            self.place_entities(entire_dungeon, entities)
         elif self.dungeon_level == 2:
             # Chamber 2: Eroded rooms
             max_rooms = 40
@@ -42,7 +40,6 @@ class GameMap:
                                entities)
             self.caves_chamber(map_width, map_height, 80, 1)
             self.erode(map_width, map_height, 1)
-            self.place_entities(entire_dungeon, entities)
         elif self.dungeon_level == 3:
             # Chamber 3: Caves
             max_rooms = 30
@@ -52,7 +49,6 @@ class GameMap:
                                entities)
             self.caves_chamber(map_width, map_height, 60, 4)
             self.erode(map_width, map_height, 1)
-            self.place_entities(entire_dungeon, entities)
         elif self.dungeon_level == 4:
             # Chamber 4: Narrow Caves
             max_rooms = 20
@@ -63,7 +59,6 @@ class GameMap:
             self.rooms_chamber(max_rooms, min_room_size, max_room_size, map_width, map_height, player,
                                entities)
             self.erode(map_width, map_height, 1)
-            self.place_entities(entire_dungeon, entities)
         else:
             # TODO: other chambers
             max_rooms = 30
@@ -73,9 +68,9 @@ class GameMap:
                                entities)
             self.caves_chamber(map_width, map_height, 60, 4)
             self.erode(map_width, map_height, 1)
-            self.place_entities(entire_dungeon, entities)
 
-    def place_entities(self, room, entities):
+    def place_entities(self, map_width, map_height, entities):
+        room = Rect(0, 0, map_width, map_height)    # Room is the entire dungeon
         max_monsters = from_dungeon_level([[50, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
         max_plants = from_dungeon_level([[25, 1], [35, 3], [50, 4], [35, 6]], self.dungeon_level)
         max_items = from_dungeon_level([[20, 1], [25, 3], [30, 4]], self.dungeon_level)
@@ -179,7 +174,7 @@ class GameMap:
                     entities.append(cleansing_hand_purifier(x, y))
                 elif monster_choice == 'Alfonrice, the Spinning Blade':
                     entities.append(alfonrice(x, y))
-                    monster_chances.update({'Alfonrice, the Spinning Blade': 0})
+                    monster_chances.pop('Alfonrice, the Spinning Blade')
 
         # Place items
         for i in range(number_of_items):
@@ -251,6 +246,7 @@ class GameMap:
         # Define variable floor size here!
         # self.make_map(constants['map_width'], constants['map_height']/2, player, entities)
         self.make_map(constants['map_width'], constants['map_height'], player, entities)
+        self.place_entities(constants['map_width'], constants['map_height'], entities)
 
         # Heal on change of floors?
         # player.fighter.heal(player.fighter.max_hp // 2)
@@ -325,13 +321,6 @@ class GameMap:
                         self.create_v_tunnel(prev_y, new_y, prev_x)
                         self.create_h_tunnel(prev_x, new_x, new_y)
 
-                # Make a list of all the free tiles to be sent to object placement
-                for x in range(map_width):
-                    for y in range(map_height):
-                        if not self.tiles[x][y].block_sight and not self.tiles[x][y].blocked:
-                            free_tiles.append(self.tiles[x][y])
-                # Use this if you wish to place actors on a room-by-room basis
-                # self.place_entities(new_room, entities)
                 rooms.append(new_room)
                 num_rooms += 1
 

@@ -247,7 +247,7 @@ def play_game(player, entities, game_map, message_log, root_console, panel, hp_b
             if game_state == GameStates.SHOW_INVENTORY:
                 player_turn_results.extend(player.inventory.use(item, entities=entities, fov_map=fov_map))
             elif game_state == GameStates.DROP_INVENTORY:
-                player_turn_results.extend(player.inventory.drop_item(item))
+                player_turn_results.extend(player.inventory.drop_item(item, player))
 
         if look:
             previous_game_state = game_state
@@ -419,6 +419,7 @@ def play_game(player, entities, game_map, message_log, root_console, panel, hp_b
                         if turn_number % 4 == 0:
                             if entity.fighter.current_hp < entity.fighter.base_max_hp:
                                 entity.fighter.current_hp += 1
+
                     enemy_turn_results = entity.ai.take_turn(player, fov_map, game_map, entities)
 
                     for enemy_turn_result in enemy_turn_results:

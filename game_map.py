@@ -283,7 +283,6 @@ class GameMap:
 
     def rooms_chamber(self, max_rooms, min_room_size, max_room_size, map_width, map_height, player, entities):
         # A chamber which is filled with rectangular rooms of random sizes, joined with single-jointed corridors.
-        free_tiles = []
         rooms = []
         num_rooms = 0
         for r in range(max_rooms):
@@ -465,8 +464,9 @@ class GameMap:
 
             for y in range(self.height):
                 for x in range(self.width):
-                    libtcod.map_set_properties(my_map, x, y, not self.tiles[x][y].block_sight,
-                                               not self.tiles[x][y].blocked)
+                    if self.tiles[x][y].explored:
+                        libtcod.map_set_properties(my_map, x, y, not self.tiles[x][y].block_sight,
+                                                   not self.tiles[x][y].blocked)
 
             dij_path = libtcod.dijkstra_new(my_map)
             libtcod.dijkstra_compute(dij_path, player.x, player.y)

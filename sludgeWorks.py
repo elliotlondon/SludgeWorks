@@ -5,7 +5,7 @@ from entity import get_blocking_entities_at_location
 from fov_functions import *
 from game_messages import Message
 from game_states import GameStates
-from game_map import GameMap
+from map_utils.game_map import GameMap
 from input_handlers import handle_keys, handle_mouse, handle_main_menu
 from initialise_new_game import get_constants, get_game_variables
 from data_loaders import load_game, save_game, delete_char_save
@@ -111,7 +111,7 @@ def play_game(player, entities, game_map, message_log, root_console, panel, hp_b
                        constants['game_window_height'], constants['panel_width'], constants['panel_height'],
                        constants['stat_bar_width'], constants['stat_bar_height'], constants['fx_panel_width'],
                        constants['fx_panel_height'], constants['camera_width'], constants['camera_height'],
-                       constants['colours'], game_state, turn_number)
+                       game_state, turn_number)
             fov_recompute = False
             custrender.clear((0, 0, 0))
             custrender.accumulate(root_console, custrender.get_viewport(root_console, True, True))
@@ -256,7 +256,7 @@ def play_game(player, entities, game_map, message_log, root_console, panel, hp_b
         if take_stairs and game_state == GameStates.PLAYERS_TURN:
             for entity in entities:
                 if entity.stairs and entity.x == player.x and entity.y == player.y:
-                    entities = game_map.next_floor(player, constants)
+                    entities = game_map.next_floor(player)
                     fov_map = initialize_fov(game_map)
                     message_log.add_message(Message('You descend to level {0} of the SludgeWorks...'
                                                     .format(game_map.dungeon_level), libtcod.yellow))

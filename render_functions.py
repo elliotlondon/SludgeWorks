@@ -61,43 +61,47 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_colour, back_
 
 def render_all(con, panel, hp_bar, xp_bar, entities, player, game_map, fov_map, message_log, root_width, root_height,
                game_window_width, game_window_height, panel_width, panel_height, stat_bar_width,
-               stat_bar_height, fx_panel_width, fx_panel_height, camera_width, camera_height, colours,
-               game_state, turn_number):
+               stat_bar_height, fx_panel_width, fx_panel_height, camera_width, camera_height, game_state, turn_number):
     seed = Random(1337)  # Randomise randint to prevent d&d roll changes
 
-    '''
-    Render the game window area
-    '''
+    # Render the game window area
     camera_x, camera_y = move_camera(player, game_map, game_window_width, game_window_height)
+    if game_map.width < game_window_width:
+        camera_x = 0
+        camera_width = game_map.width
+    if game_map.height < game_window_height:
+        camera_y = 0
+        camera_height = game_map.height
     for y in range(camera_height):
         for x in range(camera_width):
             map_x = int(camera_x + x)
             map_y = int(camera_y + y)
+
             visible = libtcod.map_is_in_fov(fov_map, map_x, map_y)
             wall = game_map.tiles[map_x][map_y].block_sight
 
             # Using randint without seed here causes a 'disco' effect. Great for hallucinations!!!
-            floor_char = [' ', '.', ',', '`']
+            floor_char = game_map.floor_chars
             floor_char = floor_char[Random.randint(seed, 0, len(floor_char)-1)]
 
             if visible:
                 if wall:
-                    libtcod.console_put_char_ex(con, x, y, ord('▓'.encode('cp437')), colours.get('light_wall'),
-                                                colours.get('dark_ground'))
+                    libtcod.console_put_char_ex(con, x, y, ord('▓'.encode('cp437')), game_map.light_wall,
+                                               game_map.dark_ground)
                     game_map.tiles[map_x][map_y].explored = True
                 else:
-                    libtcod.console_put_char_ex(con, x, y, floor_char, colours.get('light_ground'),
-                                                colours.get('dark_ground'))
+                    libtcod.console_put_char_ex(con, x, y, floor_char, game_map.light_ground,
+                                                game_map.dark_ground)
                     game_map.tiles[map_x][map_y].explored = True
 
             elif game_map.tiles[map_x][map_y].explored:
                 if wall:
-                    libtcod.console_put_char_ex(con, x, y, ord('▒'.encode('cp437')), colours.get('dark_wall'),
-                                                colours.get('dark_ground'))
+                    libtcod.console_put_char_ex(con, x, y, ord('▒'.encode('cp437')), game_map.dark_wall,
+                                                game_map.dark_ground)
                     game_map.tiles[map_x][map_y].blocks_sight = True
                 else:
-                    libtcod.console_put_char_ex(con, x, y, ord('.'.encode('cp437')), colours.get('dark_ground'),
-                                                colours.get('dark_ground'))
+                    libtcod.console_put_char_ex(con, x, y, ord('.'.encode('cp437')), game_map.dark_ground,
+                                                game_map.dark_ground)
 
     entities_in_render_order = sorted(entities, key=lambda z: z.render_order.value)
 
@@ -116,9 +120,7 @@ def render_all(con, panel, hp_bar, xp_bar, entities, player, game_map, fov_map, 
                              get_names_under_char(player, entities, fov_map))
     libtcod.console_blit(con, 0, 0, root_width, root_height, con, 0, 0)
 
-    '''
-    Render all of the panels here
-    '''
+    # Render all of the panels here
     panel.clear(fg=(255, 255, 255))
     hp_bar.clear(fg=(255, 255, 255))
     xp_bar.clear(fg=(255, 255, 255))

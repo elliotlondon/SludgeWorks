@@ -7,7 +7,7 @@ from entity import Entity
 from equipment_slots import EquipmentSlots
 from game_messages import MessageLog
 from game_states import GameStates
-from game_map import GameMap
+from map_utils.game_map import GameMap
 from render_functions import RenderOrder
 
 
@@ -15,8 +15,8 @@ def get_constants():
     window_title = 'SludgeWorks'
 
     # Define the size for the game window as a whole
-    root_width = 80
-    root_height = 48
+    root_width = 72
+    root_height = 45
 
     # Define the size of the stat bar (HP and XP)
     stat_bar_width = root_width
@@ -43,20 +43,12 @@ def get_constants():
     camera_width = game_window_width
     camera_height = game_window_height
 
-    # TODO: Have this change depending upon what the dungeon level is and the dungeon level structure
-    map_width = 80
-    map_height = 42
+    map_width = game_window_width
+    map_height = game_window_height
 
     fov_algorithm = 0
     fov_light_walls = True
     fov_radius = 5
-
-    colours = {
-        'dark_wall': libtcod.dark_grey,
-        'light_wall': libtcod.Color(150, 100, 50),
-        'dark_ground': libtcod.black,
-        'light_ground': libtcod.dark_grey,
-    }
 
     constants = {
         'window_title': window_title,
@@ -79,8 +71,7 @@ def get_constants():
         'camera_height': camera_height,
         'fov_algorithm': fov_algorithm,
         'fov_light_walls': fov_light_walls,
-        'fov_radius': fov_radius,
-        'colours': colours
+        'fov_radius': fov_radius
     }
 
     return constants
@@ -117,8 +108,8 @@ def get_game_variables(constants):
     player.equipment.toggle_equip(leather_armour)
 
     # Create the first floor map
-    game_map = GameMap(constants['map_width'], constants['map_height'])
-    game_map.make_map(constants['map_width'], constants['map_height'], player, entities)
+    game_map = GameMap('near_surface', constants['map_width'], constants['map_height'])
+    game_map.make_map(player, entities)
     game_map.place_entities(constants['map_width'], constants['map_height'], entities)
 
     message_log = MessageLog(constants['comments_x'], constants['comments_width'], constants['comments_height'])

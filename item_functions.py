@@ -65,13 +65,12 @@ def cast_fireball(*args, **kwargs):
                                                               libtcod.yellow)})
         return results
 
-    results.append({'consumed': True, 'message': Message('The fireball explodes, burning everything within {0} tiles!'.
-                                                         format(radius), libtcod.orange)})
+    results.append({'consumed': True, 'message': Message(f'The fireball explodes, burning everything within {radius} '
+                                                         f'tiles!', libtcod.orange)})
 
     for entity in entities:
         if entity.distance(target_x, target_y) <= radius and entity.fighter:
-            results.append({'message': Message('The {0} gets burned for {1} damage!'.format(entity.name, damage),
-                                               libtcod.orange)})
+            results.append({'message': Message(f'The {entity.name} gets burned for {damage} damage!', libtcod.orange)})
             results.extend(entity.fighter.take_damage(damage))
 
     return results
@@ -97,6 +96,8 @@ def cast_confuse(*args, **kwargs):
                                                                      f'confused. Perhaps the lack of brain has '
                                                                      f'something to do with it...',
                                                                      libtcod.light_green)})
+                break
+
             confused_ai = ConfusedMonster(entity.ai, 10)
             confused_ai.owner = entity
             entity.ai = confused_ai

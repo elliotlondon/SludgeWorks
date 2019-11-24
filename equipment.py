@@ -14,296 +14,90 @@ class Equipment:
         self.left_hand = left_hand
         self.right_hand = right_hand
 
+    def __iter__(self):
+        for attr in self.__dict__.items():
+            yield attr
+
+    @property
+    def total(self):
+        methods = 0
+        for i in self:
+            methods += 1
+        return methods
+
     @property
     def damage_dice(self):
         damage_dice = 0
-
         if self.main_hand and self.main_hand.equippable:
             damage_dice = self.main_hand.equippable.damage_dice
-
         return damage_dice
 
     @property
     def damage_sides(self):
         damage_sides = 0
-
         if self.main_hand and self.main_hand.equippable:
             damage_sides = self.main_hand.equippable.damage_sides
-
         return damage_sides
 
     @property
     def strength_bonus(self):
         bonus = 0
-
-        if self.main_hand and self.main_hand.equippable:
-            bonus += self.main_hand.equippable.strength_bonus
-        if self.off_hand and self.off_hand.equippable:
-            bonus += self.off_hand.equippable.strength_bonus
-        if self.head and self.head.equippable:
-            bonus += self.head.equippable.strength_bonus
-        if self.torso and self.torso.equippable:
-            bonus += self.torso.equippable.strength_bonus
-        if self.hands and self.hands.equippable:
-            bonus += self.main_hand.equippable.strength_bonus
-        if self.legs and self.legs.equippable:
-            bonus += self.legs.equippable.strength_bonus
-        if self.feet and self.feet.equippable:
-            bonus += self.feet.equippable.strength_bonus
-        if self.left_hand and self.left_hand.equippable:
-            bonus += self.left_hand.equippable.strength_bonus
-        if self.right_hand and self.right_hand.equippable:
-            bonus += self.right_hand.equippable.strength_bonus
-
+        for x in self.__dict__:
+            if getattr(self, x) and self.__dict__[x].equippable:
+                bonus += self.__dict__[x].equippable.strength_bonus
         return bonus
 
     @property
     def dexterity_bonus(self):
         bonus = 0
-
-        if self.main_hand and self.main_hand.equippable:
-            bonus += self.main_hand.equippable.dexterity_bonus
-        if self.off_hand and self.off_hand.equippable:
-            bonus += self.off_hand.equippable.dexterity_bonus
-        if self.head and self.head.equippable:
-            bonus += self.head.equippable.dexterity_bonus
-        if self.torso and self.torso.equippable:
-            bonus += self.torso.equippable.dexterity_bonus
-        if self.hands and self.hands.equippable:
-            bonus += self.main_hand.equippable.dexterity_bonus
-        if self.legs and self.legs.equippable:
-            bonus += self.legs.equippable.dexterity_bonus
-        if self.feet and self.feet.equippable:
-            bonus += self.feet.equippable.dexterity_bonus
-        if self.left_hand and self.left_hand.equippable:
-            bonus += self.left_hand.equippable.dexterity_bonus
-        if self.right_hand and self.right_hand.equippable:
-            bonus += self.right_hand.equippable.dexterity_bonus
-
+        for x in self.__dict__:
+            if getattr(self, x) and self.__dict__[x].equippable:
+                bonus += self.__dict__[x].equippable.dexterity_bonus
         return bonus
 
     @property
     def vitality_bonus(self):
         bonus = 0
-
-        if self.main_hand and self.main_hand.equippable:
-            bonus += self.main_hand.equippable.vitality_bonus
-        if self.off_hand and self.off_hand.equippable:
-            bonus += self.off_hand.equippable.vitality_bonus
-        if self.head and self.head.equippable:
-            bonus += self.head.equippable.vitality_bonus
-        if self.torso and self.torso.equippable:
-            bonus += self.torso.equippable.vitality_bonus
-        if self.hands and self.hands.equippable:
-            bonus += self.main_hand.equippable.vitality_bonus
-        if self.legs and self.legs.equippable:
-            bonus += self.legs.equippable.vitality_bonus
-        if self.feet and self.feet.equippable:
-            bonus += self.feet.equippable.vitality_bonus
-        if self.left_hand and self.left_hand.equippable:
-            bonus += self.left_hand.equippable.vitality_bonus
-        if self.right_hand and self.right_hand.equippable:
-            bonus += self.right_hand.equippable.vitality_bonus
-
+        for x in self.__dict__:
+            if getattr(self, x) and self.__dict__[x].equippable:
+                bonus += self.__dict__[x].equippable.vitality_bonus
         return bonus
 
     @property
     def intellect_bonus(self):
         bonus = 0
-
-        if self.main_hand and self.main_hand.equippable:
-            bonus += self.main_hand.equippable.intellect_bonus
-        if self.off_hand and self.off_hand.equippable:
-            bonus += self.off_hand.equippable.intellect_bonus
-        if self.head and self.head.equippable:
-            bonus += self.head.equippable.intellect_bonus
-        if self.torso and self.torso.equippable:
-            bonus += self.torso.equippable.intellect_bonus
-        if self.hands and self.hands.equippable:
-            bonus += self.main_hand.equippable.intellect_bonus
-        if self.legs and self.legs.equippable:
-            bonus += self.legs.equippable.intellect_bonus
-        if self.feet and self.feet.equippable:
-            bonus += self.feet.equippable.intellect_bonus
-        if self.left_hand and self.left_hand.equippable:
-            bonus += self.left_hand.equippable.intellect_bonus
-        if self.right_hand and self.right_hand.equippable:
-            bonus += self.right_hand.equippable.intellect_bonus
-
+        for x in self.__dict__:
+            if getattr(self, x) and self.__dict__[x].equippable:
+                bonus += self.__dict__[x].equippable.intellect_bonus
         return bonus
 
     @property
     def perception_bonus(self):
         bonus = 0
-
-        if self.main_hand and self.main_hand.equippable:
-            bonus += self.main_hand.equippable.perception_bonus
-        if self.off_hand and self.off_hand.equippable:
-            bonus += self.off_hand.equippable.perception_bonus
-        if self.head and self.head.equippable:
-            bonus += self.head.equippable.perception_bonus
-        if self.torso and self.torso.equippable:
-            bonus += self.torso.equippable.perception_bonus
-        if self.hands and self.hands.equippable:
-            bonus += self.main_hand.equippable.perception_bonus
-        if self.legs and self.legs.equippable:
-            bonus += self.legs.equippable.perception_bonus
-        if self.feet and self.feet.equippable:
-            bonus += self.feet.equippable.perception_bonus
-        if self.left_hand and self.left_hand.equippable:
-            bonus += self.left_hand.equippable.perception_bonus
-        if self.right_hand and self.right_hand.equippable:
-            bonus += self.right_hand.equippable.perception_bonus
-
+        for x in self.__dict__:
+            if getattr(self, x) and self.__dict__[x].equippable:
+                bonus += self.__dict__[x].equippable.perception_bonus
         return bonus
 
     @property
     def armour_bonus(self):
         bonus = 0
-
-        if self.main_hand and self.main_hand.equippable:
-            bonus += self.main_hand.equippable.armour_bonus
-        if self.off_hand and self.off_hand.equippable:
-            bonus += self.off_hand.equippable.armour_bonus
-        if self.head and self.head.equippable:
-            bonus += self.head.equippable.armour_bonus
-        if self.torso and self.torso.equippable:
-            bonus += self.torso.equippable.armour_bonus
-        if self.hands and self.hands.equippable:
-            bonus += self.main_hand.equippable.armour_bonus
-        if self.legs and self.legs.equippable:
-            bonus += self.legs.equippable.armour_bonus
-        if self.feet and self.feet.equippable:
-            bonus += self.feet.equippable.armour_bonus
-        if self.left_hand and self.left_hand.equippable:
-            bonus += self.left_hand.equippable.armour_bonus
-        if self.right_hand and self.right_hand.equippable:
-            bonus += self.right_hand.equippable.armour_bonus
-
+        for x in self.__dict__:
+            if getattr(self, x) and self.__dict__[x].equippable:
+                bonus += self.__dict__[x].equippable.armour_bonus
         return bonus
 
-    def toggle_equip(self, equippable_entity):
-        results = []
+    @staticmethod
+    def toggle_equip(entity, equippable_entity):
+        """This function formally swaps the object attributes of two items, or assigns one if there's no current one."""
         slot = equippable_entity.equippable.slot
-
-        if slot == EquipmentSlots.MAIN_HAND:
-            if self.main_hand == equippable_entity:
-                self.main_hand = None
-                results.append({'dequipped': equippable_entity})
-            else:
-                if self.main_hand:
-                    results.append({'dequipped': self.main_hand})
-
-                self.main_hand = equippable_entity
-                results.append({'equipped': equippable_entity})
-        elif slot == EquipmentSlots.OFF_HAND:
-            if self.off_hand == equippable_entity:
-                self.off_hand = None
-                results.append({'dequipped': equippable_entity})
-            else:
-                if self.off_hand:
-                    results.append({'dequipped': self.off_hand})
-
-                self.off_hand = equippable_entity
-                results.append({'equipped': equippable_entity})
-
-        elif slot == EquipmentSlots.HEAD:
-            if self.head == equippable_entity:
-                self.head = None
-                results.append({'dequipped': equippable_entity})
-            else:
-                if self.head:
-                    results.append({'dequipped': self.head})
-
-                self.head = equippable_entity
-                results.append({'equipped': equippable_entity})
-
-        elif slot == EquipmentSlots.TORSO:
-            if self.torso == equippable_entity:
-                self.torso = None
-                results.append({'dequipped': equippable_entity})
-            else:
-                if self.torso:
-                    results.append({'dequipped': self.torso})
-
-                self.torso = equippable_entity
-                results.append({'equipped': equippable_entity})
-
-        elif slot == EquipmentSlots.HANDS:
-            if self.hands == equippable_entity:
-                self.hands = None
-                results.append({'dequipped': equippable_entity})
-            else:
-                if self.hands:
-                    results.append({'dequipped': self.hands})
-
-                self.hands = equippable_entity
-                results.append({'equipped': equippable_entity})
-
-        elif slot == EquipmentSlots.LEGS:
-            if self.legs == equippable_entity:
-                self.legs = None
-                results.append({'dequipped': equippable_entity})
-            else:
-                if self.legs:
-                    results.append({'dequipped': self.legs})
-
-                self.legs = equippable_entity
-                results.append({'equipped': equippable_entity})
-
-        elif slot == EquipmentSlots.FEET:
-            if self.feet == equippable_entity:
-                self.feet = None
-                results.append({'dequipped': equippable_entity})
-            else:
-                if self.feet:
-                    results.append({'dequipped': self.feet})
-
-                self.feet = equippable_entity
-                results.append({'equipped': equippable_entity})
-
-        elif slot == EquipmentSlots.LEFT_HAND:
-            if self.left_hand == equippable_entity:
-                self.left_hand = None
-                results.append({'dequipped': equippable_entity})
-            else:
-                if self.left_hand:
-                    results.append({'dequipped': self.left_hand})
-
-                self.left_hand = equippable_entity
-                results.append({'equipped': equippable_entity})
-
-        elif slot == EquipmentSlots.RIGHT_HAND:
-            if self.right_hand == equippable_entity:
-                self.right_hand = None
-                results.append({'dequipped': equippable_entity})
-            else:
-                if self.right_hand:
-                    results.append({'dequipped': self.right_hand})
-
-                self.right_hand = equippable_entity
-                results.append({'equipped': equippable_entity})
-
-        # Couldn't get this to work...
-
-        # enumerate() ???
-
-        # for x in vars(EquipmentSlots):
-        #     if getattr(EquipmentSlots, x) == slot:
-        #         for y in vars(Equipment):
-        #             if getattr(self, y) == equippable_entity:
-        #                 setattr(self, y, None)
-        #                 results.append({'dequipped': equippable_entity})
-        #
-        #             else:
-        #                 if getattr(self, y) == equippable_entity:
-        #                     results.append({'dequipped': equippable_entity})
-        #
-        #                 setattr(self, y, equippable_entity)
-        #                 results.append({'equipped': equippable_entity})
-        #                 break
-
-        return results
+        for x in vars(EquipmentSlots):
+            if getattr(EquipmentSlots, x) == slot:
+                if getattr(entity.equipment, x.lower()) == equippable_entity:
+                    setattr(entity.equipment, x.lower(), None)
+                else:
+                    setattr(entity.equipment, x.lower(), equippable_entity)
+                break
 
 
 class Equippable:
@@ -319,3 +113,13 @@ class Equippable:
         self.intellect_bonus = intellect_bonus
         self.perception_bonus = perception_bonus
         self.armour_bonus = armour_bonus
+
+    def __iter__(self):
+        for attr in self.__dict__.items():
+            yield attr
+
+    @staticmethod
+    def to_string(slot):
+        """Pass in a slot object and get its name as a nice string in return"""
+        string = str(slot).replace('EquipmentSlots.', '').replace('_', ' ')
+        return string

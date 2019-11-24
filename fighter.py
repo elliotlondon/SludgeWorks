@@ -176,12 +176,12 @@ class Fighter:
             # Check for damage and display chat messages
             if damage > 0:
                 if crit:
-                    results.append({'message': Message('{0} attacks {1} for {2} hit points. *Critical Hit!*'.
+                    results.append({'message': Message('{0} crits {1} for {2} damage.'.
                                                        format(self.owner.name.capitalize(), target.name,
-                                                              str(damage)), libtcod.white)})
+                                                              str(damage)), libtcod.light_red)})
                     results.extend(target.fighter.take_damage(damage))
                 else:
-                    results.append({'message': Message('{0} attacks {1} for {2} hit points.'.
+                    results.append({'message': Message('{0} attacks {1} for {2} damage.'.
                                     format(self.owner.name.capitalize(), target.name, str(damage)), libtcod.white)})
                     results.extend(target.fighter.take_damage(damage))
                 # Debug to see enemy HP

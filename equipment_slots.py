@@ -3,13 +3,13 @@ from enum import Enum, auto
 
 class EquipmentSlots(Enum):
     # Weapons
-    MAIN_HAND = auto()
-    OFF_HAND = auto()
+    Main_Hand = auto()
+    Off_Hand = auto()
     # Armour
-    HEAD = auto()
-    TORSO = auto()
-    HANDS = auto()
-    LEGS = auto()
-    FEET = auto()
-    LEFT_HAND = auto()
-    RIGHT_HAND = auto()
+    Head = auto()
+    Torso = auto()
+    Hands = auto()
+    Legs = auto()
+    Feet = auto()
+    Left_Hand = auto()
+    Right_Hand = auto()

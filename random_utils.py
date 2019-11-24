@@ -12,7 +12,6 @@ def from_dungeon_level(table, dungeon_level):
 
 def random_choice_index(chances):
     random_chance = randint(1, sum(chances))
-
     running_sum = 0
     choice = 0
     for w in chances:

@@ -9,7 +9,7 @@ from random import randint
 
 # Weapons and shields (main-hand and off-hand)
 def iron_dagger(x, y):
-    equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
+    equippable_component = Equippable(EquipmentSlots.Main_Hand,
                                       damage_dice=1, damage_sides=3)
     return Entity(x, y, '-', libtcod.light_grey,
                     'Iron Dagger', 'A short blade ideal for swift stabbing attacks.',
@@ -17,7 +17,7 @@ def iron_dagger(x, y):
 
 
 def iron_longsword(x, y):
-    equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
+    equippable_component = Equippable(EquipmentSlots.Main_Hand,
                                       damage_dice=1, damage_sides=4,
                                       strength_bonus=1)
     return Entity(x, y, '/', libtcod.light_grey, 'Iron Longsword',
@@ -28,7 +28,7 @@ def iron_longsword(x, y):
 
 
 def steel_longsword(x, y):
-    equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
+    equippable_component = Equippable(EquipmentSlots.Main_Hand,
                                       damage_dice=1, damage_sides=6,
                                       strength_bonus=1)
     return Entity(x, y, '/', libtcod.lighter_grey, 'Steel Longsword',
@@ -39,7 +39,7 @@ def steel_longsword(x, y):
 
 
 def steel_dagger(x, y):
-    equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
+    equippable_component = Equippable(EquipmentSlots.Main_Hand,
                                       damage_dice=1, damage_sides=3,
                                       dexterity_bonus=1)
     return Entity(x, y, '-', libtcod.lighter_grey, 'Steel Dagger',
@@ -49,7 +49,7 @@ def steel_dagger(x, y):
 
 
 def steel_mace(x, y):
-    equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
+    equippable_component = Equippable(EquipmentSlots.Main_Hand,
                                       damage_dice=2, damage_sides=3,
                                       strength_bonus=2)
     return Entity(x, y, '*', libtcod.lighter_grey, 'Steel Mace',
@@ -60,7 +60,7 @@ def steel_mace(x, y):
 
 
 def influenced_hatchet(x, y):
-    equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
+    equippable_component = Equippable(EquipmentSlots.Main_Hand,
                                       damage_dice=3, damage_sides=3,
                                       strength_bonus=3, dexterity_bonus=3)
     return Entity(x, y, '|', libtcod.light_lime, 'Influenced Hatchet',
@@ -73,14 +73,14 @@ def influenced_hatchet(x, y):
 
 
 def iron_buckler(x, y):
-    equippable_component = Equippable(EquipmentSlots.OFF_HAND, armour_bonus=1)
+    equippable_component = Equippable(EquipmentSlots.Off_Hand, armour_bonus=1)
     return Entity(x, y, ']', libtcod.light_grey, 'Iron Buckler',
                   'A small buckler that can be attached to the arm and used to deflect attacks.',
                   equippable=equippable_component)
 
 
 def steel_greatshield(x, y):
-    equippable_component = Equippable(EquipmentSlots.OFF_HAND, armour_bonus=2)
+    equippable_component = Equippable(EquipmentSlots.Off_Hand, armour_bonus=2)
     return Entity(x, y, ')', libtcod.lighter_grey, 'Steel Heraldic Greatshield',
                   'A steel greatshield once emblazoned with the heraldry of an ancient house. Although the image is'
                   'mostly concealed by time, you are still able to make out what appears to be a crowned, upright'
@@ -90,14 +90,14 @@ def steel_greatshield(x, y):
 
 # Armour
 def iron_helmet(x, y):
-    equippable_component = Equippable(EquipmentSlots.HEAD, armour_bonus=1)
+    equippable_component = Equippable(EquipmentSlots.Head, armour_bonus=1)
     return Entity(x, y, '^', libtcod.light_grey, 'Iron Helmet',
                   'An iron helmet designed to help minimise head wounds.',
                   equippable=equippable_component)
 
 
 def steel_bascinet(x, y):
-    equippable_component = Equippable(EquipmentSlots.HEAD, armour_bonus=2)
+    equippable_component = Equippable(EquipmentSlots.Head, armour_bonus=2)
     return Entity(x, y, '^', libtcod.lighter_grey, 'Steel Bascinet',
                   'A crescent-moon shaped slot is cut into the front of this helmet made of interlocking plate. The '
                   'front of the faceguard protrudes confidently in the assurance that all but the most mortal of wounds'
@@ -106,7 +106,7 @@ def steel_bascinet(x, y):
 
 
 def leather_armour(x, y):
-    equippable_component = Equippable(EquipmentSlots.TORSO, armour_bonus=1)
+    equippable_component = Equippable(EquipmentSlots.Torso, armour_bonus=1)
     return Entity(x, y, ']', libtcod.dark_orange, 'Leather Armour',
                   'Basic leather armour covering the torso, providing modest protection. This was the best you could '
                   'find...',
@@ -114,7 +114,7 @@ def leather_armour(x, y):
 
 
 def steel_cuirass(x, y):
-    equippable_component = Equippable(EquipmentSlots.TORSO, armour_bonus=3)
+    equippable_component = Equippable(EquipmentSlots.Torso, armour_bonus=3)
     return Entity(x, y, ']', libtcod.white, 'Steel Cuirass',
                   'A medieval steel chestplate, frayed with rust and various unusual discolourations. Despite the'
                   'moderate lack of structural integrity, this will still provide ample protection against most'
@@ -123,7 +123,7 @@ def steel_cuirass(x, y):
 
 
 def trickster_gloves(x, y):
-    equippable_component = Equippable(EquipmentSlots.HANDS, armour_bonus=1, dexterity_bonus=2)
+    equippable_component = Equippable(EquipmentSlots.Hands, armour_bonus=1, dexterity_bonus=2)
     return Entity(x, y, ')', libtcod.darker_orange, 'Trickster\'s Gloves',
                   'These dark, leather gloves which extend to the elbow not only provide safety against any intruding '
                   'fangs, but cause you to question whether the nagging sense of kleptomania you are experiencing '
@@ -132,7 +132,7 @@ def trickster_gloves(x, y):
 
 
 def steel_platelegs(x, y):
-    equippable_component = Equippable(EquipmentSlots.LEGS, armour_bonus=2)
+    equippable_component = Equippable(EquipmentSlots.Legs, armour_bonus=2)
     return Entity(x, y, '}', libtcod.white, 'Steel Platelegs',
                   'All the components of a solid, medieval-style set of plated leg armour stand before you; tassets, '
                   'cuisses and greaves all made from dented, but reasonable quality steel.',
@@ -140,7 +140,7 @@ def steel_platelegs(x, y):
 
 
 def wax_coated_ring(x, y):
-    equippable_component = Equippable(EquipmentSlots.LEFT_HAND, dexterity_bonus=2, vitality_bonus=2)
+    equippable_component = Equippable(EquipmentSlots.Left_Hand, dexterity_bonus=2, vitality_bonus=2)
     return Entity(x, y, '.', libtcod.dark_yellow, 'Wax-Coated Ring',
                   'A ring completely covered in a darkened yellow wax which is impossible to remove. You surmise that '
                   'this material exists not to prevent damage to the ring, but to impart permanence to the inherent '

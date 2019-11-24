@@ -9,7 +9,7 @@ from map_utils.game_map import GameMap
 from input_handlers import handle_keys, handle_mouse, handle_main_menu
 from initialise_new_game import get_constants, get_game_variables
 from data_loaders import load_game, save_game, delete_char_save
-from menus import main_menu, message_box
+from menus import main_menu, message_box, target_overlay
 from render_functions import clear_all, render_all, entity_in_fov, entities_in_fov
 from random_utils import roll_dice
 
@@ -127,8 +127,10 @@ def play_game(player, entities, game_map, message_log, root_console, panel, hp_b
         pickup = action.get('pickup')
         show_inventory = action.get('show_inventory')
         drop_inventory = action.get('drop_inventory')
+        show_loadout = action.get('show_loadout')
         look = action.get('look')
         inventory_index = action.get('inventory_index')
+        loadout_index = action.get('loadout_index')
         take_stairs = action.get('take_stairs')
         level_up = action.get('level_up')
         show_character_screen = action.get('show_character_screen')
@@ -142,6 +144,8 @@ def play_game(player, entities, game_map, message_log, root_console, panel, hp_b
         left_click = mouse_action.get('left_click')
         right_click = mouse_action.get('right_click')
 
+        target_x = player.x
+        target_y = player.y
         player_turn_results = []
 
         # For all actions that do not return to the main menu, recompute fov (prevents off-screen window drawing errors)
@@ -226,7 +230,8 @@ def play_game(player, entities, game_map, message_log, root_console, panel, hp_b
         elif pickup and game_state == GameStates.PLAYERS_TURN:
             for entity in entities:
                 if entity.item and entity.x == player.x and entity.y == player.y:
-                    pickup_results = player.inventory.add_item(entity)
+                    pickup_results = player.inventory.pick_up(player, entity)
+                    entities.remove(entity)
                     player_turn_results.extend(pickup_results)
                     break
             else:
@@ -241,13 +246,25 @@ def play_game(player, entities, game_map, message_log, root_console, panel, hp_b
             game_state = GameStates.DROP_INVENTORY
 
         if inventory_index is not None and previous_game_state != GameStates.PLAYER_DEAD and inventory_index < len(
-                player.inventory.items):
-            item = player.inventory.items[inventory_index]
+                player.inventory.inv_items):
+            item = player.inventory.inv_items[inventory_index]
 
             if game_state == GameStates.SHOW_INVENTORY:
-                player_turn_results.extend(player.inventory.use(item, entities=entities, fov_map=fov_map))
+                player_turn_results.extend(player.inventory.use(player, item, entities=entities, fov_map=fov_map))
             elif game_state == GameStates.DROP_INVENTORY:
-                player_turn_results.extend(player.inventory.drop_item(item, player))
+                player_turn_results.extend(player.inventory.drop_item(player, item))
+
+        if show_loadout:
+            previous_game_state = game_state
+            game_state = GameStates.SHOW_LOADOUT
+
+        if loadout_index is not None and previous_game_state != GameStates.PLAYER_DEAD and loadout_index < len(
+                player.inventory.equip_items):
+            item = player.inventory.equip_items[loadout_index]
+            if game_state == GameStates.SHOW_LOADOUT:
+                player_turn_results.extend(player.inventory.dequip(player, item))
+            elif game_state == GameStates.DROP_INVENTORY:
+                player_turn_results.extend(player.inventory.drop_item(player, item))
 
         if look:
             previous_game_state = game_state
@@ -258,8 +275,8 @@ def play_game(player, entities, game_map, message_log, root_console, panel, hp_b
                 if entity.stairs and entity.x == player.x and entity.y == player.y:
                     entities = game_map.next_floor(player)
                     fov_map = initialize_fov(game_map)
-                    message_log.add_message(Message('You descend to level {0} of the SludgeWorks...'
-                                                    .format(game_map.dungeon_level), libtcod.yellow))
+                    message_log.add_message(Message(f'You descend to level {game_map.dungeon_level} of the '
+                                                    f'SludgeWorks...', libtcod.yellow))
                     break
             else:
                 if entities_in_fov(entities, fov_map, message_log):
@@ -296,9 +313,16 @@ def play_game(player, entities, game_map, message_log, root_console, panel, hp_b
             game_state = GameStates.ABILITY_SCREEN
 
         if game_state == GameStates.TARGETING:
+            libtcod.console_wait_for_keypress(True)
+            target_overlay(root_console, constants['game_window_width'], constants['game_window_height'], target_x,
+                           target_y)
+            if move:
+                dx, dy = move
+                target_x += dx
+                target_y += dy
             if left_click:
                 target_x, target_y = left_click
-                item_use_results = player.inventory.use(targeting_item, entities=entities, fov_map=fov_map,
+                item_use_results = player.inventory.use(player, targeting_item, entities=entities, fov_map=fov_map,
                                                         target_x=target_x, target_y=target_y)
                 player_turn_results.extend(item_use_results)
             elif right_click:
@@ -347,7 +371,8 @@ def play_game(player, entities, game_map, message_log, root_console, panel, hp_b
             item_added = player_turn_result.get('item_added')
             item_consumed = player_turn_result.get('consumed')
             item_dropped = player_turn_result.get('item_dropped')
-            equip = player_turn_result.get('equip')
+            equipped = player_turn_result.get('equipped')
+            dequipped = player_turn_result.get('dequipped')
             targeting = player_turn_result.get('targeting')
             targeting_cancelled = player_turn_result.get('targeting_cancelled')
             xp = player_turn_result.get('xp')
@@ -360,31 +385,13 @@ def play_game(player, entities, game_map, message_log, root_console, panel, hp_b
                     message, game_state = kill_player(dead_entity)
                 else:
                     message = kill_monster(dead_entity, entities)
-
                 message_log.add_message(message)
 
-            if item_added:
-                entities.remove(item_added)
-                game_state = GameStates.ENEMY_TURN
-
-            if item_consumed:
+            if item_added or item_consumed or equipped or dequipped:
                 game_state = GameStates.ENEMY_TURN
 
             if item_dropped:
                 entities.append(item_dropped)
-                game_state = GameStates.ENEMY_TURN
-
-            if equip:
-                equip_results = player.equipment.toggle_equip(equip)
-                for equip_result in equip_results:
-                    equipped = equip_result.get('equipped')
-                    dequipped = equip_result.get('dequipped')
-
-                    if equipped:
-                        message_log.add_message(Message('You equipped the {0}'.format(equipped.name)))
-
-                    if dequipped:
-                        message_log.add_message(Message('You dequipped the {0}'.format(dequipped.name)))
                 game_state = GameStates.ENEMY_TURN
 
             if targeting:

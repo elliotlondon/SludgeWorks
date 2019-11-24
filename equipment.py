@@ -19,21 +19,24 @@ class Equipment:
             yield attr
 
     @property
+    def total(self):
+        methods = 0
+        for i in self:
+            methods += 1
+        return methods
+
+    @property
     def damage_dice(self):
         damage_dice = 0
-
         if self.main_hand and self.main_hand.equippable:
             damage_dice = self.main_hand.equippable.damage_dice
-
         return damage_dice
 
     @property
     def damage_sides(self):
         damage_sides = 0
-
         if self.main_hand and self.main_hand.equippable:
             damage_sides = self.main_hand.equippable.damage_sides
-
         return damage_sides
 
     @property
@@ -42,7 +45,6 @@ class Equipment:
         for x in self.__dict__:
             if getattr(self, x) and self.__dict__[x].equippable:
                 bonus += self.__dict__[x].equippable.strength_bonus
-
         return bonus
 
     @property
@@ -51,7 +53,6 @@ class Equipment:
         for x in self.__dict__:
             if getattr(self, x) and self.__dict__[x].equippable:
                 bonus += self.__dict__[x].equippable.dexterity_bonus
-
         return bonus
 
     @property
@@ -60,7 +61,6 @@ class Equipment:
         for x in self.__dict__:
             if getattr(self, x) and self.__dict__[x].equippable:
                 bonus += self.__dict__[x].equippable.vitality_bonus
-
         return bonus
 
     @property
@@ -69,7 +69,6 @@ class Equipment:
         for x in self.__dict__:
             if getattr(self, x) and self.__dict__[x].equippable:
                 bonus += self.__dict__[x].equippable.intellect_bonus
-
         return bonus
 
     @property
@@ -78,7 +77,6 @@ class Equipment:
         for x in self.__dict__:
             if getattr(self, x) and self.__dict__[x].equippable:
                 bonus += self.__dict__[x].equippable.perception_bonus
-
         return bonus
 
     @property
@@ -87,27 +85,19 @@ class Equipment:
         for x in self.__dict__:
             if getattr(self, x) and self.__dict__[x].equippable:
                 bonus += self.__dict__[x].equippable.armour_bonus
-
         return bonus
 
-    def toggle_equip(self, equippable_entity):
-        results = []
+    @staticmethod
+    def toggle_equip(entity, equippable_entity):
+        """This function formally swaps the object attributes of two items, or assigns one if there's no current one."""
         slot = equippable_entity.equippable.slot
         for x in vars(EquipmentSlots):
             if getattr(EquipmentSlots, x) == slot:
-                if getattr(self, x.lower()) == equippable_entity:
-                    setattr(self, x.lower(), None)
-                    results.append({'dequipped': equippable_entity})
-
+                if getattr(entity.equipment, x.lower()) == equippable_entity:
+                    setattr(entity.equipment, x.lower(), None)
                 else:
-                    if getattr(self, x.lower()) == equippable_entity:
-                        results.append({'dequipped': equippable_entity})
-
-                    setattr(self, x.lower(), equippable_entity)
-                    results.append({'equipped': equippable_entity})
-                    break
-
-        return results
+                    setattr(entity.equipment, x.lower(), equippable_entity)
+                break
 
 
 class Equippable:
@@ -127,3 +117,9 @@ class Equippable:
     def __iter__(self):
         for attr in self.__dict__.items():
             yield attr
+
+    @staticmethod
+    def to_string(slot):
+        """Pass in a slot object and get its name as a nice string in return"""
+        string = str(slot).replace('EquipmentSlots.', '').replace('_', ' ')
+        return string

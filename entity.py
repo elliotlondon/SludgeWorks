@@ -7,9 +7,8 @@ from item import Item
 
 class Entity:
     def __init__(self, x, y, char, colour, name, description, blocks=False, render_order=RenderOrder.CORPSE,
-                 fighter=None, ai=None, item=None, inventory=None, stairs=None, level=None, equipment=None,
-                 equippable=None, damage_dice=None, damage_sides=None, regenerates=False, faction=None,
-                 erraticity=None):
+                 fighter=None, ai=None, item=None, inventory=None, loadout=None, stairs=None, level=None,
+                 equipment=None, equippable=None, regenerates=False, faction=None, errasticity=None):
         self.x = x
         self.y = y
         self.char = char
@@ -23,40 +22,33 @@ class Entity:
         self.ai = ai
         self.item = item
         self.inventory = inventory
+        self.loadout = loadout
         self.stairs = stairs
         self.level = level
         self.equipment = equipment
         self.equippable = equippable
-        self.damage_dice = damage_dice
-        self.damage_sides = damage_sides
         self.regenerates = regenerates
         self.faction = faction
-        self.erraticity = erraticity
+        self.errasticity = errasticity
 
         if self.fighter:
             self.fighter.owner = self
-
         if self.ai:
             self.ai.owner = self
-
         if self.item:
             self.item.owner = self
-
         if self.inventory:
             self.inventory.owner = self
-
+        if self.loadout:
+            self.loadout.owner = self
         if self.stairs:
             self.stairs.owner = self
-
         if self.level:
             self.level.owner = self
-
         if self.equipment:
             self.equipment.owner = self
-
         if self.equippable:
             self.equippable.owner = self
-
             if not self.item:
                 item = Item()
                 self.item = item
@@ -69,7 +61,7 @@ class Entity:
             self.x += dx
 
     def move_random(self, game_map):
-        if randint(0, 100) < self.erraticity:
+        if randint(0, 100) < self.errasticity:
             dx = randint(-1, 1)
             dy = randint(-1, 1)
             if not game_map.is_blocked(self.x + dx, self.y + dy):
@@ -88,7 +80,6 @@ class Entity:
             dy = 1
         if dy < 0:
             dy = -1
-
         if not (game_map.is_blocked(self.x + dx, self.y + dy) or
                 get_blocking_entities_at_location(entities, self.x + dx, self.y + dy)):
                 self.move(dx, dy, game_map)

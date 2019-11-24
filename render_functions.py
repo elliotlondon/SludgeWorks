@@ -103,9 +103,8 @@ def render_all(con, panel, hp_bar, xp_bar, entities, player, game_map, fov_map, 
                     libtcod.console_put_char_ex(con, x, y, ord('.'.encode('cp437')), game_map.dark_ground,
                                                 game_map.dark_ground)
 
-    entities_in_render_order = sorted(entities, key=lambda z: z.render_order.value)
-
     # Draw all entities in the list
+    entities_in_render_order = sorted(entities, key=lambda z: z.render_order.value)
     for entity in entities_in_render_order:
         if entity.name == 'Moire Beast':
             moire_colour = [libtcod.light_grey, libtcod.lighter_grey, libtcod.lightest_gray, libtcod.grey,
@@ -149,8 +148,11 @@ def render_all(con, panel, hp_bar, xp_bar, entities, player, game_map, fov_map, 
             inventory_title = 'Press the key next to an item to use it, or Esc to cancel.\n'
         else:
             inventory_title = 'Press the key next to an item to drop it, or Esc to cancel.\n'
-
         inventory_menu(con, inventory_title, player, 50, game_window_width, game_window_height)
+
+    if game_state == GameStates.SHOW_LOADOUT:
+        loadout_title = 'EQUIPMENT. Press the key next to an item to use it, or Esc to cancel.\n'
+        loadout_menu(con, loadout_title, player, 50, game_window_width, game_window_height)
 
     elif game_state == GameStates.LEVEL_UP:
         level_up_menu(con, 'Choose a stat to increase:', player, 50, game_window_width, game_window_height)

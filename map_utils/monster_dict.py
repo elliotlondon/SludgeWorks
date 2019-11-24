@@ -52,9 +52,8 @@ def wretch(x, y):
                   'A stunted human swaddled in filthy rags and long since driven feral by the SludgeWorks.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
                   inventory=inventory_component, equipment=equipment_component,
-                  regenerates=True, faction='Scavengers', erraticity=25)
-    monster.inventory.add_item(iron_dagger(monster.x, monster.y))
-    monster.equipment.toggle_equip(iron_dagger(monster.x, monster.y))
+                  regenerates=True, faction='Scavengers', errasticity=25)
+    monster.inventory.spawn_with(monster, iron_dagger(monster.x, monster.y))
     return monster
 
 
@@ -69,7 +68,7 @@ def sludge_fiend(x, y):
                   'drips off this mutant\'s twisted form like a bullet-shredded cape; obsidian spikes protrude '
                   'in clusters from its emaciated and discoloured torso.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
-                  regenerates=True, faction='Scavengers', erraticity=50)
+                  regenerates=True, faction='Scavengers', errasticity=50)
     return monster
 
 
@@ -83,7 +82,7 @@ def thresher(x, y):
                       'creature tirelessly searches it\'s surroundings for new objects to smash together with a '
                       'joyous, childlike expression.',
                       blocks=True, fighter=fighter_component, render_order=RenderOrder.ACTOR, ai=ai_component,
-                      regenerates=True, faction='Scavengers', erraticity=75)
+                      regenerates=True, faction='Scavengers', errasticity=75)
         return monster
 
 
@@ -113,7 +112,7 @@ def lupine_terror(x, y):
                   'vision of fangs and matted, grey fur. This monstrosity walks upright in emulation of nature\'s most '
                   'infamous apex predators as blood-tinged saliva hangs from it\'s constantly masticating jaws.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
-                  regenerates=True, faction='Beasts', erraticity=50)
+                  regenerates=True, faction='Beasts', errasticity=50)
     return monster
 
 
@@ -137,7 +136,7 @@ def bloodseeker(x, y):
                   'up the hilts. The creature\'s eyes are consumed by feral rage as it prowls the caverns, twitching '
                   'from the eternal	state of pain inflicted by its inherent regeneration.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
-                  regenerates=True, faction='Beast', erraticity=100)
+                  regenerates=True, faction='Beast', errasticity=100)
     return monster
 
 
@@ -158,7 +157,7 @@ def risen_sacrifice(x, y):
                   'radiant bodies of the recently sacrificed reanimating joyfully, with blood still flowing from their '
                   'mortal wounds would strongly disagree with this statement.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
-                  faction='Cultists', erraticity=34)
+                  faction='Cultists', errasticity=34)
     return monster
 
 
@@ -173,13 +172,13 @@ def eternal_celebrant(x, y):
                   'out; a worn, sacrificial dagger trembles within his hand, piercing the suffocating darkness in '
                   'search of replies.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
-                  faction='Cultists', erraticity=100)
+                  faction='Cultists', errasticity=100)
     return monster
 
 
 def eternal_kidnapper(x, y):
     fighter_component = Fighter(current_hp=10, max_hp=10, damage_dice=2, damage_sides=4, armour=0,
-                                strength=18, dexterity=10, vitality=12, intellect=10, perception=18, xp=200,
+                                strength=20, dexterity=10, vitality=12, intellect=10, perception=18, xp=200,
                                 dodges=True)
     equipment_component = Equipment(())
     inventory_component = Inventory(10)
@@ -192,11 +191,9 @@ def eternal_kidnapper(x, y):
                   'blackjack makes this intention undeniably clear.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
                   equipment=equipment_component, inventory=inventory_component,
-                  regenerates=True, faction='Cultists', erraticity=67)
-    monster.inventory.add_item(leather_armour(x, y))
-    monster.equipment.toggle_equip(leather_armour(x, y))
-    monster.inventory.add_item(iron_buckler(x, y))
-    monster.equipment.toggle_equip(iron_buckler(x, y))
+                  regenerates=True, faction='Cultists', errasticity=67)
+    monster.inventory.spawn_with(monster, leather_armour(x, y))
+    monster.inventory.spawn_with(monster, iron_buckler(x, y))
     return monster
 
 
@@ -216,15 +213,11 @@ def cleansing_hand_crusader(x, y):
                   'to hold their own against many daily challenges experienced within the SludgeWorks.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
                   equipment=equipment_component, inventory=inventory_component,
-                  regenerates=True, faction='Cleansing Hand', erraticity=67)
-    monster.inventory.add_item(steel_cuirass(x, y))
-    monster.equipment.toggle_equip(steel_cuirass(x, y))
-    monster.inventory.add_item(steel_longsword(x, y))
-    monster.equipment.toggle_equip(steel_longsword(x, y))
-    monster.inventory.add_item(steel_greatshield(x, y))
-    monster.equipment.toggle_equip(steel_greatshield(x, y))
+                  regenerates=True, faction='Cleansing Hand', errasticity=67)
+    monster.inventory.spawn_with(monster, steel_cuirass(x, y))
+    monster.inventory.spawn_with(monster, steel_longsword(x, y))
+    monster.inventory.spawn_with(monster, steel_greatshield(x, y))
     return monster
-
 
 
 def cleansing_hand_purifier(x, y):
@@ -242,13 +235,10 @@ def cleansing_hand_purifier(x, y):
                   'Cleansing Hand territory. Never again will the last bastion of purity be defiled by such entropy.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
                   equipment=equipment_component, inventory=inventory_component,
-                  regenerates=True, faction='Cleansing Hand', erraticity=14)
-    monster.inventory.add_item(steel_cuirass(x, y))
-    monster.equipment.toggle_equip(steel_cuirass(x, y))
-    monster.inventory.add_item(steel_mace(x, y))
-    monster.equipment.toggle_equip(steel_mace(x, y))
-    monster.inventory.add_item(steel_greatshield(x, y))
-    monster.equipment.toggle_equip(steel_greatshield(x, y))
+                  regenerates=True, faction='Cleansing Hand', errasticity=14)
+    monster.inventory.spawn_with(monster, steel_cuirass(x, y))
+    monster.inventory.spawn_with(monster, steel_mace(x, y))
+    monster.inventory.spawn_with(monster, steel_greatshield(x, y))
     return monster
 
 
@@ -280,7 +270,7 @@ def hunchback(x, y):
                   'kirpan scatters all nearby light. Echoes of guttural chanting reverberate off the cave '
                   'walls as it glacially stumbles forward towards its next target.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
-                  regenerates=True, faction='Horrors', erraticity=10)
+                  regenerates=True, faction='Horrors', errasticity=10)
     return monster
 
 
@@ -307,7 +297,7 @@ def alfonrice(x, y):
                   'horrors with a single cleave of his cruciform broadsword. He grits his teeth in anticipation, '
                   'anxious to cut down the next prospective entrant to the Most Holy Bastion.',
                   blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component,
-                  regenerates=True, faction='Cleansing Hand', erraticity=50)
+                  regenerates=True, faction='Cleansing Hand', errasticity=50)
     return monster
 
 

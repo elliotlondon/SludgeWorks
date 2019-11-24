@@ -1,5 +1,5 @@
 import math
-from random import uniform
+from random import uniform, seed as rseed
 from numpy.random import normal, seed
 from map_utils.stairs import Stairs
 from random_utils import from_dungeon_level, random_choice_from_dict
@@ -40,58 +40,6 @@ class GameMap:
         tiles = [[Tile(True) for y in range(self.height)] for x in range(self.width)]
         return tiles
 
-    def make_map(self, player, entities):
-        # Generate each floor's map by calling the appropriate chamber creation function.
-        if self.dungeon_level == 1:
-            self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
-            self.erode(1)
-            return
-        if self.current_biome == 'near_surface':
-            if uniform(0, 1) >= 0.5:
-                self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
-                self.erode(1)
-            elif uniform(0, 1) >= 0.5:
-                self.current_biome = 'ice_caves'
-                self.light_wall = libtcod.white
-                self.floor_chars = ['~', ' ', ',', '`', ' ']
-                self.caves_chamber(45, 1)
-                self.erode(1)
-                self.rooms_chamber(16, 8, 75, player, entities)
-                self.erode(1)
-            else:
-                self.current_biome = 'chasms'
-                self.light_ground = libtcod.dark_grey
-                self.floor_chars = [' ', '.', ',', '`']
-                self.rooms_chamber(24, 16, 50, player, entities)
-                self.caves_chamber(60, 4)
-                self.erode(1)
-        elif self.current_biome == 'ice_caves':
-            if uniform(0, 1) >= 0.8:
-                self.current_biome = 'near_surface'
-                self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
-                self.erode(1)
-            elif uniform(0, 1) >= 0.2:
-                self.caves_chamber(45, 1)
-                self.erode(1)
-                self.rooms_chamber(16, 8, 75, player, entities)
-                self.erode(1)
-            else:
-                self.current_biome = 'chasms'
-                self.light_ground = libtcod.dark_grey
-                self.floor_chars = [' ', '.', ',', '`']
-                self.rooms_chamber(24, 16, 50, player, entities)
-                self.caves_chamber(60, 4)
-                self.erode(1)
-        elif self.current_biome == 'chasms':
-            if uniform(0, 1) >= 0.75:
-                self.current_biome = 'near_surface'
-                self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
-                self.erode(1)
-            else:
-                self.rooms_chamber(24, 16, 50, player, entities)
-                self.caves_chamber(60, 4)
-                self.erode(1)
-
     def place_entities(self, map_width, map_height, entities):
         room = Rect(0, 0, map_width, map_height)    # Room is the entire dungeon
         max_monsters = from_dungeon_level([[50, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
@@ -112,7 +60,7 @@ class GameMap:
             'Sludge Fiend': from_dungeon_level([[35, 1], [50, 4], [35, 6], [10, 8], [0, 10]], self.dungeon_level),
             'Thresher': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
             # Beasts
-            'Moire Beast': from_dungeon_level([[5, 2], [10, 3], [20, 4], [30, 6], [20, 8]], self.dungeon_level),
+            'Moire Beast': from_dungeon_level([[3, 2], [5, 3], [10, 4], [20, 6], [25, 8]], self.dungeon_level),
             'Lupine Terror': from_dungeon_level([[1, 2], [5, 3], [10, 4], [25, 6], [30, 8]], self.dungeon_level),
             'Bloodseeker': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level),
             # Horrors
@@ -126,7 +74,9 @@ class GameMap:
             'Cleansing Hand Purifier': from_dungeon_level([[5, 5], [10, 6], [20, 8], [50, 10]], self.dungeon_level),
             'Cleansing Hand Duelist': from_dungeon_level([[5, 5], [10, 7], [25, 8], [50, 10]], self.dungeon_level),
             # Minibosses
-            'Alfonrice, the Spinning Blade': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level)
+            'Alfonrice, the Spinning Blade': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level),
+            'Teague the Martyr': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level),
+            'Dymacia, Effigy of Perfection': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level)
         }
 
         # Item dictionary
@@ -137,7 +87,7 @@ class GameMap:
                                                   self.dungeon_level),
             'steel_dagger': from_dungeon_level([[5, 1], [10, 3], [5, 4], [0, 5]], self.dungeon_level),
             'steel_mace': from_dungeon_level([[5, 3], [10, 4], [15, 5], [0, 6]], self.dungeon_level),
-            'influenced_hatchet': from_dungeon_level([[1, 4], [5, 5], [3, 6], [10, 7]], self.dungeon_level),
+            'influenced_hatchet': from_dungeon_level([[1, 4], [5, 5], [3, 6], [1, 7]], self.dungeon_level),
             'iron_buckler': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
             'steel_greatshield': from_dungeon_level([[5, 2], [10, 3], [5, 5], [0, 6]], self.dungeon_level),
             'iron_helmet': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
@@ -147,9 +97,9 @@ class GameMap:
             'steel_platelegs': from_dungeon_level([[3, 3], [5, 4], [10, 5], [5, 6], [1, 7], [0, 8]],
                                                   self.dungeon_level),
             'wax_coated_ring': from_dungeon_level([[1, 0]], self.dungeon_level),
-            'lightning_scroll': from_dungeon_level([[5, 3], [10, 4], [15, 6]], self.dungeon_level),
+            'lightning_scroll': from_dungeon_level([[5, 2], [10, 4], [15, 6]], self.dungeon_level),
             'fireball_scroll': from_dungeon_level([[5, 4], [10, 6]], self.dungeon_level),
-            'confusion_scroll': from_dungeon_level([[5, 2], [10, 4]], self.dungeon_level)
+            'confusion_scroll': from_dungeon_level([[5, 0], [10, 4]], self.dungeon_level)
         }
 
         # Place stationary monsters (plants) independent of monster number
@@ -198,6 +148,12 @@ class GameMap:
                 elif monster_choice == 'Alfonrice, the Spinning Blade':
                     entities.append(alfonrice(x, y))
                     monster_chances.pop('Alfonrice, the Spinning Blade')
+                elif monster_choice == 'Teague the Martyr':
+                    entities.append(teague(x, y))
+                    monster_chances.pop('Teague the Martyr')
+                elif monster_choice == 'Dymacia, Effigy of Perfection':
+                    entities.append(dymacia(x, y))
+                    monster_chances.pop('Dymacia, Effigy of Perfection')
 
         # Place items
         for i in range(number_of_items):
@@ -266,13 +222,8 @@ class GameMap:
         # Hardcoded min/max
         minimum_width = 72
         maximum_width = 72 * 2
-        seed()      # Seed the random number generator randomly
-        if previous_width == minimum_width:
-            variable_width = round(previous_width + (previous_width - normal(previous_width, 10)))
-        elif previous_width == maximum_width:
-            variable_width = round(previous_width + (previous_width - normal(previous_width, 10)))
-        else:
-            variable_width = normal(previous_width, 10)
+        variable_width = previous_width
+        variable_width += normal(0, 5)
 
         # Ensure the width does not clip through the max/min
         if variable_width % 2 != 0:
@@ -289,14 +240,8 @@ class GameMap:
         # Hardcoded min/max
         minimum_height = 35
         maximum_height = 72 * 2
-        seed()      # Seed the random number generator randomly
-        # Height does not stay the same if max or min, only increases/decreases
-        if previous_height == minimum_height:
-            variable_height = round(previous_height + (previous_height + normal(previous_height, 10)))
-        elif previous_height == maximum_height:
-            variable_height = round(previous_height + (previous_height - normal(previous_height, 10)))
-        else:
-            variable_height = normal(previous_height, 10)
+        variable_height = 0
+        variable_height += normal(0, 5)
 
         # Ensure that the height does not clip through the max/min
         if variable_height % 2 != 0:
@@ -329,36 +274,62 @@ class GameMap:
 
         return entities
 
-    def create_room(self, room):
-        # Go through the tiles in the rectangle and make them passable
-        for x in range(room.x1 + 1, room.x2):
-            for y in range(room.y1 + 1, room.y2):
-                self.tiles[x][y].blocked = False
-                self.tiles[x][y].block_sight = False
-
-    def create_h_tunnel(self, x1, x2, y):
-        for x in range(min(x1, x2), max(x1, x2) + 1):
-            self.tiles[x][y].blocked = False
-            self.tiles[x][y].block_sight = False
-            self.tiles[x][y].tunnel = True
-
-    def create_v_tunnel(self, y1, y2, x):
-        for y in range(min(y1, y2), max(y1, y2) + 1):
-            self.tiles[x][y].blocked = False
-            self.tiles[x][y].block_sight = False
-            self.tiles[x][y].tunnel = True
-
-    def find_neighbours(self, x, y):
-        xi = (0, -1, 1) if 0 < x < self.width - 1 else ((0, -1) if x > 0 else (0, 1))
-        yi = (0, -1, 1) if 0 < y < self.height - 1 else ((0, -1) if y > 0 else (0, 1))
-        for a in xi:
-            for b in yi:
-                if a == b == 0:
-                    continue
-                yield (x + a, y + b)
+    def make_map(self, player, entities):
+        # Generate each floor's map by calling the appropriate chamber creation function.
+        x = uniform(0, 1)
+        if self.dungeon_level == 1:
+            self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
+            self.erode(1)
+            return
+        if self.current_biome == 'near_surface':
+            if x >= 0.25:
+                self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
+                self.erode(1)
+            elif x >= 0.5:
+                self.current_biome = 'ice_caves'
+                self.light_wall = libtcod.white
+                self.floor_chars = ['~', ' ', ',', '`', ' ']
+                self.caves_chamber(45, 1)
+                self.erode(1)
+                self.rooms_chamber(16, 8, 75, player, entities)
+                self.erode(1)
+            else:
+                self.current_biome = 'chasms'
+                self.light_wall = libtcod.dark_grey
+                self.floor_chars = [' ', '.', ',', '`']
+                self.rooms_chamber(8, 4, 50, player, entities)
+                self.caves_chamber(60, 2)
+                self.erode(1)
+        elif self.current_biome == 'ice_caves':
+            if x >= 0.8:
+                self.current_biome = 'near_surface'
+                self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
+                self.erode(1)
+            elif 0.8 > x >= 0.2:
+                self.caves_chamber(45, 1)
+                self.erode(1)
+                self.rooms_chamber(16, 8, 75, player, entities)
+                self.erode(1)
+            else:
+                self.current_biome = 'chasms'
+                self.light_ground = libtcod.dark_grey
+                self.floor_chars = [' ', '.', ',', '`']
+                self.rooms_chamber(8, 4, 50, player, entities)
+                self.caves_chamber(60, 2)
+                self.erode(1)
+        elif self.current_biome == 'chasms':
+            if x >= 0.75:
+                self.current_biome = 'near_surface'
+                self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
+                self.erode(1)
+            else:
+                self.rooms_chamber(8, 4, 50, player, entities)
+                self.caves_chamber(60, 2)
+                self.erode(1)
 
     def rooms_chamber(self, max_room_size, min_room_size, max_rooms, player, entities):
-        # A chamber which is filled with rectangular rooms of random sizes, joined with single-jointed corridors.
+        """A chamber which is filled with rectangular rooms of random sizes, joined with single-jointed corridors."""
+        # TODO: Separate stairs and player placement so that cavegen can be called on its own
         rooms = []
         num_rooms = 0
         map_width = self.width
@@ -464,6 +435,34 @@ class GameMap:
                     if x == 0 or x == map_width - 1 or y == 0 or y == map_height - 1:
                         self.tiles[x][y].blocked = True
                         self.tiles[x][y].block_sight = True
+
+    def create_room(self, room):
+        # Go through the tiles in the rectangle and make them passable
+        for x in range(room.x1 + 1, room.x2):
+            for y in range(room.y1 + 1, room.y2):
+                self.tiles[x][y].blocked = False
+                self.tiles[x][y].block_sight = False
+
+    def create_h_tunnel(self, x1, x2, y):
+        for x in range(min(x1, x2), max(x1, x2) + 1):
+            self.tiles[x][y].blocked = False
+            self.tiles[x][y].block_sight = False
+            self.tiles[x][y].tunnel = True
+
+    def create_v_tunnel(self, y1, y2, x):
+        for y in range(min(y1, y2), max(y1, y2) + 1):
+            self.tiles[x][y].blocked = False
+            self.tiles[x][y].block_sight = False
+            self.tiles[x][y].tunnel = True
+
+    def find_neighbours(self, x, y):
+        xi = (0, -1, 1) if 0 < x < self.width - 1 else ((0, -1) if x > 0 else (0, 1))
+        yi = (0, -1, 1) if 0 < y < self.height - 1 else ((0, -1) if y > 0 else (0, 1))
+        for a in xi:
+            for b in yi:
+                if a == b == 0:
+                    continue
+                yield (x + a, y + b)
 
     def explore(self, player, message_log):
         """This function uses a dijkstra map to navigate the player towards the nearest unexplored tile. Interrupted by

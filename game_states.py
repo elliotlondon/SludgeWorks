@@ -7,6 +7,8 @@ class GameStates(Enum):
     PLAYER_DEAD = auto()
     SHOW_INVENTORY = auto()
     DROP_INVENTORY = auto()
+    SHOW_LOADOUT = auto()
+    DROP_LOADOUT = auto()
     LOOK = auto()
     TARGETING = auto()
     LEVEL_UP = auto()

@@ -16,11 +16,9 @@ def kill_monster(monster, entities):
     monster.blocks = False
     monster.fighter = None
     monster.char = ' '
-    # Death condition for plant enemies
-    if monster.faction == 'Plants':
-        death_message = Message('The {0} dies!'.format(monster.name.capitalize()), libtcod.orange)
-        monster.ai = None
-    else:
+    death_message = Message('The {0} dies!'.format(monster.name.capitalize()), libtcod.orange)
+    monster.ai = None
+    if not monster.faction == 'Plants':
         death_message = Message('The {0} dies!'.format(monster.name.capitalize()), libtcod.orange)
         monster.ai = None
 
@@ -36,8 +34,8 @@ def kill_monster(monster, entities):
         entities.append(item)
 
     # If the entity has items in its inventory, drop them at the spot where they died
-    if monster.inventory and monster.inventory.items:
-        monster.inventory.drop_all(entities)
+    if monster.inventory:
+        monster.inventory.drop_all(monster, entities)
 
     monster.render_order = RenderOrder.CORPSE
     entities.remove(monster)

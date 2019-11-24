@@ -37,29 +37,28 @@ def inventory_menu(con, header, player, inventory_width, screen_width, screen_he
     libtcod.console_set_default_foreground(window, libtcod.white)
 
     # Show a menu with each item of the inventory as an option
-    if len(player.inventory.items) == 0:
+    if len(player.inventory.inv_items) == 0:
         options = ['Your inventory is empty.']
     else:
         options = []
+        for item in player.inventory.inv_items:
+            options.append(item.name)
+    menu(con, header, options, inventory_width, screen_width, screen_height)
 
-        for item in player.inventory.items:
-            if player.equipment.main_hand == item:
-                options.append('{0} (main hand)'.format(item.name))
-            elif player.equipment.off_hand == item:
-                options.append('{0} (off hand)'.format(item.name))
-            elif player.equipment.head == item:
-                options.append('{0} (head)'.format(item.name))
-            elif player.equipment.torso == item:
-                options.append('{0} (torso)'.format(item.name))
-            elif player.equipment.hands == item:
-                options.append('{0} (hands)'.format(item.name))
-            elif player.equipment.legs == item:
-                options.append('{0} (legs)'.format(item.name))
-            elif player.equipment.feet == item:
-                options.append('{0} (feet)'.format(item.name))
-            else:
-                options.append(item.name)
 
+def loadout_menu(con, header, player, inventory_width, screen_width, screen_height):
+    window = libtcod.console_new(screen_width, screen_height)
+    libtcod.console_set_default_foreground(window, libtcod.white)
+
+    # Make sure that everything is sorted in the right order, according to the list in equipment_slots
+
+    # Show a menu with each item of the loadout
+    if len(player.inventory.equip_items) == 0:
+        options = ['You have nothing equipped.']
+    else:
+        options = []
+        for item in player.inventory.equip_items:
+            options.append(f'{item.name} ({item.equippable.to_string(item.equippable.slot)})')
     menu(con, header, options, inventory_width, screen_width, screen_height)
 
 
@@ -195,3 +194,9 @@ def help_menu(con, menu_width, menu_height, screen_width, screen_height):
 
 def message_box(con, header, width, screen_width, screen_height):
     menu(con, header, [], width, screen_width, screen_height)
+
+
+def target_overlay(con, menu_width, menu_height, target_x, target_y):
+    window = libtcod.console_new(menu_width, menu_height)
+    libtcod.console_put_char_ex(window, 0, 0, 'X', libtcod.grey, libtcod.black)
+    libtcod.console_blit(window, 0, 0, menu_width, menu_height, con, target_x, target_y, 1, 1)

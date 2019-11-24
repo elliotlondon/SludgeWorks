@@ -25,7 +25,6 @@ def load_game():
         game_map = data_file['game_map']
         message_log = data_file['message_log']
         game_state = data_file['game_state']
-
     player = entities[player_index]
 
     return player, entities, game_map, message_log, game_state

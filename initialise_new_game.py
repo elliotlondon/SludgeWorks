@@ -78,34 +78,32 @@ def get_constants():
 
 
 def get_game_variables(constants):
-    fighter_component = Fighter(current_hp=20, max_hp=20,
-                                damage_dice=1, damage_sides=2,
-                                strength=12, dexterity=12, vitality=12, intellect=12, perception=12,
-                                level=1, armour=0, dodges=True)
-    inventory_component = Inventory(26)
-    level_component = Level()
+    fighter = Fighter(current_hp=20, max_hp=20,
+                      damage_dice=1, damage_sides=2,
+                      strength=12, dexterity=12, vitality=12, intellect=12, perception=12,
+                      level=1, armour=0, dodges=True)
+    inventory = Inventory(26)
+    level = Level()
     slot = ()
-    equipment_component = Equipment(slot)
+    equipment = Equipment(slot)
     player = Entity(0, 0, ord('@'.encode('cp437')), libtcod.white, 'Player', 'This is you.', blocks=True,
-                    render_order=RenderOrder.ACTOR, fighter=fighter_component, inventory=inventory_component,
-                    level=level_component, equipment=equipment_component)
+                    render_order=RenderOrder.ACTOR, fighter=fighter, inventory=inventory,
+                    level=level, equipment=equipment)
     entities = [player]
 
-    equippable_component = Equippable(EquipmentSlots.MAIN_HAND,
-                                      damage_dice=1, damage_sides=3)
+    equippable = Equippable(EquipmentSlots.Main_Hand,
+                            damage_dice=1, damage_sides=3)
     dagger = Entity(0, 0, '-', libtcod.light_grey,
                     'Iron Dagger', 'A short blade ideal for swift stabbing attacks.',
-                    equippable=equippable_component)
-    equippable_component = Equippable(EquipmentSlots.TORSO,
-                                      armour_bonus=1)
+                    equippable=equippable)
+    equippable = Equippable(EquipmentSlots.Torso,
+                            armour_bonus=1)
     leather_armour = Entity(0, 0, '-', libtcod.light_grey,
                             'Leather Armour', 'Basic leather armour covering the torso, providing modest protection. '
                                               'This was the best you could find...',
-                            equippable=equippable_component)
-    player.inventory.add_item(dagger)
-    player.inventory.add_item(leather_armour)
-    player.equipment.toggle_equip(dagger)
-    player.equipment.toggle_equip(leather_armour)
+                            equippable=equippable)
+    player.inventory.spawn_with(player, dagger)
+    player.inventory.spawn_with(player, leather_armour)
 
     # Create the first floor map
     game_map = GameMap('near_surface', constants['map_width'], constants['map_height'])
@@ -113,7 +111,5 @@ def get_game_variables(constants):
     game_map.place_entities(constants['map_width'], constants['map_height'], entities)
 
     message_log = MessageLog(constants['comments_x'], constants['comments_width'], constants['comments_height'])
-
     game_state = GameStates.PLAYERS_TURN
-
     return player, entities, game_map, message_log, game_state

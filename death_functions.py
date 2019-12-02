@@ -39,5 +39,4 @@ def kill_monster(monster, entities):
 
     monster.render_order = RenderOrder.CORPSE
     entities.remove(monster)
-
     return death_message

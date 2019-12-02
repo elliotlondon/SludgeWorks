@@ -73,7 +73,6 @@ def get_constants():
         'fov_light_walls': fov_light_walls,
         'fov_radius': fov_radius
     }
-
     return constants
 
 

@@ -88,6 +88,17 @@ class Equipment:
         return bonus
 
     @staticmethod
+    def check_if_occupied(entity, equippable_entity):
+        """This function formally swaps the object attributes of two items, or assigns one if there's no current one."""
+        slot = equippable_entity.equippable.slot
+        for x in vars(EquipmentSlots):
+            if getattr(EquipmentSlots, x) == slot:
+                if getattr(entity.equipment, x.lower()):
+                    return True
+                else:
+                    return False
+
+    @staticmethod
     def toggle_equip(entity, equippable_entity):
         """This function formally swaps the object attributes of two items, or assigns one if there's no current one."""
         slot = equippable_entity.equippable.slot
@@ -97,7 +108,6 @@ class Equipment:
                     setattr(entity.equipment, x.lower(), None)
                 else:
                     setattr(entity.equipment, x.lower(), equippable_entity)
-                break
 
 
 class Equippable:

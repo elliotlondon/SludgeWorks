@@ -23,7 +23,6 @@ def handle_keys(key, game_state):
         return handle_esc_menu_keys(key)
     elif game_state == GameStates.HELP_MENU:
         return handle_help_menu_keys(key)
-
     return {}
 
 

@@ -13,7 +13,6 @@ class Aggressive:
             elif target.fighter.current_hp > 0:
                 attack_results = self.owner.fighter.attack(target)
                 results.extend(attack_results)
-
         return results
 
 
@@ -28,7 +27,6 @@ class AimlessWanderer:
                 results.extend(attack_results)
         else:
             self.owner.move_random(game_map)
-
         return results
 
 
@@ -40,15 +38,14 @@ class Stationary:
             if (target.fighter.current_hp > 0) and (self.owner.distance_to(target) <= sqrt(2)):
                 attack_results = self.owner.fighter.attack(target)
                 results.extend(attack_results)
-
         return results
 
 
 class PassiveStationary:
     # Monster which neither moves nor attacks
-    def take_turn(self, target, fov_map, game_map, entities):
+    @staticmethod
+    def take_turn(target, fov_map, game_map, entities):
         results = []
-
         # Plants are friends :)
         return results
 
@@ -58,6 +55,7 @@ class ConfusedMonster:
     def __init__(self, previous_ai, number_of_turns=10):
         self.previous_ai = previous_ai
         self.number_of_turns = number_of_turns
+
     def take_turn(self, target, fov_map, game_map, entities):
         results = []
         if self.number_of_turns > 0:
@@ -69,5 +67,4 @@ class ConfusedMonster:
         else:
             self.owner.ai = self.previous_ai
             results.append({'message': Message('The {0} is no longer confused!'.format(self.owner.name), libtcod.red)})
-
         return results

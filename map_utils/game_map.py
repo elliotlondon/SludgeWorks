@@ -1,6 +1,6 @@
 import math
-from random import uniform, seed as rseed
-from numpy.random import normal, seed
+from random import uniform
+from numpy.random import normal
 from map_utils.stairs import Stairs
 from random_utils import from_dungeon_level, random_choice_from_dict
 from map_utils.monster_dict import *
@@ -8,33 +8,26 @@ from map_utils.item_dict import *
 
 
 class GameMap:
-    def __init__(self, current_biome, width, height, max_room_size=10, min_room_size=6, max_rooms=25,
-                 dark_wall=libtcod.dark_grey, light_wall=libtcod.Color(150, 100, 50), dark_ground=libtcod.black,
-                 light_ground=libtcod.dark_grey, dungeon_level=1, floor_chars=[' ', '.', ',', '`']):
+    dark_wall = libtcod.dark_grey
+    light_wall = libtcod.Color(150, 100, 50)
+    dark_ground = libtcod.black
+    light_ground = libtcod.dark_grey
+    floor_chars = [' ', '.', ',', '`']
+
+    def __init__(self, current_biome, width, height, max_room_size=10, min_room_size=6, max_rooms=25, dungeon_level=1):
         self.current_biome = current_biome
         self.width = width
         self.height = height
         self.max_room_size = max_room_size
         self.min_room_size = min_room_size
         self.max_rooms = max_rooms
-        self.dark_wall = dark_wall
-        self.light_wall = light_wall
-        self.dark_ground = dark_ground
-        self.light_ground = light_ground
         self.tiles = self.initialize_tiles()
         self.dungeon_level = dungeon_level
-        self.floor_chars = floor_chars
 
     def __iter__(self):
         for xi in range(self.width):
             for yi in range(self.height):
                 yield xi, yi, self.tiles[xi][yi]
-
-    def get_width(self):
-        return self.width
-
-    def get_height(self):
-        return self.height
 
     def initialize_tiles(self):
         tiles = [[Tile(True) for y in range(self.height)] for x in range(self.width)]
@@ -207,7 +200,6 @@ class GameMap:
     def is_blocked(self, x, y):
         if self.tiles[x][y].blocked:
             return True
-
         return False
 
     def returncoordinatesinmap(self, coord_x, coord_y):
@@ -240,7 +232,7 @@ class GameMap:
         # Hardcoded min/max
         minimum_height = 35
         maximum_height = 72 * 2
-        variable_height = 0
+        variable_height = previous_height
         variable_height += normal(0, 5)
 
         # Ensure that the height does not clip through the max/min
@@ -250,7 +242,6 @@ class GameMap:
             variable_height = minimum_height
         elif variable_height > maximum_height:
             variable_height = maximum_height
-
         return int(variable_height)
 
     def next_floor(self, player):
@@ -271,7 +262,6 @@ class GameMap:
 
         # Heal on change of floors?
         # player.fighter.heal(player.fighter.max_hp // 2)
-
         return entities
 
     def make_map(self, player, entities):
@@ -522,12 +512,13 @@ class GameMap:
                 else:
                     player.x = x
                     player.y = y
-
         return True
 
     def to_down_stairs(self, player, entities, message_log):
         """Create a Dijkstra path to the down stairs. Dijkstra was chosen over A* because libtcod's built-in dijkstra
         seems much faster."""
+        stairs_x = None
+        stairs_y = None
         stairs_found = False
         for entity in entities:
             if entity.name == 'Down Stairs':
@@ -582,8 +573,6 @@ class Tile:
             block_sight = blocked
 
         self.block_sight = block_sight
-
-        # Change this if you wish to see everything!
         self.explored = False
 
 

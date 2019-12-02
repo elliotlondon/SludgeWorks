@@ -48,16 +48,19 @@ class Inventory:
         if item_entity in entity.inventory.inv_items:
             if item_entity.item.use_function is None:
                 # Can you equip it? Let's do it!
-                if item_entity.equippable.slot is not None:
+                if item_entity.equippable.slot:
                     # Check if there's already something occupying the slot
-                    for item in entity.inventory.equip_items:
-                        if item.equippable.slot == item_entity.equippable.slot:
-                            entity.inventory.equip(entity, item_entity)
-                            if entity.name == 'Player':
+                    if entity.equipment.check_if_occupied(entity, item_entity):
+                        for item in entity.inventory.equip_items:
+                            if item.equippable.slot == item_entity.equippable.slot:
                                 entity.inventory.dequip(entity, item)
                                 entity.inventory.equip(entity, item_entity)
-                        else:
-                            entity.inventory.equip(entity, item_entity)
+                                results.append({'equipped': item_entity, 'message': Message(f'{item_entity.name} equipped',
+                                                                                      libtcod.white)})
+                            else:
+                                results = entity.inventory.equip(entity, item_entity)
+                    else:
+                        results = entity.inventory.equip(entity, item_entity)
                 else:
                     results.append({'message': Message(f'The {item_entity.name} cannot be used', libtcod.white)})
             else:
@@ -82,14 +85,15 @@ class Inventory:
         results = []
         if item in entity.inventory.inv_items:
             entity.equipment.toggle_equip(entity, item)
-            entity.inventory.equip_items.append(item)
+            entity.inventory.equip_items.insert(0, item)
             entity.inventory.inv_items.remove(item)
             if entity.name == 'Player':
                 results.append({'equipped': item, 'message': Message(f'{item.name} equipped', libtcod.white)})
-                print('equip message triggered')
             else:
                 results.append({'equipped': item, 'message': Message(f'{entity} equips the {item.name}',
                                                                      libtcod.white)})
+            print(f'entity damage dice: {entity.equipment.main_hand, entity.equipment.strength_bonus}')
+            print(f'')
         return results
 
     @staticmethod
@@ -101,15 +105,14 @@ class Inventory:
             entity.inventory.inv_items.append(item)
             entity.inventory.equip_items.remove(item)
             if entity.name == 'Player':
-                results.append({'dequipped': item, 'message': Message('{0} un-equipped'.format(item.name),
-                                                                      libtcod.white)})
+                results.append({'dequipped': item, 'message': Message(f'{item.name} un-equipped', libtcod.grey)})
             else:
                 results.append({'dequipped': item, 'message': Message(f'{entity} un-equips the {item.name}',
-                                                                     libtcod.white)})
+                                                                      libtcod.grey)})
             if len(entity.inventory.inv_items) == entity.inventory.capacity:
                 entity.inventory.drop_item(entity, item)
                 if entity.name == 'Player':
-                    results.append({'message': Message('Inventory full, {0} dropped'.format(item.name), libtcod.white)})
+                    results.append({'message': Message('Inventory full, {0} dropped'.format(item.name), libtcod.grey)})
         return results
 
     @staticmethod
@@ -137,14 +140,9 @@ class Inventory:
     @staticmethod
     def drop_all(entity, entities):
         """I've fallen and I can't get up! (drops everything at your current location, including equipped items)"""
-        results = []
         for item in entity.inventory.equip_items:
-            entity.equipment.toggle_equip(entity, item)
+            entity.inventory.dequip(entity, item)
         for item in entity.inventory.inv_items:
-            entity.inventory.drop_item(entity, item)
-            x = entity.x
-            y = entity.y
-            entities.append(item(x, y))
-        if entity.name == 'Player':
-            results.append({'message': Message('You remove all of your armour and drop it', libtcod.white)})
-        return results
+            item.x = entity.x
+            item.y = entity.y
+            entities.append(item)

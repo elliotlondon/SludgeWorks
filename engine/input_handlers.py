@@ -1,5 +1,5 @@
 import tcod as libtcod
-from game_states import GameStates
+from engine.game_states import GameStates
 
 
 def handle_keys(key, game_state):

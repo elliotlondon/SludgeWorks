@@ -1,9 +1,9 @@
-from equipment_slots import EquipmentSlots
-from equipment import Equippable
-from entity import Entity
-from item import Item
-from item_functions import *
-from render_functions import RenderOrder
+from lib.equipment_slots import EquipmentSlots
+from lib.equipment import Equippable
+from lib.entity import Entity
+from lib.item import Item
+from lib.item_functions import *
+from engine.render_functions import RenderOrder
 from random import randint
 
 

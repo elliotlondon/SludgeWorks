@@ -1,10 +1,10 @@
 import math
 from random import uniform
 from numpy.random import normal
-from map_utils.stairs import Stairs
-from random_utils import from_dungeon_level, random_choice_from_dict
-from map_utils.monster_dict import *
-from map_utils.item_dict import *
+from maps.stairs import Stairs
+from utils.random_utils import from_dungeon_level, random_choice_from_dict
+from maps.monster_dict import *
+from maps.item_dict import *
 
 
 class GameMap:

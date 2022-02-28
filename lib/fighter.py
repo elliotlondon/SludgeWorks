@@ -1,6 +1,6 @@
 import tcod as libtcod
-from random_utils import roll_dice, dnd_bonus_calc
-from game_messages import Message
+from utils.random_utils import roll_dice, dnd_bonus_calc
+from gui.game_messages import Message
 from math import floor
 
 

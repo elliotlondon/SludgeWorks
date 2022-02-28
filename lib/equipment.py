@@ -1,4 +1,4 @@
-from equipment_slots import EquipmentSlots
+from lib.equipment_slots import EquipmentSlots
 
 
 class Equipment:

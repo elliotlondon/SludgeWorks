@@ -1,8 +1,8 @@
-from fighter import Fighter
-from ai import *
-from inventory import Inventory
-from equipment import Equipment
-from map_utils.item_dict import *
+from lib.fighter import Fighter
+from lib.ai import *
+from lib.inventory import Inventory
+from lib.equipment import Equipment
+from maps.item_dict import *
 
 
 '''

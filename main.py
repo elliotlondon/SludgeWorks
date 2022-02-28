@@ -1,21 +1,21 @@
-import custrender
+from engine import custrender
 from random import choice
-from death_functions import kill_monster, kill_player
-from entity import get_blocking_entities_at_location
-from fov_functions import *
-from game_messages import Message
-from game_states import GameStates
-from map_utils.game_map import GameMap
-from input_handlers import handle_keys, handle_mouse, handle_main_menu
-from initialise_new_game import get_constants, get_game_variables
-from data_loaders import load_game, save_game, delete_char_save
-from menus import main_menu, message_box, target_overlay
-from render_functions import clear_all, render_all, entity_in_fov, entities_in_fov
-from random_utils import roll_dice
+from lib.death_functions import kill_monster, kill_player
+from lib.entity import get_blocking_entities_at_location
+from engine.fov_functions import *
+from gui.game_messages import Message
+from engine.game_states import GameStates
+from maps.game_map import GameMap
+from engine.input_handlers import handle_keys, handle_mouse, handle_main_menu
+from init import get_constants, get_game_variables
+from engine.data_loaders import load_game, save_game, delete_char_save
+from gui.menus import main_menu, message_box, target_overlay
+from engine.render_functions import clear_all, render_all, entity_in_fov, entities_in_fov
+from utils.random_utils import roll_dice
 
 
 def main():
-    libtcod.sys_set_fps(30)
+    # libtcod.sys_set_fps(30)
     constants = get_constants()
 
     player = None
@@ -28,7 +28,7 @@ def main():
     key = libtcod.Key()
     mouse = libtcod.Mouse()
 
-    libtcod.console_set_custom_font('Fonts/terminal8x8_gs_ro.png', libtcod.FONT_TYPE_GRAYSCALE |
+    libtcod.console_set_custom_font('fonts/terminal8x8_gs_ro.png', libtcod.FONT_TYPE_GRAYSCALE |
                                     libtcod.FONT_LAYOUT_ASCII_INROW)
     hp_bar = libtcod.console.Console(constants['stat_bar_width'], constants['stat_bar_height'])
     xp_bar = libtcod.console.Console(constants['stat_bar_width'], constants['stat_bar_height'])
@@ -144,6 +144,8 @@ def play_game(player, entities, game_map, message_log, root_console, panel, hp_b
         left_click = mouse_action.get('left_click')
         right_click = mouse_action.get('right_click')
 
+        target_x = player.x
+        target_y = player.y
         player_turn_results = []
 
         # For all actions that do not return to the main menu, recompute fov (prevents off-screen window drawing errors)

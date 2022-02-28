@@ -1,8 +1,8 @@
 from enum import Enum, auto
 from random import Random, choice
-from game_states import GameStates
-from menus import *
-from game_messages import Message
+from engine.game_states import GameStates
+from gui.menus import *
+from gui.game_messages import Message
 
 
 class RenderOrder(Enum):

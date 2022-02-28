@@ -1,14 +1,14 @@
 import tcod as libtcod
-from equipment import Equipment, Equippable
-from fighter import Fighter
-from inventory import Inventory
-from level import Level
-from entity import Entity
-from equipment_slots import EquipmentSlots
-from game_messages import MessageLog
-from game_states import GameStates
-from map_utils.game_map import GameMap
-from render_functions import RenderOrder
+from lib.equipment import Equipment, Equippable
+from lib.fighter import Fighter
+from lib.inventory import Inventory
+from maps.level import Level
+from lib.entity import Entity
+from lib.equipment_slots import EquipmentSlots
+from gui.game_messages import MessageLog
+from engine.game_states import GameStates
+from maps.game_map import GameMap
+from engine.render_functions import RenderOrder
 
 
 def get_constants():

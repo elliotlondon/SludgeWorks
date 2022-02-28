@@ -1,8 +1,8 @@
 import tcod as libtcod
 import math
 from random import randint
-from render_functions import RenderOrder
-from item import Item
+from engine.render_functions import RenderOrder
+from lib.item import Item
 
 
 class Entity:

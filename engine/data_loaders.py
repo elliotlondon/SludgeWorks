@@ -28,6 +28,7 @@ def load_game():
 
     return player, entities, game_map, message_log, game_state
 
+
 def delete_char_save():
     if not os.path.isdir('savegames'):
         return

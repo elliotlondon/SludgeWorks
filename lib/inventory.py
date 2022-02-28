@@ -1,5 +1,5 @@
 import tcod as libtcod
-from game_messages import Message
+from gui.game_messages import Message
 
 
 class Inventory:

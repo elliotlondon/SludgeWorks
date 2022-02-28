@@ -1,6 +1,6 @@
 import tcod as libtcod
 from random import randint
-from game_messages import Message
+from gui.game_messages import Message
 from math import sqrt
 
 

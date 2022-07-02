@@ -1,5 +1,9 @@
-from random import randint
+from logging import getLogger, DEBUG
 from math import floor
+from random import randint, choice, Random
+
+# Initialize random number generator
+Random(1337)
 
 
 def from_dungeon_level(table, dungeon_level):
@@ -22,6 +26,10 @@ def random_choice_index(chances):
         choice += 1
 
 
+def random_choice_from_list(list):
+    return choice(list)
+
+
 def random_choice_from_dict(choice_dict):
     choices = list(choice_dict.keys())
     chances = list(choice_dict.values())
@@ -39,6 +47,10 @@ def roll_dice(num, dice):  # rolls dice, returns the sum of all rolls
 
 
 def dnd_bonus_calc(value):
-    bonus = floor((value - 10)/2)
+    bonus = floor((value - 10) / 2)
 
     return bonus
+
+
+def is_debug():
+    return getLogger("my_logger").getEffectiveLevel() == DEBUG

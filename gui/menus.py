@@ -1,4 +1,4 @@
-import tcod as libtcod
+import tcod
 
 
 def menu(con, header, options, width, screen_width, screen_height):
@@ -6,35 +6,35 @@ def menu(con, header, options, width, screen_width, screen_height):
         raise ValueError('Cannot have a menu with more than 26 options.')
 
     # Calculate total height for the header (after auto-wrap) and one line per option
-    header_height = libtcod.console_get_height_rect(con, 0, 0, width, screen_height, header)
+    header_height = tcod.console_get_height_rect(con, 0, 0, width, screen_height, header)
     height = len(options) + header_height
 
     # Create an off-screen console that represents the menu's window
-    window = libtcod.console_new(width, height)
+    window = tcod.console_new(width, height)
 
     # Print the header, with auto-wrap
-    libtcod.console_set_default_foreground(window, libtcod.white)
-    libtcod.console_set_default_background(window, libtcod.black)
-    libtcod.console_print_rect_ex(window, 0, 0, width, height, libtcod.BKGND_NONE, libtcod.LEFT, header)
+    tcod.console_set_default_foreground(window, tcod.white)
+    tcod.console_set_default_background(window, tcod.black)
+    tcod.console_print_rect_ex(window, 0, 0, width, height, tcod.BKGND_NONE, tcod.LEFT, header)
 
     # Print all the options
     y = header_height
     letter_index = ord('a')
     for option_text in options:
         text = '(' + chr(letter_index) + ') ' + option_text
-        libtcod.console_print_ex(window, 0, y, libtcod.BKGND_NONE, libtcod.LEFT, text)
+        tcod.console_print_ex(window, 0, y, tcod.BKGND_NONE, tcod.LEFT, text)
         y += 1
         letter_index += 1
 
     # Blit the contents of "window" to the root console
     x = int(screen_width / 2 - width / 2)
     y = int(screen_height / 2 - height / 2)
-    libtcod.console_blit(window, 0, 0, width, height, con, x, y, 1, 0)
+    tcod.console_blit(window, 0, 0, width, height, con, x, y, 1, 0)
 
 
 def inventory_menu(con, header, player, inventory_width, screen_width, screen_height):
-    window = libtcod.console_new(screen_width, screen_height)
-    libtcod.console_set_default_foreground(window, libtcod.white)
+    window = tcod.console_new(screen_width, screen_height)
+    tcod.console_set_default_foreground(window, tcod.white)
 
     # Show a menu with each item of the inventory as an option
     if len(player.inventory.inv_items) == 0:
@@ -47,8 +47,8 @@ def inventory_menu(con, header, player, inventory_width, screen_width, screen_he
 
 
 def loadout_menu(con, header, player, inventory_width, screen_width, screen_height):
-    window = libtcod.console_new(screen_width, screen_height)
-    libtcod.console_set_default_foreground(window, libtcod.white)
+    window = tcod.console_new(screen_width, screen_height)
+    tcod.console_set_default_foreground(window, tcod.white)
 
     # Make sure that everything is sorted in the right order, according to the list in equipment_slots
 
@@ -63,19 +63,19 @@ def loadout_menu(con, header, player, inventory_width, screen_width, screen_heig
 
 
 def main_menu(con, background_image, screen_width, screen_height):
-    libtcod.image_blit_2x(background_image, con, 0, 0, 0, -1, -1)
-    libtcod.console_set_default_foreground(con, libtcod.light_yellow)
-    libtcod.console_print_ex(con, int(screen_width / 2), int(screen_height / 2) - 4, libtcod.BKGND_NONE, libtcod.CENTER,
-                             'SludgeWorks')
-    libtcod.console_print_ex(con, int(screen_width / 2), int(screen_height - 2), libtcod.BKGND_NONE, libtcod.CENTER,
-                             'designed by the Supreme Peasant')
+    tcod.image_blit_2x(background_image, con, 0, 0, 0, -1, -1)
+    tcod.console_set_default_foreground(con, tcod.light_yellow)
+    tcod.console_print_ex(con, int(screen_width / 2), int(screen_height / 2) - 4, tcod.BKGND_NONE, tcod.CENTER,
+                          'SludgeWorks')
+    tcod.console_print_ex(con, int(screen_width / 2), int(screen_height - 2), tcod.BKGND_NONE, tcod.CENTER,
+                          'designed by the Supreme Peasant')
     menu(con, '', ['New game', 'Continue', 'Quit'], 24, screen_width, screen_height)
 
 
 def level_up_menu(con, header, player, menu_width, screen_width, screen_height):
-    window = libtcod.console_new(menu_width, screen_height)
-    libtcod.console_set_default_foreground(window, libtcod.white)
-    libtcod.console_set_default_background(window, libtcod.black)
+    window = tcod.console_new(menu_width, screen_height)
+    tcod.console_set_default_foreground(window, tcod.white)
+    tcod.console_set_default_background(window, tcod.black)
 
     options = ['Strength (+1 attack, currently {0})'.format(player.fighter.base_strength),
                'Dexterity (+1 defense, currently {0})'.format(player.fighter.base_dexterity)]
@@ -84,112 +84,112 @@ def level_up_menu(con, header, player, menu_width, screen_width, screen_height):
 
 
 def character_screen(con, player, menu_width, menu_height, screen_width, screen_height):
-    window = libtcod.console_new(menu_width, menu_height)
-    libtcod.console_set_default_foreground(window, libtcod.white)
+    window = tcod.console_new(menu_width, menu_height)
+    tcod.console_set_default_foreground(window, tcod.white)
 
-    libtcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Character Information')
-    libtcod.console_print_rect_ex(window, 0, 2, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Level: {0}'.format(player.level.current_level))
-    libtcod.console_print_rect_ex(window, 0, 3, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Experience: {0}'.format(player.level.current_xp))
-    libtcod.console_print_rect_ex(window, 0, 4, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Experience to Level: {0}'
-                                  .format(player.level.experience_to_next_level))
-    libtcod.console_print_rect_ex(window, 0, 6, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Strength: \t{0} [+{1}]'.format(player.fighter.base_strength,
-                                                                                player.fighter.strength_modifier))
-    libtcod.console_print_rect_ex(window, 0, 7, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Dexterity: \t{0} [+{1}]'.format(player.fighter.base_dexterity,
-                                                                                 player.fighter.dexterity_modifier))
-    libtcod.console_print_rect_ex(window, 0, 8, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Vitality: \t{0} [+{1}]'.format(player.fighter.base_vitality,
-                                                                                player.fighter.vitality_modifier))
-    libtcod.console_print_rect_ex(window, 0, 9, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Intellect: \t{0} [+{1}]'.format(player.fighter.base_intellect,
-                                                                                 player.fighter.intellect_modifier))
-    libtcod.console_print_rect_ex(window, 0, 10, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Perception: \t{0} [+{1}]'.format(player.fighter.base_perception,
-                                                                                  player.fighter.perception_modifier))
-    libtcod.console_print_rect_ex(window, 0, 12, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Armour Rating: \t{0}'.format(player.fighter.armour_total))
+    tcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Character Information')
+    tcod.console_print_rect_ex(window, 0, 2, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Level: {0}'.format(player.level.current_level))
+    tcod.console_print_rect_ex(window, 0, 3, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Experience: {0}'.format(player.level.current_xp))
+    tcod.console_print_rect_ex(window, 0, 4, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Experience to Level: {0}'
+                               .format(player.level.experience_to_next_level))
+    tcod.console_print_rect_ex(window, 0, 6, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Strength: \t{0} [+{1}]'.format(player.fighter.base_strength,
+                                                                          player.fighter.strength_modifier))
+    tcod.console_print_rect_ex(window, 0, 7, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Dexterity: \t{0} [+{1}]'.format(player.fighter.base_dexterity,
+                                                                           player.fighter.dexterity_modifier))
+    tcod.console_print_rect_ex(window, 0, 8, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Vitality: \t{0} [+{1}]'.format(player.fighter.base_vitality,
+                                                                          player.fighter.vitality_modifier))
+    tcod.console_print_rect_ex(window, 0, 9, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Intellect: \t{0} [+{1}]'.format(player.fighter.base_intellect,
+                                                                           player.fighter.intellect_modifier))
+    tcod.console_print_rect_ex(window, 0, 10, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Perception: \t{0} [+{1}]'.format(player.fighter.base_perception,
+                                                                            player.fighter.perception_modifier))
+    tcod.console_print_rect_ex(window, 0, 12, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Armour Rating: \t{0}'.format(player.fighter.armour_total))
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height // 2
-    libtcod.console_blit(window, 0, 0, menu_width, menu_height, con, x, y, 1, 1)
+    tcod.console_blit(window, 0, 0, menu_width, menu_height, con, x, y, 1, 1)
 
 
 def ability_screen(con, player, menu_width, menu_height, screen_width, screen_height):
-    window = libtcod.console_new(menu_width, menu_height)
-    libtcod.console_set_default_foreground(window, libtcod.white)
+    window = tcod.console_new(menu_width, menu_height)
+    tcod.console_set_default_foreground(window, tcod.white)
 
-    libtcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Placeholder until abilities are implemented!')
+    tcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Placeholder until abilities are implemented!')
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height // 2
-    libtcod.console_blit(window, 0, 0, menu_width, menu_height, con, x, y, 1, 1)
+    tcod.console_blit(window, 0, 0, menu_width, menu_height, con, x, y, 1, 1)
 
 
 def esc_menu(con, menu_width, menu_height, screen_width, screen_height, turn_number):
-    window = libtcod.console_new(menu_width, menu_height)
-    libtcod.console_set_default_foreground(window, libtcod.white)
-    libtcod.console_set_color_control(libtcod.COLCTRL_1, libtcod.light_yellow, libtcod.white)
+    window = tcod.console_new(menu_width, menu_height)
+    tcod.console_set_default_foreground(window, tcod.white)
+    tcod.console_set_color_control(tcod.COLCTRL_1, tcod.light_yellow, tcod.white)
 
-    libtcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Options')
-    libtcod.console_print_rect_ex(window, 0, 3, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'a.) %c%s%celp' % (libtcod.COLCTRL_1, 'H', libtcod.COLCTRL_STOP))
-    libtcod.console_print_rect_ex(window, 0, 4, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'b.) %c%s%cesume' % (libtcod.COLCTRL_1, 'R', libtcod.COLCTRL_STOP))
-    libtcod.console_print_rect_ex(window, 0, 5, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'c.) Save & %c%s%cuit' % (libtcod.COLCTRL_1, 'Q', libtcod.COLCTRL_STOP))
-    libtcod.console_print_rect_ex(window, 0, 6, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, '\nTurns passed: {0}'.format(turn_number))
+    tcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Options')
+    tcod.console_print_rect_ex(window, 0, 3, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'a.) %c%s%celp' % (tcod.COLCTRL_1, 'H', tcod.COLCTRL_STOP))
+    tcod.console_print_rect_ex(window, 0, 4, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'b.) %c%s%cesume' % (tcod.COLCTRL_1, 'R', tcod.COLCTRL_STOP))
+    tcod.console_print_rect_ex(window, 0, 5, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'c.) Save & %c%s%cuit' % (tcod.COLCTRL_1, 'Q', tcod.COLCTRL_STOP))
+    tcod.console_print_rect_ex(window, 0, 6, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, '\nTurns passed: {0}'.format(turn_number))
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height
-    libtcod.console_blit(window, 0, 0, menu_width, int(menu_height/2 + 6), con, x, y, 1, 1)
+    tcod.console_blit(window, 0, 0, menu_width, int(menu_height / 2 + 6), con, x, y, 1, 1)
 
 
 def help_menu(con, menu_width, menu_height, screen_width, screen_height):
-    window = libtcod.console_new(menu_width, menu_height)
-    libtcod.console_set_default_foreground(window, libtcod.white)
+    window = tcod.console_new(menu_width, menu_height)
+    tcod.console_set_default_foreground(window, tcod.white)
 
-    libtcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Help')
-    libtcod.console_print_rect_ex(window, 0, 2, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Movement:')
-    libtcod.console_print_rect_ex(window, 0, 3, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Move around using either the arrow keys,')
-    libtcod.console_print_rect_ex(window, 0, 4, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'or y u i, h j k l, b n m.')
-    libtcod.console_print_rect_ex(window, 0, 6, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Commands:')
-    libtcod.console_print_rect_ex(window, 0, 7, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'g: Get')
-    libtcod.console_print_rect_ex(window, 0, 8, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'i: Inventory')
-    libtcod.console_print_rect_ex(window, 0, 9, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'd: Drop')
-    libtcod.console_print_rect_ex(window, 0, 10, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'c: Character Info')
-    libtcod.console_print_rect_ex(window, 0, 11, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, '>: Use Stairs')
-    libtcod.console_print_rect_ex(window, 0, 12, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, '.: Wait 1 turn')
-    libtcod.console_print_rect_ex(window, 0, 13, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, ';: Rest until healed')
-    libtcod.console_print_rect_ex(window, 0, 14, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, '#: Autoexplore the map (interrupted by enemies)')
-    libtcod.console_print_rect_ex(window, 0, 16, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Press F11 at any time to toggle fullscreen mode.')
-    libtcod.console_print_rect_ex(window, 0, 17, menu_width, menu_height, libtcod.BKGND_NONE,
-                                  libtcod.LEFT, 'Press Escape to leave this menu.')
+    tcod.console_print_rect_ex(window, 0, 1, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Help')
+    tcod.console_print_rect_ex(window, 0, 2, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Movement:')
+    tcod.console_print_rect_ex(window, 0, 3, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Move around using either the arrow keys,')
+    tcod.console_print_rect_ex(window, 0, 4, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'or y u i, h j k l, b n m.')
+    tcod.console_print_rect_ex(window, 0, 6, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Commands:')
+    tcod.console_print_rect_ex(window, 0, 7, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'g: Get')
+    tcod.console_print_rect_ex(window, 0, 8, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'i: Inventory')
+    tcod.console_print_rect_ex(window, 0, 9, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'd: Drop')
+    tcod.console_print_rect_ex(window, 0, 10, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'c: Character Info')
+    tcod.console_print_rect_ex(window, 0, 11, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, '>: Use Stairs')
+    tcod.console_print_rect_ex(window, 0, 12, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, '.: Wait 1 turn')
+    tcod.console_print_rect_ex(window, 0, 13, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, ';: Rest until healed')
+    tcod.console_print_rect_ex(window, 0, 14, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, '#: Autoexplore the map (interrupted by enemies)')
+    tcod.console_print_rect_ex(window, 0, 16, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Press F11 at any time to toggle fullscreen mode.')
+    tcod.console_print_rect_ex(window, 0, 17, menu_width, menu_height, tcod.BKGND_NONE,
+                               tcod.LEFT, 'Press Escape to leave this menu.')
 
     x = screen_width // 2 - menu_width // 2
     y = screen_height // 2 - menu_height // 2
-    libtcod.console_blit(window, 0, 0, menu_width, menu_height, con, x, y, 1, 1)
+    tcod.console_blit(window, 0, 0, menu_width, menu_height, con, x, y, 1, 1)
 
 
 def message_box(con, header, width, screen_width, screen_height):
@@ -197,6 +197,6 @@ def message_box(con, header, width, screen_width, screen_height):
 
 
 def target_overlay(con, menu_width, menu_height, target_x, target_y):
-    window = libtcod.console_new(menu_width, menu_height)
-    libtcod.console_put_char_ex(window, 0, 0, 'X', libtcod.grey, libtcod.black)
-    libtcod.console_blit(window, 0, 0, menu_width, menu_height, con, target_x, target_y, 1, 1)
+    window = tcod.console_new(menu_width, menu_height)
+    tcod.console_put_char_ex(window, 0, 0, 'X', tcod.grey, tcod.black)
+    tcod.console_blit(window, 0, 0, menu_width, menu_height, con, target_x, target_y, 1, 1)

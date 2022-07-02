@@ -1,26 +1,208 @@
+from __future__ import annotations
+
 import math
+import random
 from random import uniform
-from numpy.random import normal
-from maps.stairs import Stairs
-from utils.random_utils import from_dungeon_level, random_choice_from_dict
-from maps.monster_dict import *
-from maps.item_dict import *
+from typing import Iterable, Iterator, Optional, TYPE_CHECKING, Tuple
+
+import numpy as np
+import tcod
+
+import lib.entity
+from lib.entity import Item
+from lib.ai import PassiveStationary
+from utils.math_utils import Graph
+
+if TYPE_CHECKING:
+    from core.engine import Engine
+    from lib.entity import Entity
+
+from utils.random_utils import from_dungeon_level
+import maps.tiles
+
+
+class SimpleGameMap:
+    def __init__(
+            self, engine: Engine, width: int, height: int, entities: Iterable[Entity] = ()):
+        self.engine = engine
+        self.width, self.height = width, height
+        self.entities = set(entities)
+        self.tiles = np.full((width, height), fill_value=maps.tiles.wall, order="F")
+        self.rooms = []
+        self.tunnel = np.full((width, height), fill_value=False, order="F")  # Tunnel tiles
+        self.visible = np.full((width, height), fill_value=False, order="F")  # Tiles the player can currently see
+        self.explored = np.full((width, height), fill_value=False, order="F")  # Tiles the player has seen before
+        self.accessible = np.full((width, height), fill_value=False, order="F")  # Tiles the player can access by foot
+
+        self.downstairs_location = (0, 0)
+
+    @property
+    def gamemap(self) -> SimpleGameMap:
+        return self
+
+    @property
+    def actors(self) -> Iterator[lib.entity.Actor]:
+        """Iterate over this maps living actors."""
+        yield from (
+            entity
+            for entity in self.entities
+            if isinstance(entity, lib.entity.Actor) and entity.is_alive
+        )
+
+    @property
+    def dangerous_actors(self) -> Iterator[lib.entity.Actor]:
+        """Iterate over this maps living actors that are able to harm the player."""
+        yield from (
+            entity
+            for entity in self.entities
+            if isinstance(entity, lib.entity.Actor) and entity.is_alive and not isinstance(entity.ai, PassiveStationary)
+        )
+
+    @property
+    def items(self) -> Iterator[Item]:
+        yield from (entity for entity in self.entities if isinstance(entity, lib.entity.Item))
+
+    def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
+        for entity in self.entities:
+            if entity.blocks_movement and entity.x == location_x and entity.y == location_y:
+                return entity
+
+        return None
+
+    def get_actor_at_location(self, x: int, y: int) -> Optional[lib.entity.Actor]:
+        for actor in self.actors:
+            if actor.x == x and actor.y == y:
+                return actor
+
+        return None
+
+    def in_bounds(self, x: int, y: int) -> bool:
+        """Return True if x and y are within map bounds."""
+        return 0 <= x < self.width and 0 <= y < self.height
+
+    def find_neighbours(self, x, y):
+        xi = (0, -1, 1) if 0 < x < self.width - 1 else ((0, -1) if x > 0 else (0, 1))
+        yi = (0, -1, 1) if 0 < y < self.height - 1 else ((0, -1) if y > 0 else (0, 1))
+        for a in xi:
+            for b in yi:
+                if a == b == 0:
+                    continue
+                yield (x + a, y + b)
+
+    def get_random_walkable_tile(self) -> Tuple[int, int]:
+        """Return the coordinates of a random walkable tile within the current floor."""
+        walkable = np.nonzero(
+            np.logical_and(self.tiles['walkable'], self.tiles['name'] != 'hole')
+        )
+        index = random.randint(0, len(walkable[0]) - 1)
+        x = walkable[0][index]
+        y = walkable[1][index]
+
+        return (x, y)
+
+    def get_random_walkable_nontunnel_tile(self) -> Tuple[int, int]:
+        """Return the coordinates of a random walkable tile that is not a tunnel within the current floor."""
+        walkable = np.nonzero(
+            np.logical_xor(np.logical_and(self.tiles['walkable'], self.tiles['name'] != 'hole'),
+                           self.tunnel)
+        )
+        index = random.randint(0, len(walkable[0]) - 1)
+        x = walkable[0][index]
+        y = walkable[1][index]
+
+        return (x, y)
+
+    def calc_accessible(self):
+        """Calculate which tiles within the walkable map are accessible to the player."""
+        player = self.engine.player
+        walkable = self.tiles['walkable']
+
+        graph = Graph(self.width, self.height, walkable)
+        accessible = graph.find_connected_area(player.x, player.y)
+
+        return accessible
+
+    def render(self, console: tcod.Console) -> None:
+        console.tiles_rgb[0:self.width, 0:self.height] = self.tiles["dark"]
+        """
+        Renders the map.
+
+        If a tile is in the "visible" array, then draw it with the "light" colors.
+        If it isn't, but it's in the "explored" array, then draw it with the "dark" colors.
+        Otherwise, the default is "SHROUD".
+        """
+        console.tiles_rgb[0:self.width, 0:self.height] = np.select(
+            condlist=[self.visible, self.explored],
+            choicelist=[self.tiles["light"], self.tiles["dark"]],
+            default=maps.tiles.SHROUD
+        )
+
+        entities_sorted_for_rendering = sorted(self.entities, key=lambda x: x.render_order.value)
+
+        for entity in entities_sorted_for_rendering:
+            if self.visible[entity.x, entity.y]:
+                console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
+                console.print(
+                    x=entity.x, y=entity.y, string=entity.char, fg=entity.colour
+                )
+
+
+# TODO: Add saved gamemaps to gameworld
+class GameWorld:
+    """
+    Holds the settings for the GameMap, and generates new maps when moving down the stairs.
+    """
+
+    def __init__(
+            self,
+            *,
+            engine: Engine,
+            map_width: int,
+            map_height: int,
+            max_rooms: int,
+            room_min_size: int,
+            room_max_size: int,
+            current_floor: int = 0
+    ):
+        self.engine = engine
+
+        self.map_width = map_width
+        self.map_height = map_height
+
+        self.max_rooms = max_rooms
+
+        self.room_min_size = room_min_size
+        self.room_max_size = room_max_size
+
+        self.current_floor = current_floor
+
+    def generate_floor(self) -> None:
+        from maps.procgen import generate_dungeon
+
+        self.current_floor += 1
+
+        self.engine.game_map = generate_dungeon(
+            max_rooms=self.max_rooms,
+            room_min_size=self.room_min_size,
+            room_max_size=self.room_max_size,
+            map_width=self.map_width,
+            map_height=self.map_height,
+            engine=self.engine,
+        )
 
 
 class GameMap:
-    dark_wall = libtcod.dark_grey
-    light_wall = libtcod.Color(150, 100, 50)
-    dark_ground = libtcod.black
-    light_ground = libtcod.dark_grey
+    dark_wall = tcod.dark_grey
+    light_wall = tcod.Color(150, 100, 50)
+    dark_ground = tcod.black
+    light_ground = tcod.dark_grey
     floor_chars = [' ', '.', ',', '`']
 
-    def __init__(self, current_biome, width, height, max_room_size=10, min_room_size=6, max_rooms=25, dungeon_level=1):
+    def __init__(self, current_biome, width: int, height: int, max_room_size=10, min_room_size=6, max_rooms=25,
+                 dungeon_level=1):
         self.current_biome = current_biome
-        self.width = width
-        self.height = height
-        self.max_room_size = max_room_size
-        self.min_room_size = min_room_size
-        self.max_rooms = max_rooms
+        self.width, self.height = width, height
+        self.min_room_size, self.max_room_size, max_rooms = min_room_size, max_room_size, max_rooms
         self.tiles = self.initialize_tiles()
         self.dungeon_level = dungeon_level
 
@@ -34,168 +216,61 @@ class GameMap:
         return tiles
 
     def place_entities(self, map_width, map_height, entities):
-        room = Rect(0, 0, map_width, map_height)    # Room is the entire dungeon
+        room = Rect(0, 0, map_width, map_height)  # Room is the entire dungeon
         max_monsters = from_dungeon_level([[50, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
         max_plants = from_dungeon_level([[25, 1], [35, 3], [50, 4], [35, 6]], self.dungeon_level)
         max_items = from_dungeon_level([[20, 1], [25, 3], [30, 4]], self.dungeon_level)
-        number_of_monsters = randint(round(max_monsters*0.75), max_monsters)
-        number_of_plants = randint(round(max_plants*0.75), max_plants)
-        number_of_items = randint(round(max_items*0.75), max_items)
 
-        plant_chances = {
-            'Whip Vine': from_dungeon_level([[50, 1], [35, 4], [20, 6], [20, 8]], self.dungeon_level),
-            'Phosphorescent Dahlia': from_dungeon_level([[50, 1], [35, 4], [20, 6], [20, 8]], self.dungeon_level)
-        }
+        # # Item dictionary
+        # item_chances = {
+        #     'healing_potion': 35,
+        #     'iron_longsword': from_dungeon_level([[10, 1], [5, 3], [0, 4]], self.dungeon_level),
+        #     'steel_longsword': from_dungeon_level([[5, 2], [10, 3], [15, 4], [10, 5], [5, 6], [0, 7]],
+        #                                           self.dungeon_level),
+        #     'steel_dagger': from_dungeon_level([[5, 1], [10, 3], [5, 4], [0, 5]], self.dungeon_level),
+        #     'steel_mace': from_dungeon_level([[5, 3], [10, 4], [15, 5], [0, 6]], self.dungeon_level),
+        #     'influenced_hatchet': from_dungeon_level([[1, 4], [5, 5], [3, 6], [1, 7]], self.dungeon_level),
+        #     'iron_buckler': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
+        #     'steel_greatshield': from_dungeon_level([[5, 2], [10, 3], [5, 5], [0, 6]], self.dungeon_level),
+        #     'iron_helmet': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
+        #     'steel_bascinet': from_dungeon_level([[1, 2], [5, 3], [10, 4], [5, 5], [0, 6]], self.dungeon_level),
+        #     'steel_cuirass': from_dungeon_level([[1, 3], [5, 5], [10, 6], [5, 7], [0, 8]], self.dungeon_level),
+        #     'trickster_gloves': from_dungeon_level([[3, 1], [5, 2], [10, 3], [5, 4], [0, 5]], self.dungeon_level),
+        #     'steel_platelegs': from_dungeon_level([[3, 3], [5, 4], [10, 5], [5, 6], [1, 7], [0, 8]],
+        #                                           self.dungeon_level),
+        #     'wax_coated_ring': from_dungeon_level([[1, 0]], self.dungeon_level),
+        #     'lightning_scroll': from_dungeon_level([[5, 2], [10, 4], [15, 6]], self.dungeon_level),
+        #     'fireball_scroll': from_dungeon_level([[5, 4], [10, 6]], self.dungeon_level),
+        #     'confusion_scroll': from_dungeon_level([[5, 0], [10, 4]], self.dungeon_level)
+        # }
 
-        monster_chances = {
-            # Scavengers
-            'Wretch': from_dungeon_level([[50, 1], [35, 4], [20, 6], [10, 8], [0, 10]], self.dungeon_level),
-            'Sludge Fiend': from_dungeon_level([[35, 1], [50, 4], [35, 6], [10, 8], [0, 10]], self.dungeon_level),
-            'Thresher': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
-            # Beasts
-            'Moire Beast': from_dungeon_level([[3, 2], [5, 3], [10, 4], [20, 6], [25, 8]], self.dungeon_level),
-            'Lupine Terror': from_dungeon_level([[1, 2], [5, 3], [10, 4], [25, 6], [30, 8]], self.dungeon_level),
-            'Bloodseeker': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level),
-            # Horrors
-            'Hunchback': from_dungeon_level([[10, 2], [30, 4], [50, 6], [40, 8]], self.dungeon_level),
-            # Cultists
-            'Risen Sacrifice': from_dungeon_level([[10, 1], [25, 3], [30, 6], [15, 7]], self.dungeon_level),
-            'Eternal Celebrant': from_dungeon_level([[10, 2], [25, 3], [30, 6], [15, 7]], self.dungeon_level),
-            'Eternal Cult Kidnapper': from_dungeon_level([[10, 2], [20, 4], [40, 6], [20, 8]], self.dungeon_level),
-            # Cleansing Hand
-            'Cleansing Hand Crusader': from_dungeon_level([[5, 4], [15, 6], [30, 8], [50, 10]], self.dungeon_level),
-            'Cleansing Hand Purifier': from_dungeon_level([[5, 5], [10, 6], [20, 8], [50, 10]], self.dungeon_level),
-            'Cleansing Hand Duelist': from_dungeon_level([[5, 5], [10, 7], [25, 8], [50, 10]], self.dungeon_level),
-            # Minibosses
-            'Alfonrice, the Spinning Blade': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level),
-            'Teague the Martyr': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level),
-            'Dymacia, Effigy of Perfection': from_dungeon_level([[1, 4], [3, 6], [5, 8]], self.dungeon_level)
-        }
+        # # Place stationary monsters (plants) independent of monster number
+        # for i in range(number_of_plants):
+        #     x = randint(room.x1 + 1, room.x2 - 1)
+        #     y = randint(room.y1 + 1, room.y2 - 1)
+        #     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
+        #             and not self.is_blocked(x, y):
+        #         plant_choice = random_choice_from_dict(plant_chances)
+        #         if plant_choice == 'Whip Vine':
+        #             entities.append(whip_vine(x, y))
+        #         elif plant_choice == 'Phosphorescent Dahlia':
+        #             entities.append(phosphorescent_dahlia(x, y))
 
-        # Item dictionary
-        item_chances = {
-            'healing_potion': 35,
-            'iron_longsword': from_dungeon_level([[10, 1], [5, 3], [0, 4]], self.dungeon_level),
-            'steel_longsword': from_dungeon_level([[5, 2], [10, 3], [15, 4], [10, 5], [5, 6], [0, 7]],
-                                                  self.dungeon_level),
-            'steel_dagger': from_dungeon_level([[5, 1], [10, 3], [5, 4], [0, 5]], self.dungeon_level),
-            'steel_mace': from_dungeon_level([[5, 3], [10, 4], [15, 5], [0, 6]], self.dungeon_level),
-            'influenced_hatchet': from_dungeon_level([[1, 4], [5, 5], [3, 6], [1, 7]], self.dungeon_level),
-            'iron_buckler': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
-            'steel_greatshield': from_dungeon_level([[5, 2], [10, 3], [5, 5], [0, 6]], self.dungeon_level),
-            'iron_helmet': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
-            'steel_bascinet': from_dungeon_level([[1, 2], [5, 3], [10, 4], [5, 5], [0, 6]], self.dungeon_level),
-            'steel_cuirass': from_dungeon_level([[1, 3], [5, 5], [10, 6], [5, 7], [0, 8]], self.dungeon_level),
-            'trickster_gloves': from_dungeon_level([[3, 1], [5, 2], [10, 3], [5, 4], [0, 5]], self.dungeon_level),
-            'steel_platelegs': from_dungeon_level([[3, 3], [5, 4], [10, 5], [5, 6], [1, 7], [0, 8]],
-                                                  self.dungeon_level),
-            'wax_coated_ring': from_dungeon_level([[1, 0]], self.dungeon_level),
-            'lightning_scroll': from_dungeon_level([[5, 2], [10, 4], [15, 6]], self.dungeon_level),
-            'fireball_scroll': from_dungeon_level([[5, 4], [10, 6]], self.dungeon_level),
-            'confusion_scroll': from_dungeon_level([[5, 0], [10, 4]], self.dungeon_level)
-        }
-
-        # Place stationary monsters (plants) independent of monster number
-        for i in range(number_of_plants):
-            x = randint(room.x1 + 1, room.x2 - 1)
-            y = randint(room.y1 + 1, room.y2 - 1)
-            if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
-                    and not self.is_blocked(x, y):
-                plant_choice = random_choice_from_dict(plant_chances)
-                if plant_choice == 'Whip Vine':
-                    entities.append(whip_vine(x, y))
-                elif plant_choice == 'Phosphorescent Dahlia':
-                    entities.append(phosphorescent_dahlia(x, y))
-
-        # Place monsters with random spawning chances
-        for i in range(number_of_monsters):
-            x = randint(room.x1 + 1, room.x2 - 1)
-            y = randint(room.y1 + 1, room.y2 - 1)
-            if not any([entity for entity in entities if entity.x == x and entity.y == y])\
-                    and not self.is_blocked(x, y):
-                monster_choice = random_choice_from_dict(monster_chances)
-                if monster_choice == 'Wretch':
-                    entities.append(wretch(x, y))
-                elif monster_choice == 'Sludge Fiend':
-                    entities.append(sludge_fiend(x, y))
-                elif monster_choice == 'Thresher':
-                    entities.append(thresher(x, y))
-                elif monster_choice == 'Moire Beast':
-                    entities.append(moire_beast(x, y))
-                elif monster_choice == 'Lupine Terror':
-                    entities.append(lupine_terror(x, y))
-                elif monster_choice == 'Bloodseeker':
-                    entities.append(bloodseeker(x, y))
-                elif monster_choice == 'Hunchback':
-                    entities.append(hunchback(x, y))
-                elif monster_choice == 'Risen Sacrifice':
-                    entities.append(risen_sacrifice(x, y))
-                elif monster_choice == 'Eternal Celebrant':
-                    entities.append(eternal_celebrant(x, y))
-                elif monster_choice == 'Eternal Cult Kidnapper':
-                    entities.append(eternal_kidnapper(x, y))
-                elif monster_choice == 'Cleansing Hand Crusader':
-                    entities.append(cleansing_hand_crusader(x, y))
-                elif monster_choice == 'Cleansing Hand Purifier':
-                    entities.append(cleansing_hand_purifier(x, y))
-                elif monster_choice == 'Alfonrice, the Spinning Blade':
-                    entities.append(alfonrice(x, y))
-                    monster_chances.pop('Alfonrice, the Spinning Blade')
-                elif monster_choice == 'Teague the Martyr':
-                    entities.append(teague(x, y))
-                    monster_chances.pop('Teague the Martyr')
-                elif monster_choice == 'Dymacia, Effigy of Perfection':
-                    entities.append(dymacia(x, y))
-                    monster_chances.pop('Dymacia, Effigy of Perfection')
-
-        # Place items
-        for i in range(number_of_items):
-            x = randint(room.x1 + 1, room.x2 - 1)
-            y = randint(room.y1 + 1, room.y2 - 1)
-            if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
-                    and not self.is_blocked(x, y):
-                item_choice = random_choice_from_dict(item_chances)
-
-                # Weapons and shields (main-hand and off-hand)
-                if item_choice == 'iron_longsword':
-                    entities.append(iron_longsword(x, y))
-                elif item_choice == 'steel_longsword':
-                    entities.append(steel_longsword(x, y))
-                elif item_choice == 'steel_dagger':
-                    entities.append(steel_dagger(x, y))
-                elif item_choice == 'steel_mace':
-                    entities.append(steel_mace(x, y))
-                elif item_choice == 'influenced_hatchet':
-                    entities.append(influenced_hatchet(x, y))
-                elif item_choice == 'iron_buckler':
-                    entities.append(iron_buckler(x, y))
-                elif item_choice == 'steel_greatshield':
-                    entities.append(steel_greatshield(x, y))
-
-                # Armour
-                elif item_choice == 'iron_helmet':
-                    entities.append(iron_helmet(x, y))
-                elif item_choice == 'steel_bascinet':
-                    entities.append(steel_bascinet(x, y))
-                elif item_choice == 'steel_cuirass':
-                    entities.append(steel_cuirass(x, y))
-                elif item_choice == 'trickster_gloves':
-                    entities.append(trickster_gloves(x, y))
-                elif item_choice == 'steel_platelegs':
-                    entities.append(steel_platelegs(x, y))
-                elif item_choice == 'wax_coated_ring':
-                    entities.append(wax_coated_ring(x, y))
-                    item_chances.update({'wax_coated_ring:': 0})
-
-                # Consumables
-                elif item_choice == 'healing_potion':
-                    entities.append(healing_potion(x, y))
-                elif item_choice == 'fireball_scroll':
-                    entities.append(fireball_scroll(x, y))
-                elif item_choice == 'confusion_scroll':
-                    entities.append(confusion_scroll(x, y))
-                elif item_choice == 'lightning_scroll':
-                    entities.append(lightning_scroll(x, y))
+        # # Place monsters with random spawning chances
+        # for i in range(number_of_monsters):
+        #     x = randint(room.x1 + 1, room.x2 - 1)
+        #     y = randint(room.y1 + 1, room.y2 - 1)
+        #     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
+        #             and not self.is_blocked(x, y):
+        #         monster_choice = random_choice_from_dict(monster_chances)
+        #
+        # # Place items
+        # for i in range(number_of_items):
+        #     x = randint(room.x1 + 1, room.x2 - 1)
+        #     y = randint(room.y1 + 1, room.y2 - 1)
+        #     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
+        #             and not self.is_blocked(x, y):
+        #         item_choice = random_choice_from_dict(item_chances)
 
     def is_blocked(self, x, y):
         if self.tiles[x][y].blocked:
@@ -215,7 +290,7 @@ class GameMap:
         minimum_width = 72
         maximum_width = 72 * 2
         variable_width = previous_width
-        variable_width += normal(0, 5)
+        variable_width += np.normal(0, 5)
 
         # Ensure the width does not clip through the max/min
         if variable_width % 2 != 0:
@@ -233,7 +308,7 @@ class GameMap:
         minimum_height = 35
         maximum_height = 72 * 2
         variable_height = previous_height
-        variable_height += normal(0, 5)
+        variable_height += np.normal(0, 5)
 
         # Ensure that the height does not clip through the max/min
         if variable_height % 2 != 0:
@@ -277,7 +352,7 @@ class GameMap:
                 self.erode(1)
             elif x >= 0.5:
                 self.current_biome = 'ice_caves'
-                self.light_wall = libtcod.white
+                self.light_wall = tcod.white
                 self.floor_chars = ['~', ' ', ',', '`', ' ']
                 self.caves_chamber(45, 1)
                 self.erode(1)
@@ -285,7 +360,7 @@ class GameMap:
                 self.erode(1)
             else:
                 self.current_biome = 'chasms'
-                self.light_wall = libtcod.dark_grey
+                self.light_wall = tcod.dark_grey
                 self.floor_chars = [' ', '.', ',', '`']
                 self.rooms_chamber(8, 4, 50, player, entities)
                 self.caves_chamber(60, 2)
@@ -302,7 +377,7 @@ class GameMap:
                 self.erode(1)
             else:
                 self.current_biome = 'chasms'
-                self.light_ground = libtcod.dark_grey
+                self.light_ground = tcod.dark_grey
                 self.floor_chars = [' ', '.', ',', '`']
                 self.rooms_chamber(8, 4, 50, player, entities)
                 self.caves_chamber(60, 2)
@@ -319,16 +394,15 @@ class GameMap:
 
     def rooms_chamber(self, max_room_size, min_room_size, max_rooms, player, entities):
         """A chamber which is filled with rectangular rooms of random sizes, joined with single-jointed corridors."""
-        # TODO: Separate stairs and player placement so that cavegen can be called on its own
         rooms = []
         num_rooms = 0
         map_width = self.width
         map_height = self.height
         for r in range(max_rooms):
-            w = randint(min_room_size, max_room_size)
-            h = randint(min_room_size, max_room_size)
-            x = randint(0, map_width - w - 1)
-            y = randint(0, map_height - h - 1)
+            w = random.randint(min_room_size, max_room_size)
+            h = random.randint(min_room_size, max_room_size)
+            x = random.randint(0, map_width - w - 1)
+            y = random.randint(0, map_height - h - 1)
 
             # "Rect" class makes rectangles easier to work with
             new_room = Rect(x, y, w, h)
@@ -350,7 +424,7 @@ class GameMap:
                     # center coordinates of previous room
                     (prev_x, prev_y) = rooms[num_rooms - 1].center()
 
-                    if randint(0, 1) == 1:
+                    if random.randint(0, 1) == 1:
                         # first move horizontally, then vertically
                         self.create_h_tunnel(prev_x, new_x, prev_y)
                         self.create_v_tunnel(prev_y, new_y, new_x)
@@ -362,88 +436,15 @@ class GameMap:
                 rooms.append(new_room)
                 num_rooms += 1
 
-        if num_rooms > 0:
-            stairs_component = Stairs(self.dungeon_level + 1)
-            down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', libtcod.white, 'Down Stairs',
-                                 'There\'s a dark chasm here which will allow you to take a one-way trip to'
-                                 'the next chamber of the SludgeWorks.',
-                                 render_order=RenderOrder.STAIRS, stairs=stairs_component)
-            entities.append(down_stairs)
-        else:
-            print('Map generation failed: No rooms generated.')
-
-    def caves_chamber(self, p, smoothing):
-        """A chamber filled with random-sized, sprawling cave rooms, generated using an automata technique.
-        p is the probability of a cave sector being created. Smoothing values about 4 do nothing, below 4 cause
-        more rugged caves."""
-        map_width = self.width
-        map_height = self.height
-        for x in range(map_width):
-            for y in range(map_height):
-                if randint(0, 100) > p:
-                    # Select a few random locations to be turned into a floor
-                    self.tiles[x][y].blocked = False
-                    self.tiles[x][y].block_sight = False
-
-        for i in range(smoothing):
-            for x in range(map_width):
-                for y in range(map_height):
-                    if x == 0 or x == map_width - 1 or y == 0 or y == map_height - 1:
-                        self.tiles[x][y].blocked = True
-                        self.tiles[x][y].block_sight = True
-                    touching_empty_space = 0
-                    for nx, ny in self.find_neighbours(x, y):
-                        if self.tiles[nx][ny].blocked:
-                            touching_empty_space += 1
-                    if touching_empty_space >= 5 and not self.tiles[x][y].tunnel:
-                        self.tiles[x][y].blocked = True
-                        self.tiles[x][y].block_sight = True
-                    elif touching_empty_space <= 1:
-                        self.tiles[x][y].blocked = False
-                        self.tiles[x][y].block_sight = False
-                    if x == 0 or x == map_width - 1 or y == 0 or y == map_height - 1:
-                        self.tiles[x][y].blocked = True
-                        self.tiles[x][y].block_sight = True
-
-    def erode(self, smoothing):
-        """A tool for helping to increase the erosion of an already-generated map."""
-        map_width = self.width
-        map_height = self.height
-        for i in range(smoothing):
-            for x in range(map_width):
-                for y in range(map_height):
-                    touching_empty_space = 0
-                    for nx, ny in self.find_neighbours(x, y):
-                        if self.tiles[nx][ny].blocked:
-                            touching_empty_space += 1
-                    if touching_empty_space >= 5 and not self.tiles[x][y].tunnel:
-                        self.tiles[x][y].blocked = True
-                        self.tiles[x][y].block_sight = True
-                    elif touching_empty_space <= 3:
-                        self.tiles[x][y].blocked = False
-                        self.tiles[x][y].block_sight = False
-                    if x == 0 or x == map_width - 1 or y == 0 or y == map_height - 1:
-                        self.tiles[x][y].blocked = True
-                        self.tiles[x][y].block_sight = True
-
-    def create_room(self, room):
-        # Go through the tiles in the rectangle and make them passable
-        for x in range(room.x1 + 1, room.x2):
-            for y in range(room.y1 + 1, room.y2):
-                self.tiles[x][y].blocked = False
-                self.tiles[x][y].block_sight = False
-
-    def create_h_tunnel(self, x1, x2, y):
-        for x in range(min(x1, x2), max(x1, x2) + 1):
-            self.tiles[x][y].blocked = False
-            self.tiles[x][y].block_sight = False
-            self.tiles[x][y].tunnel = True
-
-    def create_v_tunnel(self, y1, y2, x):
-        for y in range(min(y1, y2), max(y1, y2) + 1):
-            self.tiles[x][y].blocked = False
-            self.tiles[x][y].block_sight = False
-            self.tiles[x][y].tunnel = True
+        # if num_rooms > 0:
+        #     stairs_component = Stairs(self.dungeon_level + 1)
+        #     down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', tcod.white, 'Down Stairs',
+        #                          'There\'s a dark chasm here which will allow you to take a one-way trip to'
+        #                          'the next chamber of the SludgeWorks.', render_order=RenderOrder.STAIRS,
+        #                          stairs=stairs_component)
+        #     entities.append(down_stairs)
+        # else:
+        #     print('Map generation failed: No rooms generated.')
 
     def find_neighbours(self, x, y):
         xi = (0, -1, 1) if 0 < x < self.width - 1 else ((0, -1) if x > 0 else (0, 1))
@@ -454,68 +455,8 @@ class GameMap:
                     continue
                 yield (x + a, y + b)
 
-    def explore(self, player, message_log):
-        """This function uses a dijkstra map to navigate the player towards the nearest unexplored tile. Interrupted by
-        monsters entering FoV."""
-        unexplored_coords = []
-
-        # Loop over the map to find all unexplored tiles
-        for y in range(self.height):
-            for x in range(self.width):
-                if not self.tiles[x][y].explored and not self.tiles[x][y].blocked:
-                    unexplored_coords.append((y, x))
-
-        if len(unexplored_coords) == 0:
-            message_log.add_message(Message('There is nowhere else to explore.', libtcod.yellow))
-            return False
-
-        # Find the nearest unexplored coords
-        starting_distance = 100000
-        closest_coord = None
-
-        for y, x in unexplored_coords:
-            new_distance = math.hypot(x - player.x, y - player.y)
-
-            if new_distance < starting_distance:
-                starting_distance = new_distance
-                closest_coord = (x, y)
-
-        path_to_closest_coord = []
-
-        if closest_coord:
-            my_map = libtcod.map_new(self.width, self.height)
-
-            for y in range(self.height):
-                for x in range(self.width):
-                    if not self.tiles[x][y].blocked:
-                        libtcod.map_set_properties(my_map, x, y, True, True)
-
-            # Create a new dijkstra map
-            dij_pather = libtcod.dijkstra_new(my_map)
-
-            # Compute the dijkstra map
-            libtcod.dijkstra_compute(dij_pather, player.x, player.y)
-
-            # Make a path to target
-            libtcod.dijkstra_path_set(dij_pather, closest_coord[0], closest_coord[1])
-
-            # Get the path
-            if not libtcod.dijkstra_is_empty(dij_pather):
-                x, y = libtcod.dijkstra_path_walk(dij_pather)
-                path_to_closest_coord.append((x, y))
-
-                # Move player along the path
-                if not path_to_closest_coord:
-                    message_log.add_message(Message('You cannot explore the remaining tiles', libtcod.yellow))
-                    return False
-
-                else:
-                    player.x = x
-                    player.y = y
-        return True
-
     def to_down_stairs(self, player, entities, message_log):
-        """Create a Dijkstra path to the down stairs. Dijkstra was chosen over A* because libtcod's built-in dijkstra
+        """Create a Dijkstra path to the down stairs. Dijkstra was chosen over A* because tcod's built-in dijkstra
         seems much faster."""
         stairs_x = None
         stairs_y = None
@@ -528,26 +469,26 @@ class GameMap:
                     stairs_found = True
 
         if stairs_found:
-            my_map = libtcod.map_new(self.width, self.height)
+            my_map = tcod.map_new(self.width, self.height)
 
             for y in range(self.height):
                 for x in range(self.width):
                     if self.tiles[x][y].explored:
-                        libtcod.map_set_properties(my_map, x, y, not self.tiles[x][y].block_sight,
-                                                   not self.tiles[x][y].blocked)
+                        tcod.map_set_properties(my_map, x, y, not self.tiles[x][y].block_sight,
+                                                not self.tiles[x][y].blocked)
 
-            dij_path = libtcod.dijkstra_new(my_map)
-            libtcod.dijkstra_compute(dij_path, player.x, player.y)
-            libtcod.dijkstra_path_set(dij_path, stairs_x, stairs_y)
+            dij_path = tcod.dijkstra_new(my_map)
+            tcod.dijkstra_compute(dij_path, player.x, player.y)
+            tcod.dijkstra_path_set(dij_path, stairs_x, stairs_y)
 
-            if not libtcod.dijkstra_is_empty(dij_path):
-                x, y = libtcod.dijkstra_path_walk(dij_path)
+            if not tcod.dijkstra_is_empty(dij_path):
+                x, y = tcod.dijkstra_path_walk(dij_path)
 
                 # Move player along the path
                 if not x and not y:
-                    message_log.add_message(
-                        Message('You cannot safely reach the next set of down stairs from here.',
-                                libtcod.yellow))
+                    # message_log.add_message(
+                    # Message('You cannot safely reach the next set of down stairs from here.',
+                    #         tcod.yellow))
                     return False
                 else:
                     player.x = x
@@ -556,10 +497,10 @@ class GameMap:
             elif player.x == stairs_x and player.y == stairs_y:
                 return False
             else:
-                message_log.add_message(Message('Path to stairs does not exist.', libtcod.yellow))
+                # message_log.add_message(Message('Path to stairs does not exist.', tcod.yellow))
                 return False
         else:
-            message_log.add_message(Message('You have not yet discovered the path to the next floor.', libtcod.yellow))
+            # message_log.add_message(Message('You have not yet discovered the path to the next floor.', tcod.yellow))
             return False
 
 

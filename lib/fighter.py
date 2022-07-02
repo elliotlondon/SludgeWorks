@@ -1,14 +1,26 @@
-import tcod as libtcod
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import tcod
+
+from config.colour import player_die, enemy_die
+from core.render_functions import RenderOrder
+from lib.ai import HostileStationary, PassiveStationary
+from lib.base_component import BaseComponent
 from utils.random_utils import roll_dice, dnd_bonus_calc
-from gui.game_messages import Message
-from math import floor
+
+if TYPE_CHECKING:
+    from entity import Actor
 
 
-class Fighter:
-    def __init__(self, current_hp, max_hp, damage_dice, damage_sides, strength, dexterity, vitality, intellect,
+class Fighter(BaseComponent):
+    parent: Actor
+
+    def __init__(self, hp, max_hp, damage_dice, damage_sides, strength, dexterity, vitality, intellect,
                  perception, armour, xp=0, level=1, dodges=False):
+        self._hp = hp
         self.base_max_hp = max_hp
-        self.current_hp = current_hp
         self.damage_dice = damage_dice
         self.damage_sides = damage_sides
         self.base_strength = strength
@@ -22,6 +34,16 @@ class Fighter:
         self.dodges = dodges
 
     @property
+    def hp(self) -> int:
+        return self._hp
+
+    @hp.setter
+    def hp(self, value: int) -> None:
+        self._hp = max(0, min(value, self.max_hp))
+        if self._hp == 0 and self.parent.ai:
+            self.die()
+
+    @property
     def max_hp(self):
         bonus = 0
 
@@ -29,8 +51,8 @@ class Fighter:
 
     @property
     def damage(self):
-        if self.owner and self.owner.equipment:
-            damage = roll_dice(self.owner.equipment.damage_dice, self.owner.equipment.damage_sides)
+        if self.parent and self.parent.equipment.damage_dice != 0:
+            damage = roll_dice(self.parent.equipment.damage_dice, self.parent.equipment.damage_sides)
         else:
             damage = roll_dice(self.damage_dice, self.damage_sides)
 
@@ -38,162 +60,83 @@ class Fighter:
 
     @property
     def crit_damage(self):
-        if self.owner and self.owner.equipment:
-            damage = roll_dice(2*self.owner.equipment.damage_dice, self.owner.equipment.damage_sides)
+        if self.parent and self.parent.equipment.damage_dice != 0:
+            damage = roll_dice(2 * self.parent.equipment.damage_dice, self.parent.equipment.damage_sides)
         else:
-            damage = roll_dice(2*self.damage_dice, self.damage_sides)
+            damage = roll_dice(2 * self.damage_dice, self.damage_sides)
 
         return damage
 
     @property
     def strength_modifier(self):
-        bonus = 0
-        if self.owner and self.owner.equipment:
-            bonus += self.owner.equipment.strength_bonus
-
-        strength_bonus = dnd_bonus_calc(self.base_strength)
-
-        return strength_bonus + bonus
+        return dnd_bonus_calc(self.base_strength) + self.parent.equipment.strength_bonus
 
     @property
     def dexterity_modifier(self):
-        bonus = 0
-        if self.owner and self.owner.equipment:
-            bonus += self.owner.equipment.dexterity_bonus
-
-        dexterity_bonus = dnd_bonus_calc(self.base_dexterity)
-
-        return dexterity_bonus + bonus
+        return dnd_bonus_calc(self.base_dexterity) + self.parent.equipment.dexterity_bonus
 
     @property
     def vitality_modifier(self):
-        bonus = 0
-        if self.owner and self.owner.equipment:
-            bonus += self.owner.equipment.vitality_bonus
-
-        vitality_bonus = dnd_bonus_calc(self.base_vitality)
-
-        return vitality_bonus + bonus
+        return dnd_bonus_calc(self.base_vitality) + self.parent.equipment.vitality_bonus
 
     @property
     def intellect_modifier(self):
-        bonus = 0
-        if self.owner and self.owner.equipment:
-            bonus += self.owner.equipment.intellect_bonus
-
-        intellect_bonus = dnd_bonus_calc(self.base_intellect)
-
-        return intellect_bonus + bonus
-
-    @property
-    def perception_modifier(self):
-        bonus = 0
-        if self.owner and self.owner.equipment:
-            bonus += self.owner.equipment.perception_bonus
-
-        perception_bonus = dnd_bonus_calc(self.base_perception)
-
-        return perception_bonus + bonus
+        return dnd_bonus_calc(self.base_intellect) + self.parent.equipment.intellect_bonus
 
     @property
     def armour_total(self):
-        bonus = 0
-        if self.owner and self.owner.equipment:
-            bonus += self.owner.equipment.armour_bonus
+        return self.base_armour + self.parent.equipment.armour_bonus
 
-        return self.base_armour + bonus
+    def heal(self, amount: int) -> int:
+        if self.hp == self.max_hp:
+            return 0
 
-    def take_damage(self, amount):
-        results = []
+        new_hp_value = self.hp + amount
 
-        self.current_hp -= amount
-        if self.current_hp <= 0:
-            self.current_hp = 0
-            results.append({'dead': self.owner, 'xp': self.xp})
-        return results
+        if new_hp_value > self.max_hp:
+            new_hp_value = self.max_hp
 
-    def heal(self, amount):
-        self.current_hp += amount
-        if self.current_hp > self.max_hp:
-            self.current_hp = self.max_hp
+        amount_recovered = new_hp_value - self.hp
 
-    def attack(self, target):
-        results = []
-        damage = None
-        crit = False
-        crit_chance = 0.05   # Critical hit chance in %
-        max_crit_chance = 0.25  # Define max chance to stop overflows!
+        self.hp = new_hp_value
 
-        # Roll to see if hit
-        attack_roll = roll_dice(1, 20) + self.dexterity_modifier
-        if target.fighter.dodges:
-            dodge_roll = roll_dice(1, 20) + target.fighter.dexterity_modifier
-        else:
-            dodge_roll = 0
+        return amount_recovered
 
-        if attack_roll > dodge_roll:    # Attack hits
-            # Calculate strength-weighted damage roll
-            damage_roll = self.damage + self.strength_modifier
-            if target.fighter.armour_total > 0:
-                defence_roll = roll_dice(1, target.fighter.armour_total)
+    def take_damage(self, amount: int) -> None:
+        self.hp -= amount
+
+    def die(self) -> None:
+        xp = self.parent.level.xp_given
+
+        # Plants do not have a corpse
+        if isinstance(self.parent.ai, HostileStationary) or isinstance(self.parent.ai, PassiveStationary):
+            if self.parent.name.endswith("s"):
+                death_message = f"The {self.parent.name} are cut down!"
             else:
-                defence_roll = 0
-
-            # Check if entity penetrates target's armour
-            penetration_int = abs(damage_roll - defence_roll)
-            if (damage_roll - defence_roll) > 0:
-
-                # Calculate modified (positive) crit chance
-                while penetration_int > 0 and crit_chance <= max_crit_chance:
-                    crit_chance += 0.01
-                    penetration_int -= 1
-
-                # Check if crit
-                if roll_dice(1, floor(1/crit_chance)) == floor(1/crit_chance):
-                    crit = True
-                    damage = self.crit_damage - defence_roll
-                else:
-                    damage = self.damage - defence_roll
-
-            # Crits can penetrate otherwise impervious armour!
-            elif (damage_roll - defence_roll) <= 0:
-
-                # Calculate modified (negative) crit chance
-                while penetration_int > 0 and crit_chance > 0:
-                    crit_chance -= 0.01
-                    penetration_int -= 1
-
-                # Check if crit
-                if crit_chance <= 0:
-                    damage = 0
-                else:
-                    if roll_dice(1, floor(1 / crit_chance)) == floor(1 / crit_chance):
-                        crit = True
-                        damage = self.crit_damage - defence_roll
-                    else:
-                        damage = 0
-
-            # Check for damage and display chat messages
-            if damage > 0:
-                if crit:
-                    results.append({'message': Message('{0} crits {1} for {2} damage.'.
-                                                       format(self.owner.name.capitalize(), target.name,
-                                                              str(damage)), libtcod.light_red)})
-                    results.extend(target.fighter.take_damage(damage))
-                else:
-                    results.append({'message': Message('{0} attacks {1} for {2} damage.'.
-                                    format(self.owner.name.capitalize(), target.name, str(damage)), libtcod.white)})
-                    results.extend(target.fighter.take_damage(damage))
-                # Debug to see enemy HP
-                # if target.name == 'Risen Sacrifice':
-                #     results.append({'message': Message('{0} has hit {1} points left.'.format(
-                #         target.name.capitalize(), target.fighter.current_hp), libtcod.orange)})
-            else:
-                results.append({'message': Message('{0} attacks {1} but does no damage.'.
-                                                   format(self.owner.name.capitalize(), target.name),
-                                                   libtcod.grey)})
+                death_message = f"The {self.parent.name} is cut down!"
+            death_message_color = enemy_die
+            self.gamemap.entities.remove(self.parent)
         else:
-            results.append({'message': Message('{0} attacks {1} and misses. ([{2} vs. {3}])'.format(
-                self.owner.name.capitalize(), target.name, attack_roll, dodge_roll), libtcod.grey)})
+            if self.engine.player is self.parent:
+                death_message = 'YOU DIED'
+                death_message_color = player_die
+            else:
+                death_message = f"The {self.parent.name} dies!"
+                death_message_color = enemy_die
 
-        return results
+            self.parent.char = "%"
+            self.parent.color = tcod.dark_red
+            self.parent.blocks_movement = False
+            self.parent.ai = None
+            self.parent.render_order = RenderOrder.CORPSE
+            if self.parent.name == 'Player':
+                self.parent.name = 'your lifeless body'
+            elif self.parent.name[0].lower() in 'aeiou':
+                self.parent.name = 'An ' + self.parent.name + ' corpse'
+            else:
+                self.parent.name = 'A ' + self.parent.name + ' corpse'
+
+        self.engine.message_log.add_message(death_message, death_message_color)
+
+        # TODO: Award xp to whomever strikes the last blow
+        self.engine.player.level.add_xp(xp)

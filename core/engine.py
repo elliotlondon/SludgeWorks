@@ -1,15 +1,10 @@
 from __future__ import annotations
 
-import lzma
-import pickle
 from typing import TYPE_CHECKING
 
 from tcod import FOV_SYMMETRIC_SHADOWCAST
-from tcod.console import Console
 from tcod.map import compute_fov
 
-import config.colour
-import core.render_functions
 from config.exceptions import Impossible
 from gui.message_log import MessageLog
 

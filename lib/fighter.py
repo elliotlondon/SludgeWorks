@@ -114,9 +114,9 @@ class Fighter(BaseComponent):
         # Plants do not have a corpse
         if isinstance(self.parent.ai, HostileStationary) or isinstance(self.parent.ai, PassiveStationary):
             if self.parent.name.endswith("s"):
-                death_message = f"The {self.parent.name} are cut down!"
+                death_message = f"The {self.parent.name} are destroyed!"
             else:
-                death_message = f"The {self.parent.name} is cut down!"
+                death_message = f"The {self.parent.name} dies!"
             death_message_color = enemy_die
 
             # Generate floor in its place

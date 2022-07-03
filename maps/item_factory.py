@@ -33,7 +33,7 @@ fireball_twig = Item(
     char="√",
     colour=tcod.dark_red,
     name="Burnt Imbued Twig",
-    consumable=lib.consumable.FireballDamageConsumable(damage=12, radius=3),
+    consumable=lib.consumable.FireballDamageConsumable(lower_bound=10, upper_bound=16, radius=3),
     usetext="You snap the twig..."
 )
 

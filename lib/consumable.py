@@ -84,9 +84,14 @@ class RandomHealConsumable(Consumable):
 
 
 class FireballDamageConsumable(Consumable):
-    def __init__(self, damage: int, radius: int):
-        self.damage = damage
+    def __init__(self, lower_bound: int, upper_bound, radius: int):
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
         self.radius = radius
+
+    @property
+    def damage(self):
+        return random.randint(self.lower_bound, self.upper_bound)
 
     def get_action(self, consumer: Actor) -> AreaRangedAttackHandler:
         core.g.engine.message_log.add_message(
@@ -103,19 +108,29 @@ class FireballDamageConsumable(Consumable):
         if not core.g.engine.game_map.visible[target_xy]:
             raise Impossible("You cannot target an area that you cannot see.")
 
+        # Display message for use whenever Item is consumed
+        core.g.engine.message_log.add_message(self.parent.usetext, config.colour.use)
+
         targets_hit = False
         for actor in core.g.engine.game_map.actors:
             if actor.distance(*target_xy) <= self.radius:
-                # Display message for use whenever Item is consumed
-                core.g.engine.message_log.add_message(self.parent.usetext, config.colour.use)
-                core.g.engine.message_log.add_message(
-                    f"The {actor.name} is engulfed in a fiery explosion, taking {self.damage} damage!"
-                )
+                if actor.name == "Player":
+                    core.g.engine.message_log.add_message(
+                        f"You are engulfed in a fiery explosion, taking {self.damage} damage!"
+                    )
+                elif actor.name.endswith('s'):
+                    core.g.engine.message_log.add_message(
+                        f"The {actor.name} are engulfed in a fiery explosion, taking {self.damage} damage!"
+                    )
+                else:
+                    core.g.engine.message_log.add_message(
+                        f"The {actor.name} is engulfed in a fiery explosion, taking {self.damage} damage!"
+                    )
                 actor.fighter.take_damage(self.damage)
                 targets_hit = True
 
         if not targets_hit:
-            raise Impossible("There are no targets in the radius.")
+            core.g.engine.message_log.add_message("It has seems to have no effect...", config.colour.invalid)
         self.consume()
 
 

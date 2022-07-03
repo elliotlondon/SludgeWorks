@@ -8,6 +8,7 @@ import numpy as np  # type: ignore
 import tcod
 import logging
 
+import core.g
 from core.actions import Action, BumpAction, MeleeAction, MovementAction, WaitAction
 
 if TYPE_CHECKING:
@@ -54,12 +55,12 @@ class HostileEnemy(BaseAI):
         self.path: List[Tuple[int, int]] = []
 
     def perform(self) -> None:
-        target = self.engine.player
+        target = core.g.engine.player
         dx = target.x - self.entity.x
         dy = target.y - self.entity.y
         distance = max(abs(dx), abs(dy))  # Chebyshev distance.
 
-        if self.engine.game_map.visible[self.entity.x, self.entity.y]:
+        if core.g.engine.game_map.visible[self.entity.x, self.entity.y]:
             if distance <= 1:
                 return MeleeAction(self.entity, dx, dy).perform()
 
@@ -77,7 +78,7 @@ class HostileEnemy(BaseAI):
         else:
             dest_x = self.entity.x + randint(-1, 1)
             dest_y = self.entity.y + randint(-1, 1)
-            if (dest_x < self.engine.game_map.width) and (dest_y < self.engine.game_map.height):
+            if (dest_x < core.g.engine.game_map.width) and (dest_y < core.g.engine.game_map.height):
                 return MovementAction(self.entity, dest_x - self.entity.x, dest_y - self.entity.y).perform()
             else:
                 return WaitAction(self.entity).perform()
@@ -89,12 +90,12 @@ class HostileStationary(BaseAI):
         self.path: List[Tuple[int, int]] = []
 
     def perform(self) -> None:
-        target = self.engine.player
+        target = core.g.engine.player
         dx = target.x - self.entity.x
         dy = target.y - self.entity.y
         distance = max(abs(dx), abs(dy))  # Chebyshev distance.
 
-        if self.engine.game_map.visible[self.entity.x, self.entity.y]:
+        if core.g.engine.game_map.visible[self.entity.x, self.entity.y]:
             if distance <= 1:
                 return MeleeAction(self.entity, dx, dy).perform()
 
@@ -134,12 +135,12 @@ class ConfusedEnemy(BaseAI):
         self.turns_remaining = turns_remaining
 
         if logging.DEBUG >= logging.root.level:
-            self.engine.message_log.add_message(f"{self.entity.name} has {self.turns_remaining} of confusion.")
+            core.g.engine.message_log.add_message(f"{self.entity.name} has {self.turns_remaining} of confusion.")
 
     def perform(self) -> None:
         # Revert the AI back to the original state if the effect has run its course.
         if self.turns_remaining <= 0:
-            self.engine.message_log.add_message(f"The {self.entity.name} is no longer confused.")
+            core.g.engine.message_log.add_message(f"The {self.entity.name} is no longer confused.")
             self.entity.ai = self.previous_ai
         else:
             # Pick a random direction

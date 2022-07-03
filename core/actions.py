@@ -5,33 +5,14 @@ from typing import Optional, Tuple, TYPE_CHECKING
 
 import numpy as np
 
+from core.action import Action, ItemAction
 import config.colour
 from config.exceptions import Impossible
 from utils.random_utils import roll_dice
+import core.g
 
 if TYPE_CHECKING:
-    from core.engine import Engine
     from lib.entity import Entity, Actor, Item
-
-
-class Action:
-    def __init__(self, entity: Actor) -> None:
-        super().__init__()
-        self.entity = entity
-
-    @property
-    def engine(self) -> Engine:
-        """Return the engine this action belongs to."""
-        return self.entity.gamemap.engine
-
-    def perform(self) -> None:
-        """
-        Perform this action with the objects needed to determine its scope.
-            `self.engine` is the scope this action is being performed in.
-            `self.entity` is the object performing the action.
-        This method must be overridden by Action subclasses.
-        """
-        raise NotImplementedError()
 
 
 class PickupAction(Action):
@@ -47,40 +28,19 @@ class PickupAction(Action):
         actor_location_y = self.entity.y
         inventory = self.entity.inventory
 
-        for item in self.engine.game_map.items:
+        for item in core.g.engine.game_map.items:
             if actor_location_x == item.x and actor_location_y == item.y:
                 if len(inventory.items) >= inventory.capacity:
                     raise Impossible("Your inventory is full.")
 
-                self.engine.game_map.entities.remove(item)
+                core.g.engine.game_map.entities.remove(item)
                 item.parent = self.entity.inventory
                 inventory.items.append(item)
 
-                self.engine.message_log.add_message(f"You picked up the {item.name}!")
+                core.g.engine.message_log.add_message(f"You picked up the {item.name}!")
                 return
 
         raise Impossible("There is nothing here to pick up.")
-
-
-class ItemAction(Action):
-    def __init__(
-            self, entity: Actor, item: Item, target_xy: Optional[Tuple[int, int]] = None
-    ):
-        super().__init__(entity)
-        self.item = item
-        if not target_xy:
-            target_xy = entity.x, entity.y
-        self.target_xy = target_xy
-
-    @property
-    def target_actor(self) -> Optional[Actor]:
-        """Return the actor at this actions destination."""
-        return self.engine.game_map.get_actor_at_location(*self.target_xy)
-
-    def perform(self) -> None:
-        """Invoke the items ability, this action will be given to provide context."""
-        if self.item.consumable:
-            self.item.consumable.activate(self)
 
 
 class DropItem(ItemAction):
@@ -112,10 +72,10 @@ class FallDownHole(Action):
         Fall down a hole/chasm and generate the next floor, taking some damage
         """
 
-        self.engine.game_world.generate_floor()
-        damage = round(self.engine.player.fighter.base_max_hp / 4)
+        core.g.engine.game_world.generate_floor()
+        damage = round(core.g.engine.player.fighter.base_max_hp / 4)
         self.entity.fighter.take_damage(damage)
-        self.engine.message_log.add_message(
+        core.g.engine.message_log.add_message(
             f"You fall down the hole to the next floor, taking {damage} damage! Ouch!", config.colour.descend
         )
 
@@ -125,9 +85,9 @@ class TakeStairsAction(Action):
         """
         Take the stairs, if any exist at the entity's location.
         """
-        if (self.entity.x, self.entity.y) == self.engine.game_map.downstairs_location:
-            self.engine.game_world.generate_floor()
-            self.engine.message_log.add_message(
+        if (self.entity.x, self.entity.y) == core.g.engine.game_map.downstairs_location:
+            core.g.engine.game_world.generate_floor()
+            core.g.engine.message_log.add_message(
                 "You slide down the tunnel, descending deeper into the Sludgeworks.", config.colour.descend
             )
         else:
@@ -149,12 +109,12 @@ class ActionWithDirection(Action):
     @property
     def blocking_entity(self) -> Optional[Entity]:
         """Return the blocking entity at this action's destination."""
-        return self.engine.game_map.get_blocking_entity_at_location(*self.dest_xy)
+        return core.g.engine.game_map.get_blocking_entity_at_location(*self.dest_xy)
 
     @property
     def target_actor(self) -> Optional[Actor]:
         """Return the actor at the destination of this action."""
-        return self.engine.game_map.get_actor_at_location(*self.dest_xy)
+        return core.g.engine.game_map.get_actor_at_location(*self.dest_xy)
 
     def perform(self) -> None:
         raise NotImplementedError()
@@ -224,50 +184,50 @@ class MeleeAction(ActionWithDirection):
             if damage > 0:
                 if crit:
                     if attacker.name.capitalize() == 'Player':
-                        self.engine.message_log.add_message(f'You crit the {defender.name.capitalize()} for '
+                        core.g.engine.message_log.add_message(f'You crit the {defender.name.capitalize()} for '
                                                             f'{str(damage)} damage!', config.colour.player_atk)
                     elif defender.name.capitalize() == 'Player':
-                        self.engine.message_log.add_message(f'The {attacker.name} crits you for '
+                        core.g.engine.message_log.add_message(f'The {attacker.name} crits you for '
                                                             f'{str(damage)} damage!', config.colour.enemy_crit)
                     else:
-                        self.engine.message_log.add_message(f'The {attacker.name} crits the {defender.name}'
+                        core.g.engine.message_log.add_message(f'The {attacker.name} crits the {defender.name}'
                                                             f'{str(damage)} damage!', config.colour.enemy_crit)
                 else:
                     if attacker.name.capitalize() == 'Player':
-                        self.engine.message_log.add_message(f'You attack the {defender.name.capitalize()} for '
+                        core.g.engine.message_log.add_message(f'You attack the {defender.name.capitalize()} for '
                                                             f'{str(damage)} damage.', config.colour.player_atk)
                     elif defender.name.capitalize() == 'Player':
-                        self.engine.message_log.add_message(f'The {attacker.name} attacks you for '
+                        core.g.engine.message_log.add_message(f'The {attacker.name} attacks you for '
                                                             f'{str(damage)} damage.', config.colour.enemy_atk)
                     else:
-                        self.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                        core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
                                                             f'{str(damage)} damage.', config.colour.enemy_atk)
                 defender.fighter.hp -= damage
             else:
                 if attacker.name.capitalize() == 'Player':
-                    self.engine.message_log.add_message(f'You attack the {defender.name.capitalize()} '
+                    core.g.engine.message_log.add_message(f'You attack the {defender.name.capitalize()} '
                                                         f'but do no damage.', config.colour.enemy_evade)
                 elif defender.name.capitalize() == 'Player':
-                    self.engine.message_log.add_message(f'The {attacker.name} attacks you '
+                    core.g.engine.message_log.add_message(f'The {attacker.name} attacks you '
                                                         f'but does no damage!', config.colour.player_evade)
                 else:
-                    self.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                    core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
                                                         f'but does no damage.', config.colour.enemy_evade)
                 if logging.DEBUG >= logging.root.level:
-                    self.engine.message_log.add_message(f"DEBUG: Roll [{attack_roll} vs. {defence_roll}].",
+                    core.g.engine.message_log.add_message(f"DEBUG: Roll [{attack_roll} vs. {defence_roll}].",
                                                         config.colour.debug)
         else:
             if attacker.name.capitalize() == 'Player':
-                self.engine.message_log.add_message(f'You attack the {defender.name.capitalize()} '
+                core.g.engine.message_log.add_message(f'You attack the {defender.name.capitalize()} '
                                                     f'but the attack is evaded.', config.colour.enemy_evade)
             elif defender.name.capitalize() == 'Player':
-                self.engine.message_log.add_message(f'You evade the {attacker.name.capitalize()}\'s attack.',
+                core.g.engine.message_log.add_message(f'You evade the {attacker.name.capitalize()}\'s attack.',
                                                     config.colour.player_evade)
             else:
-                self.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
                                                     f'but the attack is evaded.', config.colour.enemy_evade)
             if logging.DEBUG >= logging.root.level:
-                self.engine.message_log.add_message(f"DEBUG: Roll [{attack_roll} vs. {dodge_roll}].",
+                core.g.engine.message_log.add_message(f"DEBUG: Roll [{attack_roll} vs. {dodge_roll}].",
                                                     config.colour.debug)
 
 
@@ -275,13 +235,13 @@ class MovementAction(ActionWithDirection):
     def perform(self) -> None:
         dest_x, dest_y = self.dest_xy
 
-        if not self.engine.game_map.in_bounds(dest_x, dest_y):
+        if not core.g.engine.game_map.in_bounds(dest_x, dest_y):
             # Destination is out of bounds.
             raise Impossible("That way is blocked.")
-        if not self.engine.game_map.tiles["walkable"][dest_x, dest_y]:
+        if not core.g.engine.game_map.tiles["walkable"][dest_x, dest_y]:
             # Destination is blocked by a tile.
             raise Impossible("That way is blocked.")
-        if self.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+        if core.g.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
             # Destination is blocked by a tile.
             raise Impossible("That way is blocked.")
 

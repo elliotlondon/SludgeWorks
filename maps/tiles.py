@@ -62,6 +62,7 @@ verdant_3 = new_tile(name="verdant_3", walkable=True, transparent=True,
 verdant_4 = new_tile(name="verdant_4", walkable=True, transparent=True,
                      dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
                      light=(ord("∙"), tcod.dark_green, (0, 0, 0)))
+verdant_chars = [",", ".", "'", "∙"]
 verdant_tiles_1 = [verdant_1, verdant_2, verdant_3, verdant_4]
 
 # Walls

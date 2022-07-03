@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List, TYPE_CHECKING
 
 from lib.base_component import BaseComponent
+import core.g
 
 if TYPE_CHECKING:
     from lib.entity import Actor, Item
@@ -144,9 +145,9 @@ class Inventory(BaseComponent):
         item.place(self.parent.x, self.parent.y, self.gamemap)
 
         if self.parent.name == 'Player':
-            self.engine.message_log.add_message(f"You drop the {item.name}.")
+            core.g.engine.message_log.add_message(f"You drop the {item.name}.")
         else:
-            self.engine.message_log.add_message(f"{self.parent.name} drops the {item.name}.")
+            core.g.engine.message_log.add_message(f"{self.parent.name} drops the {item.name}.")
 
     # @staticmethod
     # def drop_all(entity, entities):

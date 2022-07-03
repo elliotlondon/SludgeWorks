@@ -1,25 +1,25 @@
 from __future__ import annotations
 
-import os
 import logging
+import math
+import os
 from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union, List
 
-import tcod
 import numpy as np
-import math
-import random
-import time
+import tcod
 
 import config.colour
 import config.inputs
 import core.actions
+import core.g
+from core.rendering import render_map, render_ui
 from config.exceptions import Impossible
+from core.actions import Action
 
 if TYPE_CHECKING:
-    from engine import Engine
     from lib.entity import Item
 
-ActionOrHandler = Union[core.actions.Action, "BaseEventHandler"]
+ActionOrHandler = Union[Action, "BaseEventHandler"]
 """
 An event handler return value which can trigger an action or switch active handlers.
 If a handler is returned then it will become the active handler for future events.
@@ -34,13 +34,13 @@ class BaseEventHandler(tcod.event.EventDispatch[ActionOrHandler]):
         state = self.dispatch(event)
         if isinstance(state, BaseEventHandler):
             return state
-        assert not isinstance(state, core.actions.Action), f"{self!r} can not handle actions."
+        assert not isinstance(state, Action), f"{self!r} can not handle actions."
         return self
 
     def on_render(self, console: tcod.Console) -> None:
         raise NotImplementedError()
 
-    def ev_quit(self, event: tcod.event.Quit) -> Optional[core.actions.Action]:
+    def ev_quit(self, event: tcod.event.Quit) -> Optional[Action]:
         raise SystemExit()
 
 
@@ -81,53 +81,63 @@ class PopupMessage(BaseEventHandler):
 
 
 class EventHandler(BaseEventHandler):
-    def __init__(self, engine: Engine):
-        self.engine = engine
-
     def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
-        """Handle events for input handlers with an engine."""
+        """Handle an event, perform any actions, then return the next active event handler."""
         action_or_state = self.dispatch(event)
-        if isinstance(action_or_state, BaseEventHandler):
+        if isinstance(action_or_state, EventHandler):
             return action_or_state
-        if self.handle_action(action_or_state):
-            # A valid action was performed.
-            if not self.engine.player.is_alive:
-                # The player was killed sometime during or after the action.
-                return GameOverEventHandler(self.engine)
-            elif self.engine.player.level.requires_level_up:
-                return LevelUpEventHandler(self.engine)
-            return MainGameEventHandler(self.engine)  # Return to the main handler.
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        # Failsafe for recursion
+        if not core.g.engine.player.is_alive:
+            return GameOverEventHandler()
+        elif core.g.engine.player.level.requires_level_up:
+            return LevelUpEventHandler()
+
+        # Garbage collection for exiled entities
+        exiles = []
+        for entity in core.g.engine.game_map.entities:
+            if entity.name == ' ':
+                exiles.append(entity)
+        core.g.engine.game_map.entities = set([x for x in core.g.engine.game_map.entities
+                                               if x not in exiles])
+
         return self
 
-    def handle_action(self, action: Optional[core.actions.Action]) -> bool:
-        """Handle actions returned from event methods. Returns True if the action will advance a turn.
-        """
-        if action is None:
-            return False
-
+    def handle_action(self, action: Action) -> EventHandler:
+        """Handle actions returned from event methods."""
         try:
             action.perform()
         except Impossible as exc:
-            self.engine.message_log.add_message(exc.args[0], config.colour.impossible)
-            return False  # Skip enemy turn on exceptions.
+            core.g.engine.message_log.add_message(exc.args[0], config.colour.impossible)
+            return self  # Skip enemy turn on exceptions.
 
-        self.engine.handle_enemy_turns()
-        self.engine.update_fov()
-        return True
+        # Action was successfully performed and a turn was advanced
+        core.g.engine.handle_enemy_turns()
+        core.g.engine.update_fov()
+
+    def ev_quit(self, event: tcod.event.Quit) -> Optional[ActionOrHandler]:
+        raise SystemExit()
 
     def ev_mousemotion(self, event: tcod.event.MouseMotion) -> None:
-        if self.engine.game_map.in_bounds(event.tile.x, event.tile.y):
-            self.engine.mouse_location = event.tile.x, event.tile.y
+        if core.g.engine.game_map.in_bounds(event.tile.x, event.tile.y):
+            core.g.engine.mouse_location = event.tile.x, event.tile.y
 
     def on_render(self, console: tcod.Console) -> None:
-        self.engine.render(console)
+        render_map(console, core.g.engine.game_map)
+        render_ui(console, core.g.engine)
 
 
 class ExploreEventHandler(EventHandler):
-    def __init__(self, engine: Engine):
-        super().__init__(engine)
+    def __init__(self):
+        super().__init__()
         # Init message
-        self.engine.message_log.add_message(f"You begin exploring.", config.colour.yellow)
+        core.g.engine.message_log.add_message(f"You begin exploring.", config.colour.yellow)
         self.path = []
 
     def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
@@ -137,68 +147,68 @@ class ExploreEventHandler(EventHandler):
             return action_or_state
         if self.handle_action(action_or_state):
             # A valid action was performed.
-            if not self.engine.player.is_alive:
+            if not core.g.engine.player.is_alive:
                 # The player was killed sometime during or after the action.
-                return GameOverEventHandler(self.engine)
-            elif self.engine.player.level.requires_level_up:
-                return LevelUpEventHandler(self.engine)
-            return MainGameEventHandler(self.engine)  # Return to the main handler.
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
         return self
 
-    def handle_action(self, action: Optional[core.actions.Action]):
+    def handle_action(self, action: Optional[Action]):
         """Handle actions returned from event methods. Returns True if the action will advance a turn."""
-        player = self.engine.player
+        player = core.g.engine.player
 
         if action is not tcod.event.KeyDown:
             if self.actor_in_fov():
-                return MainGameEventHandler(self.engine)
+                return MainGameEventHandler()
             try:
                 path = self.explore()
                 if path is not None:
                     action = core.actions.BumpAction(player, path[0] - player.x, path[1] - player.y)
                     action.perform()
-                    self.engine.handle_enemy_turns()
-                    self.engine.update_fov()
+                    core.g.engine.handle_enemy_turns()
+                    core.g.engine.update_fov()
                     if self.actor_in_fov():
-                        return MainGameEventHandler(self.engine)
+                        return MainGameEventHandler()
                 else:
-                    return MainGameEventHandler(self.engine)
+                    return MainGameEventHandler()
             except Impossible as exc:
-                self.engine.message_log.add_message(exc.args[0], config.colour.impossible)
+                core.g.engine.message_log.add_message(exc.args[0], config.colour.impossible)
                 return True  # Skip enemy turn on exceptions.
         else:
-            return MainGameEventHandler(self.engine)
+            return MainGameEventHandler()
 
     def actor_in_fov(self) -> bool:
         """Check if there are any enemies in the FOV."""
-        visible_tiles = np.nonzero(self.engine.game_map.visible)
-        for actor in self.engine.game_map.dangerous_actors:
+        visible_tiles = np.nonzero(core.g.engine.game_map.visible)
+        for actor in core.g.engine.game_map.dangerous_actors:
             if actor.x in visible_tiles[0] and actor.y in visible_tiles[1] and actor.name != 'Player':
-                self.engine.message_log.add_message(f"You spot a {actor.name} and stop exploring.", config.colour.yellow)
+                core.g.engine.message_log.add_message(f"You spot a {actor.name} and stop exploring.",
+                                                      config.colour.yellow)
                 return True
         return False
 
     def explore(self) -> Optional[List]:
         """Use a dijkstra map to navigate the player towards the nearest unexplored tile."""
-        game_map = self.engine.game_map
-        player = self.engine.player
+        player = core.g.engine.player
 
         unexplored_coords = []
-        for y in range(self.engine.game_map.height):
-            for x in range(self.engine.game_map.width):
-                if not self.engine.game_map.explored[x, y] and self.engine.game_map.accessible[x, y]:
+        for y in range(core.g.engine.game_map.height):
+            for x in range(core.g.engine.game_map.width):
+                if not core.g.engine.game_map.explored[x, y] and core.g.engine.game_map.accessible[x, y]:
                     unexplored_coords.append((y, x))
 
         if logging.DEBUG >= logging.root.level:
-            self.engine.message_log.add_message(f"DEBUG: Unexplored coords = {len(unexplored_coords)}", config.colour.debug)
+            core.g.engine.message_log.add_message(f"DEBUG: Unexplored coords = {len(unexplored_coords)}",
+                                                  config.colour.debug)
 
         if len(unexplored_coords) == 0:
-            self.engine.message_log.add_message("There is nowhere else to explore.", config.colour.yellow)
+            core.g.engine.message_log.add_message("There is nowhere else to explore.", config.colour.yellow)
             return None
 
         # Find the nearest unexplored coords
         closest_distance = 10000
-
         closest_coord = None
         for y, x in unexplored_coords:
             new_distance = math.hypot(x - player.x, y - player.y)
@@ -211,17 +221,18 @@ class ExploreEventHandler(EventHandler):
         if closest_coord:
             if len(self.path) <= 1:
                 # No path exists, so make one
-                cost = np.array(self.engine.game_map.accessible, dtype=np.int8)
+                cost = np.array(core.g.engine.game_map.accessible, dtype=np.int8)
 
                 # Create a graph from the cost array and pass that graph to a new pathfinder.
                 graph = tcod.path.SimpleGraph(cost=cost, cardinal=2, diagonal=3)
                 pathfinder = tcod.path.Pathfinder(graph)
-                pathfinder.add_root((self.engine.player.x, self.engine.player.y))  # Start position.
+                pathfinder.add_root((core.g.engine.player.x, core.g.engine.player.y))  # Start position.
 
                 # Compute the path to the destination and remove the starting point.
                 self.path: List[List[int]] = pathfinder.path_to(closest_coord)[1:].tolist()
                 if not self.path:
-                    self.engine.message_log.add_message("You cannot explore the remaining tiles.", config.colour.yellow)
+                    core.g.engine.message_log.add_message("You cannot explore the remaining tiles.",
+                                                          config.colour.yellow)
                     return None
                 return self.path[0]
             else:
@@ -230,58 +241,28 @@ class ExploreEventHandler(EventHandler):
                 new_coords = self.path[0]
                 return new_coords
 
-        # path_to_closest_coord = []
-        #
-        # if closest_coord:
-        #     my_map = tcod.map_new(game_map.width, game_map.height)
-        #     for y in range(game_map.height):
-        #         for x in range(game_map.width):
-        #             if game_map.tiles[x, y]['walkable']:
-        #                 tcod.map_set_properties(my_map, x, y, True, True)
-        #
-        #     dij_path = tcod.dijkstra_new(my_map)
-        #     tcod.dijkstra_compute(dij_path, player.x, player.y)
-        #     tcod.dijkstra_path_set(dij_path, closest_coord[0], closest_coord[1])
-        #
-        #     # Get the path
-        #     if not tcod.dijkstra_is_empty(dij_path):
-        #         x, y = tcod.dijkstra_path_walk(dij_path)
-        #         path_to_closest_coord.append((x, y))
-        #
-        #         # Move player along the path
-        #         if not path_to_closest_coord:
-        #             self.engine.message_log.add_message("You cannot explore the remaining tiles.", config.colour.yellow)
-        #             return None
-        #         else:
-        #             if logging.DEBUG >= logging.root.level:
-        #                 self.engine.message_log.add_message(f"DEBUG: Move position = {x, y}",
-        #                                                     config.colour.debug)
-        #
-        #             # Return the list of walkable tiles to be performed in parent action handler
-        #             return path_to_closest_coord
-
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         """By default any key exits this input handler."""
-        self.engine.message_log.add_message(f"You stop exploring.", config.colour.yellow)
+        core.g.engine.message_log.add_message(f"You stop exploring.", config.colour.yellow)
         return self.on_exit()
 
     def on_render(self, console: tcod.Console) -> None:
-        self.engine.render(console)
+        render_map(console, core.g.engine.game_map)
+        render_ui(console, core.g.engine)
 
     def on_exit(self) -> Optional[ActionOrHandler]:
         """Called when the user is trying to exit or cancel an action.
         By default this returns to the main event handler."""
-        return MainGameEventHandler(self.engine)
-
+        return MainGameEventHandler()
 
 
 class MainGameEventHandler(EventHandler):
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
-        action: Optional[core.actions.Action] = None
+        action: Optional[Action] = None
 
         key = event.sym
         modifier = event.mod
-        player = self.engine.player
+        player = core.g.engine.player
 
         if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT):
             return core.actions.TakeStairsAction(player)
@@ -290,10 +271,10 @@ class MainGameEventHandler(EventHandler):
             dx, dy = config.inputs.MOVE_KEYS[key]
 
             # Failsafe OOB check
-            if not self.engine.game_map.in_bounds(player.x + dx, player.y + dy):
-                self.engine.message_log.add_message("That way is blocked.", config.colour.impossible)
-            elif self.engine.game_map.tiles[player.x + dx, player.y + dy]['name'] == 'hole':
-                return HoleJumpEventHandler(self.engine)
+            if not core.g.engine.game_map.in_bounds(player.x + dx, player.y + dy):
+                core.g.engine.message_log.add_message("That way is blocked.", config.colour.impossible)
+            elif core.g.engine.game_map.tiles[player.x + dx, player.y + dy]['name'] == 'hole':
+                return HoleJumpEventHandler()
             else:
                 action = core.actions.BumpAction(player, dx, dy)
         elif key in config.inputs.WAIT_KEYS:
@@ -305,21 +286,21 @@ class MainGameEventHandler(EventHandler):
         #     self.engine.event_handler.toggle_fullscreen()
 
         elif key == tcod.event.K_m:
-            return HistoryViewer(self.engine)
+            return HistoryViewer()
         elif key == tcod.event.K_SEMICOLON:
-            return LookHandler(self.engine)
+            return LookHandler()
         elif key == tcod.event.K_c:
-            return CharacterScreenEventHandler(self.engine)
+            return CharacterScreenEventHandler()
 
         elif key == tcod.event.K_g:
             action = core.actions.PickupAction(player)
         elif key == tcod.event.K_i:
-            return InventoryActivateHandler(self.engine)
+            return InventoryActivateHandler()
         elif key == tcod.event.K_d:
-            return InventoryDropHandler(self.engine)
+            return InventoryDropHandler()
 
         elif key == tcod.event.K_HASH or key == tcod.event.K_SLASH:
-            return ExploreEventHandler(self.engine)
+            return ExploreEventHandler()
 
         return action
 
@@ -348,6 +329,9 @@ class AskUserEventHandler(EventHandler):
             tcod.event.K_RCTRL,
             tcod.event.K_LALT,
             tcod.event.K_RALT,
+            tcod.event.K_LGUI,
+            tcod.event.K_RGUI,
+            tcod.event.K_MODE,
         }:
             return None
         return self.on_exit()
@@ -358,15 +342,9 @@ class AskUserEventHandler(EventHandler):
 
     def on_exit(self) -> Optional[ActionOrHandler]:
         """Called when the user is trying to exit or cancel an action.
-
         By default this returns to the main event handler.
         """
-        return MainGameEventHandler(self.engine)
-
-
-# TODO: User input for username
-class UsernameEventHandler(AskUserEventHandler):
-    TITLE = "Please input a character name. Press # for default"
+        return MainGameEventHandler()
 
 
 class CharacterScreenEventHandler(AskUserEventHandler):
@@ -375,9 +353,9 @@ class CharacterScreenEventHandler(AskUserEventHandler):
     def on_render(self, console: tcod.Console) -> None:
         super().on_render(console)
 
-        level_str = f"Level: {self.engine.player.level.current_level}"
-        xp_str = f"XP: {self.engine.player.level.current_xp}"
-        xp_next_str = f"XP for next level: {self.engine.player.level.experience_to_next_level}"
+        level_str = f"Level: {core.g.engine.player.level.current_level}"
+        xp_str = f"XP: {core.g.engine.player.level.current_xp}"
+        xp_next_str = f"XP for next level: {core.g.engine.player.level.experience_to_next_level}"
 
         width = len(xp_next_str) + 2
         x = console.width // 2 - int(width / 2)
@@ -398,8 +376,8 @@ class CharacterScreenEventHandler(AskUserEventHandler):
         console.print(x=x + 1, y=y + 2, string=xp_str)
         console.print(x=x + 1, y=y + 3, string=xp_next_str)
 
-        console.print(x=x + 1, y=y + 4, string=f"Strength: {self.engine.player.fighter.base_strength}")
-        console.print(x=x + 1, y=y + 5, string=f"Dexterity: {self.engine.player.fighter.base_dexterity}")
+        console.print(x=x + 1, y=y + 4, string=f"Strength: {core.g.engine.player.fighter.base_strength}")
+        console.print(x=x + 1, y=y + 5, string=f"Dexterity: {core.g.engine.player.fighter.base_dexterity}")
 
 
 class LevelUpEventHandler(AskUserEventHandler):
@@ -431,21 +409,21 @@ class LevelUpEventHandler(AskUserEventHandler):
         console.print(
             x=x + 1,
             y=y + 4,
-            string=f"a) Vitality (+20 HP, from {self.engine.player.fighter.max_hp})",
+            string=f"a) Vitality (+20 HP, from {core.g.engine.player.fighter.max_hp})",
         )
         console.print(
             x=x + 1,
             y=y + 5,
-            string=f"b) Strength (+1 attack, from {self.engine.player.fighter.base_strength})",
+            string=f"b) Strength (+1 attack, from {core.g.engine.player.fighter.base_strength})",
         )
         console.print(
             x=x + 1,
             y=y + 6,
-            string=f"c) Dexterity (+1 defense, from {self.engine.player.fighter.base_dexterity})",
+            string=f"c) Dexterity (+1 defense, from {core.g.engine.player.fighter.base_dexterity})",
         )
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
-        player = self.engine.player
+        player = core.g.engine.player
         key = event.sym
         index = key - tcod.event.K_a
 
@@ -457,7 +435,7 @@ class LevelUpEventHandler(AskUserEventHandler):
             else:
                 player.level.increase_defense()
         else:
-            self.engine.message_log.add_message("Invalid entry.", config.colour.invalid)
+            core.g.engine.message_log.add_message("Invalid entry.", config.colour.invalid)
 
             return None
 
@@ -485,7 +463,7 @@ class InventoryEventHandler(AskUserEventHandler):
         they are.
         """
         super().on_render(console)
-        number_of_items_in_inventory = len(self.engine.player.inventory.items)
+        number_of_items_in_inventory = len(core.g.engine.player.inventory.items)
 
         height = number_of_items_in_inventory + 2
 
@@ -506,14 +484,14 @@ class InventoryEventHandler(AskUserEventHandler):
             fg=(255, 255, 255),
             bg=(0, 0, 0),
         )
+        console.print(x + 1, y, f" {self.TITLE} ", fg=(0, 0, 0), bg=(255, 255, 255))
 
         if number_of_items_in_inventory > 0:
-            for i, item in enumerate(self.engine.player.inventory.items):
+            for i, item in enumerate(core.g.engine.player.inventory.items):
                 item_key = chr(ord("a") + i)
-                is_equipped = self.engine.player.equipment.item_is_equipped(item)
+                is_equipped = core.g.engine.player.equipment.item_is_equipped(item)
 
                 item_string = f"({item_key}) {item.name}"
-
                 if is_equipped:
                     item_string = f"{item_string} (E)"
 
@@ -522,7 +500,7 @@ class InventoryEventHandler(AskUserEventHandler):
             console.print(x + 1, y + 1, "(Empty)")
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
-        player = self.engine.player
+        player = core.g.engine.player
         key = event.sym
         index = key - tcod.event.K_a
 
@@ -530,7 +508,7 @@ class InventoryEventHandler(AskUserEventHandler):
             try:
                 selected_item = player.inventory.items[index]
             except IndexError:
-                self.engine.message_log.add_message("Invalid entry.", config.colour.invalid)
+                core.g.engine.message_log.add_message("Invalid entry.", config.colour.invalid)
                 return None
             return self.on_item_selected(selected_item)
         return super().ev_keydown(event)
@@ -543,14 +521,14 @@ class InventoryEventHandler(AskUserEventHandler):
 class InventoryActivateHandler(InventoryEventHandler):
     """Handle using an inventory item."""
 
-    TITLE = "Select an item to use"
+    TITLE = "Select an item to use:"
 
     def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
         if item.consumable:
             # Return the action for the selected item.
-            return item.consumable.get_action(self.engine.player)
+            return item.consumable.get_action(core.g.engine.player)
         elif item.equippable:
-            return core.actions.EquipAction(self.engine.player, item)
+            return core.actions.EquipAction(core.g.engine.player, item)
         else:
             return None
 
@@ -562,22 +540,22 @@ class InventoryDropHandler(InventoryEventHandler):
 
     def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
         """Drop this item."""
-        return core.actions.DropItem(self.engine.player, item)
+        return core.actions.DropItem(core.g.engine.player, item)
 
 
 class SelectIndexHandler(AskUserEventHandler):
     """Handles asking the user for an index on the map."""
 
-    def __init__(self, engine: Engine):
+    def __init__(self):
         """Sets the cursor to the player when this handler is constructed."""
-        super().__init__(engine)
-        player = self.engine.player
-        engine.mouse_location = player.x, player.y
+        super().__init__()
+        player = core.g.engine.player
+        core.g.engine.mouse_location = player.x, player.y
 
     def on_render(self, console: tcod.Console) -> None:
         """Highlight the tile under the cursor."""
         super().on_render(console)
-        x, y = self.engine.mouse_location
+        x, y = core.g.engine.mouse_location
         console.tiles_rgb["bg"][x, y] = config.colour.white
         console.tiles_rgb["fg"][x, y] = config.colour.black
 
@@ -593,22 +571,22 @@ class SelectIndexHandler(AskUserEventHandler):
             if event.mod & (tcod.event.KMOD_LALT | tcod.event.KMOD_RALT):
                 modifier *= 20
 
-            x, y = self.engine.mouse_location
+            x, y = core.g.engine.mouse_location
             dx, dy = config.inputs.MOVE_KEYS[key]
             x += dx * modifier
             y += dy * modifier
             # Clamp the cursor index to the map size.
-            x = max(0, min(x, self.engine.game_map.width - 1))
-            y = max(0, min(y, self.engine.game_map.height - 1))
-            self.engine.mouse_location = x, y
+            x = max(0, min(x, core.g.engine.game_map.width - 1))
+            y = max(0, min(y, core.g.engine.game_map.height - 1))
+            core.g.engine.mouse_location = x, y
             return None
         elif key in config.inputs.CONFIRM_KEYS:
-            return self.on_index_selected(*self.engine.mouse_location)
+            return self.on_index_selected(*core.g.engine.mouse_location)
         return super().ev_keydown(event)
 
     def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[ActionOrHandler]:
         """Left click confirms a selection."""
-        if self.engine.game_map.in_bounds(*event.tile):
+        if core.g.engine.game_map.in_bounds(*event.tile):
             if event.button == 1:
                 return self.on_index_selected(*event.tile)
         return super().ev_mousebuttondown(event)
@@ -625,33 +603,26 @@ class LookHandler(SelectIndexHandler):
 
     def on_index_selected(self, x: int, y: int) -> MainGameEventHandler:
         """Return to main handler."""
-        return MainGameEventHandler(self.engine)
+        return MainGameEventHandler()
 
 
 class SingleRangedAttackHandler(SelectIndexHandler):
     """Handles targeting a single enemy. Only the enemy selected will be affected."""
 
-    def __init__(
-            self, engine: Engine, callback: Callable[[Tuple[int, int]], Optional[core.actions.Action]]
-    ):
-        super().__init__(engine)
+    def __init__(self, callback: Callable[[Tuple[int, int]], Optional[Action]]):
+        super().__init__()
 
         self.callback = callback
 
-    def on_index_selected(self, x: int, y: int) -> Optional[core.actions.Action]:
+    def on_index_selected(self, x: int, y: int) -> Optional[Action]:
         return self.callback((x, y))
 
 
 class AreaRangedAttackHandler(SelectIndexHandler):
     """Handles targeting an area within a given radius. Any entity within the area will be affected."""
 
-    def __init__(
-            self,
-            engine: Engine,
-            radius: int,
-            callback: Callable[[Tuple[int, int]], Optional[core.actions.Action]],
-    ):
-        super().__init__(engine)
+    def __init__(self, radius: int, callback: Callable[[Tuple[int, int]], Optional[Action]]):
+        super().__init__()
 
         self.radius = radius
         self.callback = callback
@@ -660,7 +631,7 @@ class AreaRangedAttackHandler(SelectIndexHandler):
         """Highlight the tile under the cursor."""
         super().on_render(console)
 
-        x, y = self.engine.mouse_location
+        x, y = core.g.engine.mouse_location
 
         # Draw a rectangle around the targeted area, so the player can see the affected tiles.
         console.draw_frame(
@@ -673,7 +644,7 @@ class AreaRangedAttackHandler(SelectIndexHandler):
             decoration="/-\\| |\\-/"
         )
 
-    def on_index_selected(self, x: int, y: int) -> Optional[core.actions.Action]:
+    def on_index_selected(self, x: int, y: int) -> Optional[Action]:
         return self.callback((x, y))
 
 
@@ -683,9 +654,9 @@ class HoleJumpEventHandler(AskUserEventHandler):
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
         if event.sym in config.inputs.YESNO_KEYS:
             if event.sym not in (tcod.event.K_n, tcod.event.K_ESCAPE):
-                core.actions.FallDownHole(self.engine.player).perform()
-                self.engine.update_fov()
-            return MainGameEventHandler(self.engine)
+                core.actions.FallDownHole(core.g.engine.player).perform()
+                core.g.engine.update_fov()
+            return MainGameEventHandler()
         return None
 
     def on_render(self, console: tcod.Console) -> None:
@@ -733,9 +704,9 @@ class GameOverEventHandler(EventHandler):
 class HistoryViewer(EventHandler):
     """Print the history on a larger window which can be navigated."""
 
-    def __init__(self, engine: Engine):
-        super().__init__(engine)
-        self.log_length = len(engine.message_log.messages)
+    def __init__(self):
+        super().__init__()
+        self.log_length = len(core.g.engine.message_log.messages)
         self.cursor = self.log_length - 1
 
     def on_render(self, console: tcod.Console) -> None:
@@ -748,13 +719,13 @@ class HistoryViewer(EventHandler):
         log_console.print_box(0, 0, log_console.width, 1, "┤Message history├", alignment=tcod.CENTER)
 
         # Render the message log using the cursor parameter.
-        self.engine.message_log.render_messages(
+        core.g.engine.message_log.render_messages(
             log_console,
             1,
             1,
             log_console.width - 2,
             log_console.height - 2,
-            self.engine.message_log.messages[: self.cursor + 1],
+            core.g.engine.message_log.messages[: self.cursor + 1],
         )
         log_console.blit(console, 3, 3)
 
@@ -776,12 +747,11 @@ class HistoryViewer(EventHandler):
         elif event.sym == tcod.event.K_END:
             self.cursor = self.log_length - 1  # Move directly to the last message.
         else:  # Any other key moves back to the main game state.
-            return MainGameEventHandler(self.engine)
+            return MainGameEventHandler()
         return None
 
 
 # TODO: Restore autoexplore
-# TODO: Restore resting
 # TODO: Restore autostairs
 def handle_event():
     """

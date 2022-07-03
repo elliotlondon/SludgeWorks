@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 import tcod
 
 max_items_by_floor = [
-    (1, 20),
+    (1, 200),
     (2, 25),
     (4, 30),
     (6, 35)
@@ -41,7 +41,9 @@ max_monsters_by_floor = [
 
 item_chances: Dict[int, List[Tuple[Entity, int]]] = {
     0: [(maps.item_factory.healing_mud, 50),
-        (maps.item_factory.confusing_twig, 5)],
+        (maps.item_factory.confusing_twig, 5),
+        (maps.item_factory.lightning_twig, 15),
+        (maps.item_factory.fireball_twig, 10)],
     1: [(maps.item_factory.longsword, 10)],
     2: [(maps.item_factory.lightning_twig, 5)],
     3: [(maps.item_factory.longsword, 5)],
@@ -372,7 +374,7 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
         # Initialize map
         dungeon = SimpleGameMap(engine, map_width, map_height, entities=[player])
         dungeon = add_caves(dungeon, smoothing=1, p=60)
-        dungeon = add_rooms(dungeon, engine, max_rooms, room_min_size, room_max_size)
+        dungeon = add_rooms(dungeon, max_rooms, room_min_size, room_max_size)
 
         # Smooth edges
         # dungeon = erode(dungeon, 1)
@@ -410,7 +412,7 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
     raise FatalMapGenError(f"Dungeon generation failed! Reason: floor attempts exceeded.")
 
 
-def add_rooms(dungeon: SimpleGameMap, engine: Engine, max_rooms: int,
+def add_rooms(dungeon: SimpleGameMap, max_rooms: int,
               room_min_size: int, room_max_size: int) -> SimpleGameMap:
     rooms: List[RectangularRoom] = []
 

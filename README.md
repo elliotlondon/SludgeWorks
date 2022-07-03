@@ -1,4 +1,4 @@
-![sludgeworks_logo](sludgeworks_logo.PNG)
+![sludgeworks_logo](assets/sludgeworks_logo.PNG)
 
 The worlds greatest oddity has long been the SludgeWorks; a reality-warping cave network that stabs deep into the heart of the earth. Here, some alien force has caused evolution and natural selection to go into overdrive, causing the native flora and fauna to mutate beyond all plausibility. This rift contains great treasures and although many attempts have been made to exploit this unknown realm, only whispers of its powers reach the surface. Mutated and feral, vaguely-human remnants of previous expeditions wander it's twisted caverns, shying away from the light and adapting to their wretched forms. Despite these perils, the prospect of eternal life and evolutionary transcendence are rumoured to await those brave enough to reach the Mezzanine, the fabled final chamber, and bathe in its ichor.
 

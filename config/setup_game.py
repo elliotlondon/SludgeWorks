@@ -5,11 +5,13 @@ import copy
 import lzma
 import pickle
 import traceback
+from pathlib import Path
 from typing import Optional
 
 import tcod
 
 import config.colour
+import core.g
 import core.input_handlers
 import maps.item_factory
 import maps.monster_factory
@@ -61,14 +63,23 @@ def new_game() -> Engine:
     player.inventory.items.append(leather_armor)
     player.equipment.toggle_equip(leather_armor, add_message=False)
 
+    core.g.engine = engine
     return engine
 
 
-def load_game(filename: str) -> Engine:
+def save_game(path: Path) -> None:
+    """If an engine is active then save it."""
+    if not hasattr(core.g, "engine"):
+        return  # If called before a new game is started then g.engine is not assigned.
+    path.write_bytes(lzma.compress(pickle.dumps(core.g.engine)))
+    print("Game saved.")
+
+
+def load_game(path: Path) -> Engine:
     """Load an Engine instance from a file."""
-    with open(filename, "rb") as f:
-        engine = pickle.loads(lzma.decompress(f.read()))
+    engine = pickle.loads(lzma.decompress(path.read_bytes()))
     assert isinstance(engine, Engine)
+    core.g.engine = engine
     return engine
 
 
@@ -106,13 +117,15 @@ class MainMenu(core.input_handlers.BaseEventHandler):
             raise SystemExit()
         elif event.sym == tcod.event.K_c:
             try:
-                return core.input_handlers.MainGameEventHandler(load_game("savegames/savegame.sav"))
+                load_game(Path("savegames/savegame.sav"))
+                return core.input_handlers.MainGameEventHandler()
             except FileNotFoundError:
                 return core.input_handlers.PopupMessage(self, "No saved game to load.")
             except Exception as exc:
                 traceback.print_exc()  # Print to stderr.
                 return core.input_handlers.PopupMessage(self, f"Failed to load save:\n{exc}")
         elif event.sym == tcod.event.K_n:
-            return core.input_handlers.MainGameEventHandler(new_game())
+            new_game()
+            return core.input_handlers.MainGameEventHandler()
 
         return None

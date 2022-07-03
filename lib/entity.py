@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from lib.fighter import Fighter
     from lib.consumable import Consumable
     from lib.equipment import Equipment
-    from lib.equipment import Equippable
+    from lib.equippable import Equippable
     from lib.inventory import Inventory
     from maps.game_map import SimpleGameMap
 
@@ -137,7 +137,7 @@ class Entity:
             dy = -1
         if not (game_map.is_blocked(self.x + dx, self.y + dy) or
                 get_blocking_entities_at_location(entities, self.x + dx, self.y + dy)):
-            self.move(dx, dy, game_map)
+            self.move(dx, dy)
 
     def move_astar(self, target, entities, game_map):
         # Create a FOV map that has the dimensions of the map
@@ -173,9 +173,6 @@ class Entity:
             self.move_towards(target.x, target.y, game_map, entities)
 
         tcod.path_delete(my_path)
-
-    def distance(self, x, y):
-        return math.hypot((x - self.x), (y - self.y))
 
     def distance_to(self, other):
         dx = other.x - self.x

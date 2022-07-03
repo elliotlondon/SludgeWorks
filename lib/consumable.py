@@ -11,6 +11,7 @@ from config.exceptions import Impossible
 from core.actions import ItemAction
 from core.input_handlers import ActionOrHandler, AreaRangedAttackHandler, SingleRangedAttackHandler
 from lib.base_component import BaseComponent
+import core.g
 
 if TYPE_CHECKING:
     from entity import Actor, Item
@@ -19,15 +20,16 @@ if TYPE_CHECKING:
 class Consumable(BaseComponent):
     parent: Item
 
+    def item(self) -> lib.entity.Item:
+        assert isinstance(self.parent, lib.entity.Item)
+        return self.parent
+
     def get_action(self, consumer: Actor) -> Optional[ActionOrHandler]:
         """Try to return the action for this item."""
         return ItemAction(consumer, self.parent)
 
     def activate(self, action: ItemAction) -> None:
-        """Invoke this items ability.
-
-        `action` is the context for this activation.
-        """
+        """Invoke this items ability. 'action' is the context for this activation."""
         raise NotImplementedError()
 
     def consume(self) -> None:
@@ -50,8 +52,8 @@ class HealingConsumable(Consumable):
 
         if amount_recovered > 0:
             # Display message for use whenever Item is consumed
-            self.engine.message_log.add_message(self.parent.usetext, config.colour.use)
-            self.engine.message_log.add_message(
+            core.g.engine.message_log.add_message(self.parent.usetext, config.colour.use)
+            core.g.engine.message_log.add_message(
                 f"You recover {amount_recovered} HP!", config.colour.health_recovered)
             self.consume()
         else:
@@ -73,8 +75,8 @@ class RandomHealConsumable(Consumable):
 
         if amount_recovered > 0:
             # Display message for use whenever Item is consumed
-            self.engine.message_log.add_message(self.parent.usetext, config.colour.use)
-            self.engine.message_log.add_message(
+            core.g.engine.message_log.add_message(self.parent.usetext, config.colour.use)
+            core.g.engine.message_log.add_message(
                 f"You recover {amount_recovered} HP!", config.colour.health_recovered)
             self.consume()
         else:
@@ -87,11 +89,10 @@ class FireballDamageConsumable(Consumable):
         self.radius = radius
 
     def get_action(self, consumer: Actor) -> AreaRangedAttackHandler:
-        self.engine.message_log.add_message(
+        core.g.engine.message_log.add_message(
             "Select a target location.", config.colour.needs_target
         )
         return AreaRangedAttackHandler(
-            self.engine,
             radius=self.radius,
             callback=lambda xy: ItemAction(consumer, self.parent, xy),
         )
@@ -99,15 +100,15 @@ class FireballDamageConsumable(Consumable):
     def activate(self, action: ItemAction) -> None:
         target_xy = action.target_xy
 
-        if not self.engine.game_map.visible[target_xy]:
+        if not core.g.engine.game_map.visible[target_xy]:
             raise Impossible("You cannot target an area that you cannot see.")
 
         targets_hit = False
-        for actor in self.engine.game_map.actors:
+        for actor in core.g.engine.game_map.actors:
             if actor.distance(*target_xy) <= self.radius:
                 # Display message for use whenever Item is consumed
-                self.engine.message_log.add_message(self.parent.usetext, config.colour.use)
-                self.engine.message_log.add_message(
+                core.g.engine.message_log.add_message(self.parent.usetext, config.colour.use)
+                core.g.engine.message_log.add_message(
                     f"The {actor.name} is engulfed in a fiery explosion, taking {self.damage} damage!"
                 )
                 actor.fighter.take_damage(self.damage)
@@ -128,7 +129,7 @@ class LightningDamageConsumable(Consumable):
         target = None
         closest_distance = self.maximum_range + 1.0
 
-        for actor in self.engine.game_map.actors:
+        for actor in core.g.engine.game_map.actors:
             if actor is not consumer and self.parent.gamemap.visible[actor.x, actor.y]:
                 distance = consumer.distance(actor.x, actor.y)
 
@@ -138,8 +139,8 @@ class LightningDamageConsumable(Consumable):
 
         if target:
             # Display message for use whenever Item is consumed
-            self.engine.message_log.add_message(self.parent.usetext, config.colour.use)
-            self.engine.message_log.add_message(
+            core.g.engine.message_log.add_message(self.parent.usetext, config.colour.use)
+            core.g.engine.message_log.add_message(
                 f"A lighting bolt strikes the {target.name} for {self.damage} damage!"
             )
             target.fighter.take_damage(self.damage)
@@ -160,19 +161,14 @@ class ConfusionConsumable(Consumable):
         return self.base_turns - self.save_bonus
 
     def get_action(self, consumer: Actor) -> SingleRangedAttackHandler:
-        self.engine.message_log.add_message(
-            "Select a target location.", config.colour.needs_target
-        )
-        return SingleRangedAttackHandler(
-            self.engine,
-            callback=lambda xy: ItemAction(consumer, self.parent, xy),
-        )
+        core.g.engine.message_log.add_message("Select a target location.", config.colour.needs_target)
+        return SingleRangedAttackHandler(callback=lambda xy: ItemAction(consumer, self.parent, xy))
 
     def activate(self, action: ItemAction) -> None:
         consumer = action.entity
         target = action.target_actor
 
-        if not self.engine.game_map.visible[action.target_xy]:
+        if not core.g.engine.game_map.visible[action.target_xy]:
             raise Impossible("You cannot target an area that you cannot see.")
         if not target:
             raise Impossible("No enemy at location (You must select an enemy to target).")
@@ -180,14 +176,22 @@ class ConfusionConsumable(Consumable):
             raise Impossible("You can't bring yourself to target yourself.")
 
         # Display message for use whenever Item is consumed
-        self.engine.message_log.add_message(self.parent.usetext, config.colour.use)
-        self.engine.message_log.add_message(
-            f"The {target.name} becomes confused and starts to stumble around!",
-            config.colour.status_effect_applied,
-        )
+        core.g.engine.message_log.add_message(self.parent.usetext, config.colour.use)
 
-        self.save_bonus = dnd_bonus_calc(target.fighter.intellect_modifier)
-        target.ai = lib.ai.ConfusedEnemy(
-            entity=target, previous_ai=target.ai, turns_remaining=self.calc_turns,
-        )
+        # Logic for whether enemy can be confused
+        if isinstance(target.ai, lib.ai.PassiveStationary):
+            core.g.engine.message_log.add_message(
+                f"The {self.parent.name} has no effect...",
+                config.colour.enemy_evade,
+            )
+        else:
+            core.g.engine.message_log.add_message(
+                f"The {target.name} becomes confused and starts to stumble around!",
+                config.colour.status_effect_applied,
+            )
+
+            self.save_bonus = dnd_bonus_calc(target.fighter.intellect_modifier)
+            target.ai = lib.ai.ConfusedEnemy(
+                entity=target, previous_ai=target.ai, turns_remaining=self.calc_turns,
+            )
         self.consume()

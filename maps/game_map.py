@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 import random
 from random import uniform
 from typing import Iterable, Iterator, Optional, TYPE_CHECKING, Tuple
@@ -122,29 +121,29 @@ class SimpleGameMap:
 
         return accessible
 
-    def render(self, console: tcod.Console) -> None:
-        console.tiles_rgb[0:self.width, 0:self.height] = self.tiles["dark"]
-        """
-        Renders the map.
-
-        If a tile is in the "visible" array, then draw it with the "light" colors.
-        If it isn't, but it's in the "explored" array, then draw it with the "dark" colors.
-        Otherwise, the default is "SHROUD".
-        """
-        console.tiles_rgb[0:self.width, 0:self.height] = np.select(
-            condlist=[self.visible, self.explored],
-            choicelist=[self.tiles["light"], self.tiles["dark"]],
-            default=maps.tiles.SHROUD
-        )
-
-        entities_sorted_for_rendering = sorted(self.entities, key=lambda x: x.render_order.value)
-
-        for entity in entities_sorted_for_rendering:
-            if self.visible[entity.x, entity.y]:
-                console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
-                console.print(
-                    x=entity.x, y=entity.y, string=entity.char, fg=entity.colour
-                )
+    # def render(self, console: tcod.Console) -> None:
+    #     console.tiles_rgb[0:self.width, 0:self.height] = self.tiles["dark"]
+    #     """
+    #     Renders the map.
+    #
+    #     If a tile is in the "visible" array, then draw it with the "light" colors.
+    #     If it isn't, but it's in the "explored" array, then draw it with the "dark" colors.
+    #     Otherwise, the default is "SHROUD".
+    #     """
+    #     console.tiles_rgb[0:self.width, 0:self.height] = np.select(
+    #         condlist=[self.visible, self.explored],
+    #         choicelist=[self.tiles["light"], self.tiles["dark"]],
+    #         default=maps.tiles.SHROUD
+    #     )
+    #
+    #     entities_sorted_for_rendering = sorted(self.entities, key=lambda x: x.render_order.value)
+    #
+    #     for entity in entities_sorted_for_rendering:
+    #         if self.visible[entity.x, entity.y]:
+    #             console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
+    #             console.print(
+    #                 x=entity.x, y=entity.y, string=entity.char, fg=entity.colour
+    #             )
 
 
 # TODO: Add saved gamemaps to gameworld

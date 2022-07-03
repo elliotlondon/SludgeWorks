@@ -3,12 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import tcod
+import random
 
 from config.colour import player_die, enemy_die
 from core.render_functions import RenderOrder
 from lib.ai import HostileStationary, PassiveStationary
 from lib.base_component import BaseComponent
 from utils.random_utils import roll_dice, dnd_bonus_calc
+import core.g
+from maps.tiles import verdant_chars
 
 if TYPE_CHECKING:
     from entity import Actor
@@ -115,9 +118,15 @@ class Fighter(BaseComponent):
             else:
                 death_message = f"The {self.parent.name} is cut down!"
             death_message_color = enemy_die
-            self.gamemap.entities.remove(self.parent)
+
+            # Generate floor in its place
+            self.parent.char = random.choice(verdant_chars)
+            self.parent.blocks_movement = False
+            self.parent.ai = None
+            self.parent.render_order = RenderOrder.CORPSE
+            self.parent.name = ' '
         else:
-            if self.engine.player is self.parent:
+            if core.g.engine.player is self.parent:
                 death_message = 'YOU DIED'
                 death_message_color = player_die
             else:
@@ -136,7 +145,7 @@ class Fighter(BaseComponent):
             else:
                 self.parent.name = 'A ' + self.parent.name + ' corpse'
 
-        self.engine.message_log.add_message(death_message, death_message_color)
+        core.g.engine.message_log.add_message(death_message, death_message_color)
 
         # TODO: Award xp to whomever strikes the last blow
-        self.engine.player.level.add_xp(xp)
+        core.g.engine.player.level.add_xp(xp)

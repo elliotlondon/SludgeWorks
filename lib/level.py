@@ -4,6 +4,7 @@ import math
 from typing import TYPE_CHECKING
 
 from lib.base_component import BaseComponent
+import core.g
 
 if TYPE_CHECKING:
     from entity import Actor
@@ -40,9 +41,9 @@ class Level(BaseComponent):
         self.current_xp += xp
 
         if self.parent.name == 'Player':
-            self.engine.message_log.add_message(f"You gain {xp} experience points.")
+            core.g.engine.message_log.add_message(f"You gain {xp} experience points.")
         if self.requires_level_up:
-            self.engine.message_log.add_message(f"You advance to level {self.current_level + 1}!")
+            core.g.engine.message_log.add_message(f"You advance to level {self.current_level + 1}!")
 
     def increase_level(self) -> None:
         self.current_xp -= self.experience_to_next_level
@@ -55,20 +56,20 @@ class Level(BaseComponent):
         self.parent.fighter.base_max_hp += amount
         self.parent.fighter.hp += amount
 
-        self.engine.message_log.add_message(f"Your health and maximum health increase by {amount}.")
+        core.g.engine.message_log.add_message(f"Your health and maximum health increase by {amount}.")
 
         self.increase_level()
 
     def increase_power(self, amount: int = 1) -> None:
         self.parent.fighter.base_strength += amount
 
-        self.engine.message_log.add_message(f"Your strength skill improves by {amount}.")
+        core.g.engine.message_log.add_message(f"Your strength skill improves by {amount}.")
 
         self.increase_level()
 
     def increase_defense(self, amount: int = 1) -> None:
         self.parent.fighter.base_dexterity += amount
 
-        self.engine.message_log.add_message(f"Your dexterity skill improves by {amount}.")
+        core.g.engine.message_log.add_message(f"Your dexterity skill improves by {amount}.")
 
         self.increase_level()

@@ -153,6 +153,21 @@ class ExploreEventHandler(EventHandler):
             elif core.g.engine.player.level.requires_level_up:
                 return LevelUpEventHandler()
             return MainGameEventHandler()  # Return to the main handler.
+
+        # Failsafe for recursion
+        if not core.g.engine.player.is_alive:
+            return GameOverEventHandler()
+        elif core.g.engine.player.level.requires_level_up:
+            return LevelUpEventHandler()
+
+        # Garbage collection for exiled entities
+        exiles = []
+        for entity in core.g.engine.game_map.entities:
+            if entity.name == ' ':
+                exiles.append(entity)
+        core.g.engine.game_map.entities = set([x for x in core.g.engine.game_map.entities
+                                               if x not in exiles])
+
         return self
 
     def handle_action(self, action: Optional[Action]):
@@ -169,8 +184,9 @@ class ExploreEventHandler(EventHandler):
                     action.perform()
                     core.g.engine.handle_enemy_turns()
                     core.g.engine.update_fov()
-                    if self.actor_in_fov():
-                        return MainGameEventHandler()
+                    # if self.actor_in_fov():
+                    #     return MainGameEventHandler()
+                    return MainGameEventHandler()
                 else:
                     return MainGameEventHandler()
             except Impossible as exc:

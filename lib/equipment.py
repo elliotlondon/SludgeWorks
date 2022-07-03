@@ -130,25 +130,25 @@ class Equipment(BaseComponent):
 
     def toggle_equip(self, equippable_item: Item, add_message: bool = True) -> None:
         if equippable_item.equippable:
-            match equippable_item.equippable.equipment_type:
-                case EquipmentType.Main_Hand:
-                    slot = "main_hand"
-                case EquipmentType.Off_Hand:
-                    slot = "off_hand"
-                case EquipmentType.Head:
-                    slot = "head"
-                case EquipmentType.Torso:
-                    slot = "torso"
-                case EquipmentType.Legs:
-                    slot = "legs"
-                case EquipmentType.Hands:
-                    slot = "hands"
-                case EquipmentType.Feet:
-                    slot = "feet"
-                case EquipmentType.Left_Hand:
-                    slot = "left_hand"
-                case EquipmentType.Right_Hand:
-                    slot = "right_hand"
+            type = equippable_item.equippable.equipment_type
+            if type == EquipmentType.Main_Hand:
+                slot = "main_hand"
+            elif type == EquipmentType.Off_Hand:
+                slot = "off_hand"
+            elif type == EquipmentType.Head:
+                slot = "head"
+            elif type == EquipmentType.Torso:
+                slot = "torso"
+            elif type == EquipmentType.Legs:
+                slot = "legs"
+            elif type == EquipmentType.Hands:
+                slot = "hands"
+            elif type == EquipmentType.Feet:
+                slot = "feet"
+            elif type == EquipmentType.Left_Hand:
+                slot = "left_hand"
+            elif type == EquipmentType.Right_Hand:
+                slot = "right_hand"
 
         if getattr(self, slot) == equippable_item:
             self.unequip_from_slot(slot, add_message)

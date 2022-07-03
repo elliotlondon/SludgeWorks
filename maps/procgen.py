@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 import tcod
 
 max_items_by_floor = [
-    (1, 200),
+    (1, 20),
     (2, 25),
     (4, 30),
     (6, 35)
@@ -42,19 +42,18 @@ max_monsters_by_floor = [
 item_chances: Dict[int, List[Tuple[Entity, int]]] = {
     0: [(maps.item_factory.healing_mud, 50),
         (maps.item_factory.confusing_twig, 5),
-        (maps.item_factory.lightning_twig, 15),
-        (maps.item_factory.fireball_twig, 10)],
+        (maps.item_factory.lightning_twig, 5)],
     1: [(maps.item_factory.longsword, 10)],
-    2: [(maps.item_factory.lightning_twig, 5)],
-    3: [(maps.item_factory.longsword, 5)],
+    2: [(maps.item_factory.fireball_twig, 5)],
+    3: [(maps.item_factory.longsword, 5),
+        (maps.item_factory.cuirass, 5)],
     4: [(maps.item_factory.longsword, 0),
         (maps.item_factory.confusing_twig, 10),
         (maps.item_factory.lightning_twig, 10),
         (maps.item_factory.fireball_twig, 5)],
-    5: [(maps.item_factory.cuirass, 5)],
+    5: [(maps.item_factory.cuirass, 10)],
     6: [(maps.item_factory.lightning_twig, 15),
-        (maps.item_factory.fireball_twig, 10),
-        (maps.item_factory.cuirass, 10)],
+        (maps.item_factory.fireball_twig, 10)],
     7: [(maps.item_factory.cuirass, 5)],
     8: [(maps.item_factory.cuirass, 0)]
 }

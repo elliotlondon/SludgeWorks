@@ -7,8 +7,8 @@ import random
 
 from config.colour import player_die, enemy_die
 from core.render_functions import RenderOrder
-from lib.ai import HostileStationary, PassiveStationary
-from lib.base_component import BaseComponent
+from parts.ai import HostileStationary, PassiveStationary
+from parts.base_component import BaseComponent
 from utils.random_utils import roll_dice, dnd_bonus_calc
 import core.g
 from maps.tiles import verdant_chars

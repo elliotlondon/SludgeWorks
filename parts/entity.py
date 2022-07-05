@@ -4,19 +4,19 @@ import copy
 import math
 from random import randint
 from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union
-from lib.level import Level
+from parts.level import Level
 
 import tcod
 
 from core.render_functions import RenderOrder
 
 if TYPE_CHECKING:
-    from lib.ai import BaseAI
-    from lib.fighter import Fighter
-    from lib.consumable import Consumable
-    from lib.equipment import Equipment
-    from lib.equippable import Equippable
-    from lib.inventory import Inventory
+    from parts.ai import BaseAI
+    from parts.fighter import Fighter
+    from parts.consumable import Consumable
+    from parts.equipment import Equipment
+    from parts.equippable import Equippable
+    from parts.inventory import Inventory
     from maps.game_map import SimpleGameMap
 
 T = TypeVar("T", bound="Entity")

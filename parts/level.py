@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING
 
-from lib.base_component import BaseComponent
+from parts.base_component import BaseComponent
 import core.g
 
 if TYPE_CHECKING:

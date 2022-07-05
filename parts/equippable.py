@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from lib.equipment_types import EquipmentType
+from parts.equipment_types import EquipmentType
 
 if TYPE_CHECKING:
     pass

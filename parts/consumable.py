@@ -5,12 +5,12 @@ from typing import Optional, TYPE_CHECKING
 
 from utils.random_utils import dnd_bonus_calc
 import config.colour
-import lib.ai
-import lib.inventory
+import parts.ai
+import parts.inventory
 from config.exceptions import Impossible
 from core.actions import ItemAction
 from core.input_handlers import ActionOrHandler, AreaRangedAttackHandler, SingleRangedAttackHandler
-from lib.base_component import BaseComponent
+from parts.base_component import BaseComponent
 import core.g
 
 if TYPE_CHECKING:
@@ -20,8 +20,8 @@ if TYPE_CHECKING:
 class Consumable(BaseComponent):
     parent: Item
 
-    def item(self) -> lib.entity.Item:
-        assert isinstance(self.parent, lib.entity.Item)
+    def item(self) -> parts.entity.Item:
+        assert isinstance(self.parent, parts.entity.Item)
         return self.parent
 
     def get_action(self, consumer: Actor) -> Optional[ActionOrHandler]:
@@ -38,7 +38,7 @@ class Consumable(BaseComponent):
         inventory = entity.parent
 
         # Remove Item from inventory
-        if isinstance(inventory, lib.inventory.Inventory):
+        if isinstance(inventory, parts.inventory.Inventory):
             inventory.items.remove(entity)
 
 
@@ -194,7 +194,7 @@ class ConfusionConsumable(Consumable):
         core.g.engine.message_log.add_message(self.parent.usetext, config.colour.use)
 
         # Logic for whether enemy can be confused
-        if isinstance(target.ai, lib.ai.PassiveStationary):
+        if isinstance(target.ai, parts.ai.PassiveStationary):
             core.g.engine.message_log.add_message(
                 f"The {self.parent.name} has no effect...",
                 config.colour.enemy_evade,
@@ -206,7 +206,7 @@ class ConfusionConsumable(Consumable):
             )
 
             self.save_bonus = dnd_bonus_calc(target.fighter.intellect_modifier)
-            target.ai = lib.ai.ConfusedEnemy(
+            target.ai = parts.ai.ConfusedEnemy(
                 entity=target, previous_ai=target.ai, turns_remaining=self.calc_turns,
             )
         self.consume()

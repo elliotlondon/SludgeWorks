@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
 
-from lib.base_component import BaseComponent
-from lib.equipment_types import EquipmentType
+from parts.base_component import BaseComponent
+from parts.equipment_types import EquipmentType
 import core.g
 
 if TYPE_CHECKING:
@@ -129,6 +129,7 @@ class Equipment(BaseComponent):
         setattr(self, slot, None)
 
     def toggle_equip(self, equippable_item: Item, add_message: bool = True) -> None:
+        slot = None
         if equippable_item.equippable:
             type = equippable_item.equippable.equipment_type
             if type == EquipmentType.Main_Hand:

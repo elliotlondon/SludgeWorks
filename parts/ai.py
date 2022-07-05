@@ -12,7 +12,7 @@ import core.g
 from core.actions import Action, BumpAction, MeleeAction, MovementAction, WaitAction
 
 if TYPE_CHECKING:
-    from lib.entity import Actor
+    from parts.entity import Actor
 
 
 class BaseAI(Action):

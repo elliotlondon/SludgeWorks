@@ -12,7 +12,7 @@ import config.setup_game
 import core.input_handlers
 
 # Enable global debug
-basicConfig(level=DEBUG)
+# basicConfig(level=DEBUG)
 
 
 def main() -> None:

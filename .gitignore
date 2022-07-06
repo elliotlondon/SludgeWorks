@@ -1,0 +1,22 @@
+# Saved games
+*.sav
+
+# Python optimized files
+*.pyo
+
+# Python config folders
+*.idea
+__pycache__
+gui/__pycache/
+maps/__pycache/
+utils/__pycache/
+
+# venv folders
+lib/
+sludgeworks37/
+lib64/
+
+# pyinstaller
+build/
+dist/
+sludgeworks.spec

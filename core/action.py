@@ -5,7 +5,7 @@ from typing import Optional, Tuple, TYPE_CHECKING
 import core.g
 
 if TYPE_CHECKING:
-    from lib.entity import Actor, Item
+    from parts.entity import Actor, Item
 
 
 class Action:

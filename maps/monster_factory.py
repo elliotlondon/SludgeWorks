@@ -2,12 +2,12 @@ from random import randint
 
 import tcod
 
-from lib.ai import HostileEnemy, NPC, HostileStationary, PassiveStationary
-from lib.entity import Actor
-from lib.fighter import Fighter
-from lib.inventory import Inventory
-from lib.level import Level
-from lib.equipment import Equipment
+from parts.ai import HostileEnemy, NPC, HostileStationary, PassiveStationary
+from parts.entity import Actor
+from parts.fighter import Fighter
+from parts.inventory import Inventory
+from parts.level import Level
+from parts.equipment import Equipment
 
 # Player
 player = Actor(char="@", colour=(255, 255, 255), name="Player",

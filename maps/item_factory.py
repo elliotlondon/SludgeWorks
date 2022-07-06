@@ -1,15 +1,15 @@
 import tcod
 
-import lib.consumable
-import lib.equippable
-from lib.entity import Item
+import parts.equippable
+import parts.consumable
+from parts.entity import Item
 
 # Consumables
 healing_mud = Item(
     char="‼",
     colour=tcod.orange,
     name="Healing Mud",
-    consumable=lib.consumable.RandomHealConsumable(8, 12),
+    consumable=parts.consumable.RandomHealConsumable(8, 12),
     usetext="You slather yourself in the healing mud..."
 )
 
@@ -17,7 +17,7 @@ lightning_twig = Item(
     char="√",
     colour=tcod.dark_yellow,
     name="Crackling Imbued Twig",
-    consumable=lib.consumable.LightningDamageConsumable(damage=20, maximum_range=5),
+    consumable=parts.consumable.LightningDamageConsumable(damage=20, maximum_range=5),
     usetext="You snap the twig..."
 )
 
@@ -25,7 +25,7 @@ confusing_twig = Item(
     char="√",
     colour=tcod.dark_fuchsia,
     name="Warping Imbued Twig",
-    consumable=lib.consumable.ConfusionConsumable(number_of_turns=6),
+    consumable=parts.consumable.ConfusionConsumable(number_of_turns=6),
     usetext="You snap the twig..."
 )
 
@@ -33,7 +33,7 @@ fireball_twig = Item(
     char="√",
     colour=tcod.dark_red,
     name="Burnt Imbued Twig",
-    consumable=lib.consumable.FireballDamageConsumable(lower_bound=10, upper_bound=16, radius=3),
+    consumable=parts.consumable.FireballDamageConsumable(lower_bound=10, upper_bound=16, radius=3),
     usetext="You snap the twig..."
 )
 
@@ -42,28 +42,28 @@ dagger = Item(
     char="/",
     colour=tcod.light_grey,
     name="Dagger",
-    equippable=lib.equippable.Dagger()
+    equippable=parts.equippable.Dagger()
 )
 
 longsword = Item(
     char="/",
     colour=tcod.light_grey,
     name="Sword",
-    equippable=lib.equippable.LongSword()
+    equippable=parts.equippable.LongSword()
 )
 
 leather_armor = Item(
     char="]",
     colour=tcod.dark_orange,
     name="Leather Armor",
-    equippable=lib.equippable.LeatherArmour(),
+    equippable=parts.equippable.LeatherArmour(),
 )
 
 cuirass = Item(
     char="]",
     colour=tcod.silver,
     name="Steel Cuirass",
-    equippable=lib.equippable.Cuirass()
+    equippable=parts.equippable.Cuirass()
 )
 
 # def steel_cuirass(x, y):
@@ -85,7 +85,7 @@ cuirass = Item(
 # def steel_platelegs(x, y):
 #     equippable_component = Equippable(EquipmentSlots.Legs, armour_bonus=2)
 #     return Entity(x, y, '}', tcod.white, 'Steel Platelegs',
-#                   'All the components of a solid, medieval-style set of plated leg armour stand before you; tassets, '
+#                   'All the lib of a solid, medieval-style set of plated leg armour stand before you; tassets, '
 #                   'cuisses and greaves all made from dented, but reasonable quality steel.',
 #                   equippable=equippable_component)
 #

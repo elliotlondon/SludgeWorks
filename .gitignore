@@ -13,7 +13,7 @@ utils/__pycache/
 
 # venv folders
 lib/
-sludgeworks/
+sludgeworks37/
 lib64/
 
 # pyinstaller

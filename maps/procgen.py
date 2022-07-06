@@ -15,7 +15,7 @@ from maps.game_map import SimpleGameMap
 
 if TYPE_CHECKING:
     from core.engine import Engine
-    from lib.entity import Entity
+    from parts.entity import Entity
 
 import tcod
 

@@ -1,22 +1,19 @@
 from __future__ import annotations
 
 import random
-from random import uniform
 from typing import Iterable, Iterator, Optional, TYPE_CHECKING, Tuple
 
 import numpy as np
-import tcod
 
-import lib.entity
-from lib.entity import Item
-from lib.ai import PassiveStationary
+import parts.entity
+from parts.ai import PassiveStationary
+from parts.entity import Item
 from utils.math_utils import Graph
 
 if TYPE_CHECKING:
     from core.engine import Engine
-    from lib.entity import Entity
+    from parts.entity import Entity
 
-from utils.random_utils import from_dungeon_level
 import maps.tiles
 
 
@@ -40,26 +37,26 @@ class SimpleGameMap:
         return self
 
     @property
-    def actors(self) -> Iterator[lib.entity.Actor]:
+    def actors(self) -> Iterator[parts.entity.Actor]:
         """Iterate over this maps living actors."""
         yield from (
             entity
             for entity in self.entities
-            if isinstance(entity, lib.entity.Actor) and entity.is_alive
+            if isinstance(entity, parts.entity.Actor) and entity.is_alive
         )
 
     @property
-    def dangerous_actors(self) -> Iterator[lib.entity.Actor]:
+    def dangerous_actors(self) -> Iterator[parts.entity.Actor]:
         """Iterate over this maps living actors that are able to harm the player."""
         yield from (
             entity
             for entity in self.entities
-            if isinstance(entity, lib.entity.Actor) and entity.is_alive and not isinstance(entity.ai, PassiveStationary)
+            if isinstance(entity, parts.entity.Actor) and entity.is_alive and not isinstance(entity.ai, PassiveStationary)
         )
 
     @property
     def items(self) -> Iterator[Item]:
-        yield from (entity for entity in self.entities if isinstance(entity, lib.entity.Item))
+        yield from (entity for entity in self.entities if isinstance(entity, parts.entity.Item))
 
     def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
         for entity in self.entities:
@@ -68,7 +65,7 @@ class SimpleGameMap:
 
         return None
 
-    def get_actor_at_location(self, x: int, y: int) -> Optional[lib.entity.Actor]:
+    def get_actor_at_location(self, x: int, y: int) -> Optional[parts.entity.Actor]:
         for actor in self.actors:
             if actor.x == x and actor.y == y:
                 return actor
@@ -190,317 +187,317 @@ class GameWorld:
         )
 
 
-class GameMap:
-    dark_wall = tcod.dark_grey
-    light_wall = tcod.Color(150, 100, 50)
-    dark_ground = tcod.black
-    light_ground = tcod.dark_grey
-    floor_chars = [' ', '.', ',', '`']
+# class GameMap:
+#     dark_wall = tcod.dark_grey
+#     light_wall = tcod.Color(150, 100, 50)
+#     dark_ground = tcod.black
+#     light_ground = tcod.dark_grey
+#     floor_chars = [' ', '.', ',', '`']
+#
+#     def __init__(self, current_biome, width: int, height: int, max_room_size=10, min_room_size=6, max_rooms=25,
+#                  dungeon_level=1):
+#         self.current_biome = current_biome
+#         self.width, self.height = width, height
+#         self.min_room_size, self.max_room_size, max_rooms = min_room_size, max_room_size, max_rooms
+#         self.tiles = self.initialize_tiles()
+#         self.dungeon_level = dungeon_level
+#
+#     def __iter__(self):
+#         for xi in range(self.width):
+#             for yi in range(self.height):
+#                 yield xi, yi, self.tiles[xi][yi]
+#
+#     def initialize_tiles(self):
+#         tiles = [[Tile(True) for y in range(self.height)] for x in range(self.width)]
+#         return tiles
+#
+#     def place_entities(self, map_width, map_height, entities):
+#         room = Rect(0, 0, map_width, map_height)  # Room is the entire dungeon
+#         max_monsters = from_dungeon_level([[50, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
+#         max_plants = from_dungeon_level([[25, 1], [35, 3], [50, 4], [35, 6]], self.dungeon_level)
+#         max_items = from_dungeon_level([[20, 1], [25, 3], [30, 4]], self.dungeon_level)
 
-    def __init__(self, current_biome, width: int, height: int, max_room_size=10, min_room_size=6, max_rooms=25,
-                 dungeon_level=1):
-        self.current_biome = current_biome
-        self.width, self.height = width, height
-        self.min_room_size, self.max_room_size, max_rooms = min_room_size, max_room_size, max_rooms
-        self.tiles = self.initialize_tiles()
-        self.dungeon_level = dungeon_level
+# # Item dictionary
+# item_chances = {
+#     'healing_potion': 35,
+#     'iron_longsword': from_dungeon_level([[10, 1], [5, 3], [0, 4]], self.dungeon_level),
+#     'steel_longsword': from_dungeon_level([[5, 2], [10, 3], [15, 4], [10, 5], [5, 6], [0, 7]],
+#                                           self.dungeon_level),
+#     'steel_dagger': from_dungeon_level([[5, 1], [10, 3], [5, 4], [0, 5]], self.dungeon_level),
+#     'steel_mace': from_dungeon_level([[5, 3], [10, 4], [15, 5], [0, 6]], self.dungeon_level),
+#     'influenced_hatchet': from_dungeon_level([[1, 4], [5, 5], [3, 6], [1, 7]], self.dungeon_level),
+#     'iron_buckler': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
+#     'steel_greatshield': from_dungeon_level([[5, 2], [10, 3], [5, 5], [0, 6]], self.dungeon_level),
+#     'iron_helmet': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
+#     'steel_bascinet': from_dungeon_level([[1, 2], [5, 3], [10, 4], [5, 5], [0, 6]], self.dungeon_level),
+#     'steel_cuirass': from_dungeon_level([[1, 3], [5, 5], [10, 6], [5, 7], [0, 8]], self.dungeon_level),
+#     'trickster_gloves': from_dungeon_level([[3, 1], [5, 2], [10, 3], [5, 4], [0, 5]], self.dungeon_level),
+#     'steel_platelegs': from_dungeon_level([[3, 3], [5, 4], [10, 5], [5, 6], [1, 7], [0, 8]],
+#                                           self.dungeon_level),
+#     'wax_coated_ring': from_dungeon_level([[1, 0]], self.dungeon_level),
+#     'lightning_scroll': from_dungeon_level([[5, 2], [10, 4], [15, 6]], self.dungeon_level),
+#     'fireball_scroll': from_dungeon_level([[5, 4], [10, 6]], self.dungeon_level),
+#     'confusion_scroll': from_dungeon_level([[5, 0], [10, 4]], self.dungeon_level)
+# }
 
-    def __iter__(self):
-        for xi in range(self.width):
-            for yi in range(self.height):
-                yield xi, yi, self.tiles[xi][yi]
+# # Place stationary monsters (plants) independent of monster number
+# for i in range(number_of_plants):
+#     x = randint(room.x1 + 1, room.x2 - 1)
+#     y = randint(room.y1 + 1, room.y2 - 1)
+#     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
+#             and not self.is_blocked(x, y):
+#         plant_choice = random_choice_from_dict(plant_chances)
+#         if plant_choice == 'Whip Vine':
+#             entities.append(whip_vine(x, y))
+#         elif plant_choice == 'Phosphorescent Dahlia':
+#             entities.append(phosphorescent_dahlia(x, y))
 
-    def initialize_tiles(self):
-        tiles = [[Tile(True) for y in range(self.height)] for x in range(self.width)]
-        return tiles
+# # Place monsters with random spawning chances
+# for i in range(number_of_monsters):
+#     x = randint(room.x1 + 1, room.x2 - 1)
+#     y = randint(room.y1 + 1, room.y2 - 1)
+#     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
+#             and not self.is_blocked(x, y):
+#         monster_choice = random_choice_from_dict(monster_chances)
+#
+# # Place items
+# for i in range(number_of_items):
+#     x = randint(room.x1 + 1, room.x2 - 1)
+#     y = randint(room.y1 + 1, room.y2 - 1)
+#     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
+#             and not self.is_blocked(x, y):
+#         item_choice = random_choice_from_dict(item_chances)
 
-    def place_entities(self, map_width, map_height, entities):
-        room = Rect(0, 0, map_width, map_height)  # Room is the entire dungeon
-        max_monsters = from_dungeon_level([[50, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
-        max_plants = from_dungeon_level([[25, 1], [35, 3], [50, 4], [35, 6]], self.dungeon_level)
-        max_items = from_dungeon_level([[20, 1], [25, 3], [30, 4]], self.dungeon_level)
+# def is_blocked(self, x, y):
+#     if self.tiles[x][y].blocked:
+#         return True
+#     return False
+#
+# def returncoordinatesinmap(self, coord_x, coord_y):
+#     if coord_x >= 0 and coord_x < self.width:
+#         if coord_y >= 0 and coord_y < self.height:
+#             return True
+#         return False
+#
+# @staticmethod
+# def variable_width(previous_width):
+#     """This function returns a Quasi-Markov chain map width value, based upon the width of the previous map."""
+#     # Hardcoded min/max
+#     minimum_width = 72
+#     maximum_width = 72 * 2
+#     variable_width = previous_width
+#     variable_width += np.normal(0, 5)
+#
+#     # Ensure the width does not clip through the max/min
+#     if variable_width % 2 != 0:
+#         variable_width += 1
+#     if variable_width < minimum_width:
+#         variable_width = minimum_width
+#     elif variable_width > maximum_width:
+#         variable_width = maximum_width
+#     return int(variable_width)
+#
+# @staticmethod
+# def variable_height(previous_height):
+#     """This function returns a Quasi-Markov chain map height value, based upon the width of the previous map."""
+#     # Hardcoded min/max
+#     minimum_height = 35
+#     maximum_height = 72 * 2
+#     variable_height = previous_height
+#     variable_height += np.normal(0, 5)
+#
+#     # Ensure that the height does not clip through the max/min
+#     if variable_height % 2 != 0:
+#         variable_height += 1
+#     if variable_height < minimum_height:
+#         variable_height = minimum_height
+#     elif variable_height > maximum_height:
+#         variable_height = maximum_height
+#     return int(variable_height)
+#
+# def next_floor(self, player):
+#     self.dungeon_level += 1
+#     entities = [player]
+#
+#     # Define randomly the new game map size
+#     variable_width = self.variable_width(self.width)
+#     variable_height = self.variable_height(self.height)
+#     # Write the new sizes
+#     self.width = variable_width
+#     self.height = variable_height
+#
+#     # Make the new floor
+#     self.tiles = self.initialize_tiles()
+#     self.make_map(player, entities)
+#     self.place_entities(self.width, self.height, entities)
+#
+#     # Heal on change of floors?
+#     # player.fighter.heal(player.fighter.max_hp // 2)
+#     return entities
+#
+# def make_map(self, player, entities):
+#     # Generate each floor's map by calling the appropriate chamber creation function.
+#     x = uniform(0, 1)
+#     if self.dungeon_level == 1:
+#         self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
+#         self.erode(1)
+#         return
+#     if self.current_biome == 'near_surface':
+#         if x >= 0.25:
+#             self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
+#             self.erode(1)
+#         elif x >= 0.5:
+#             self.current_biome = 'ice_caves'
+#             self.light_wall = tcod.white
+#             self.floor_chars = ['~', ' ', ',', '`', ' ']
+#             self.caves_chamber(45, 1)
+#             self.erode(1)
+#             self.rooms_chamber(16, 8, 75, player, entities)
+#             self.erode(1)
+#         else:
+#             self.current_biome = 'chasms'
+#             self.light_wall = tcod.dark_grey
+#             self.floor_chars = [' ', '.', ',', '`']
+#             self.rooms_chamber(8, 4, 50, player, entities)
+#             self.caves_chamber(60, 2)
+#             self.erode(1)
+#     elif self.current_biome == 'ice_caves':
+#         if x >= 0.8:
+#             self.current_biome = 'near_surface'
+#             self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
+#             self.erode(1)
+#         elif 0.8 > x >= 0.2:
+#             self.caves_chamber(45, 1)
+#             self.erode(1)
+#             self.rooms_chamber(16, 8, 75, player, entities)
+#             self.erode(1)
+#         else:
+#             self.current_biome = 'chasms'
+#             self.light_ground = tcod.dark_grey
+#             self.floor_chars = [' ', '.', ',', '`']
+#             self.rooms_chamber(8, 4, 50, player, entities)
+#             self.caves_chamber(60, 2)
+#             self.erode(1)
+#     elif self.current_biome == 'chasms':
+#         if x >= 0.75:
+#             self.current_biome = 'near_surface'
+#             self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
+#             self.erode(1)
+#         else:
+#             self.rooms_chamber(8, 4, 50, player, entities)
+#             self.caves_chamber(60, 2)
+#             self.erode(1)
+#
+# def rooms_chamber(self, max_room_size, min_room_size, max_rooms, player, entities):
+#     """A chamber which is filled with rectangular rooms of random sizes, joined with single-jointed corridors."""
+#     rooms = []
+#     num_rooms = 0
+#     map_width = self.width
+#     map_height = self.height
+#     for r in range(max_rooms):
+#         w = random.randint(min_room_size, max_room_size)
+#         h = random.randint(min_room_size, max_room_size)
+#         x = random.randint(0, map_width - w - 1)
+#         y = random.randint(0, map_height - h - 1)
+#
+#         # "Rect" class makes rectangles easier to work with
+#         new_room = Rect(x, y, w, h)
+#
+#         # Run through the other rooms and see if they intersect with this one
+#         for other_room in rooms:
+#             if new_room.intersect(other_room):
+#                 break
+#         else:
+#             self.create_room(new_room)
+#             (new_x, new_y) = new_room.center()
+#             center_of_last_room_x = new_x
+#             center_of_last_room_y = new_y
+#
+#             if num_rooms == 0:
+#                 player.x = new_x
+#                 player.y = new_y
+#             else:
+#                 # center coordinates of previous room
+#                 (prev_x, prev_y) = rooms[num_rooms - 1].center()
+#
+#                 if random.randint(0, 1) == 1:
+#                     # first move horizontally, then vertically
+#                     self.create_h_tunnel(prev_x, new_x, prev_y)
+#                     self.create_v_tunnel(prev_y, new_y, new_x)
+#                 else:
+#                     # first move vertically, then horizontally
+#                     self.create_v_tunnel(prev_y, new_y, prev_x)
+#                     self.create_h_tunnel(prev_x, new_x, new_y)
+#
+#             rooms.append(new_room)
+#             num_rooms += 1
 
-        # # Item dictionary
-        # item_chances = {
-        #     'healing_potion': 35,
-        #     'iron_longsword': from_dungeon_level([[10, 1], [5, 3], [0, 4]], self.dungeon_level),
-        #     'steel_longsword': from_dungeon_level([[5, 2], [10, 3], [15, 4], [10, 5], [5, 6], [0, 7]],
-        #                                           self.dungeon_level),
-        #     'steel_dagger': from_dungeon_level([[5, 1], [10, 3], [5, 4], [0, 5]], self.dungeon_level),
-        #     'steel_mace': from_dungeon_level([[5, 3], [10, 4], [15, 5], [0, 6]], self.dungeon_level),
-        #     'influenced_hatchet': from_dungeon_level([[1, 4], [5, 5], [3, 6], [1, 7]], self.dungeon_level),
-        #     'iron_buckler': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
-        #     'steel_greatshield': from_dungeon_level([[5, 2], [10, 3], [5, 5], [0, 6]], self.dungeon_level),
-        #     'iron_helmet': from_dungeon_level([[5, 1], [10, 2], [5, 3], [0, 4]], self.dungeon_level),
-        #     'steel_bascinet': from_dungeon_level([[1, 2], [5, 3], [10, 4], [5, 5], [0, 6]], self.dungeon_level),
-        #     'steel_cuirass': from_dungeon_level([[1, 3], [5, 5], [10, 6], [5, 7], [0, 8]], self.dungeon_level),
-        #     'trickster_gloves': from_dungeon_level([[3, 1], [5, 2], [10, 3], [5, 4], [0, 5]], self.dungeon_level),
-        #     'steel_platelegs': from_dungeon_level([[3, 3], [5, 4], [10, 5], [5, 6], [1, 7], [0, 8]],
-        #                                           self.dungeon_level),
-        #     'wax_coated_ring': from_dungeon_level([[1, 0]], self.dungeon_level),
-        #     'lightning_scroll': from_dungeon_level([[5, 2], [10, 4], [15, 6]], self.dungeon_level),
-        #     'fireball_scroll': from_dungeon_level([[5, 4], [10, 6]], self.dungeon_level),
-        #     'confusion_scroll': from_dungeon_level([[5, 0], [10, 4]], self.dungeon_level)
-        # }
+# if num_rooms > 0:
+#     stairs_component = Stairs(self.dungeon_level + 1)
+#     down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', tcod.white, 'Down Stairs',
+#                          'There\'s a dark chasm here which will allow you to take a one-way trip to'
+#                          'the next chamber of the SludgeWorks.', render_order=RenderOrder.STAIRS,
+#                          stairs=stairs_component)
+#     entities.append(down_stairs)
+# else:
+#     print('Map generation failed: No rooms generated.')
 
-        # # Place stationary monsters (plants) independent of monster number
-        # for i in range(number_of_plants):
-        #     x = randint(room.x1 + 1, room.x2 - 1)
-        #     y = randint(room.y1 + 1, room.y2 - 1)
-        #     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
-        #             and not self.is_blocked(x, y):
-        #         plant_choice = random_choice_from_dict(plant_chances)
-        #         if plant_choice == 'Whip Vine':
-        #             entities.append(whip_vine(x, y))
-        #         elif plant_choice == 'Phosphorescent Dahlia':
-        #             entities.append(phosphorescent_dahlia(x, y))
-
-        # # Place monsters with random spawning chances
-        # for i in range(number_of_monsters):
-        #     x = randint(room.x1 + 1, room.x2 - 1)
-        #     y = randint(room.y1 + 1, room.y2 - 1)
-        #     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
-        #             and not self.is_blocked(x, y):
-        #         monster_choice = random_choice_from_dict(monster_chances)
-        #
-        # # Place items
-        # for i in range(number_of_items):
-        #     x = randint(room.x1 + 1, room.x2 - 1)
-        #     y = randint(room.y1 + 1, room.y2 - 1)
-        #     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
-        #             and not self.is_blocked(x, y):
-        #         item_choice = random_choice_from_dict(item_chances)
-
-    def is_blocked(self, x, y):
-        if self.tiles[x][y].blocked:
-            return True
-        return False
-
-    def returncoordinatesinmap(self, coord_x, coord_y):
-        if coord_x >= 0 and coord_x < self.width:
-            if coord_y >= 0 and coord_y < self.height:
-                return True
-            return False
-
-    @staticmethod
-    def variable_width(previous_width):
-        """This function returns a Quasi-Markov chain map width value, based upon the width of the previous map."""
-        # Hardcoded min/max
-        minimum_width = 72
-        maximum_width = 72 * 2
-        variable_width = previous_width
-        variable_width += np.normal(0, 5)
-
-        # Ensure the width does not clip through the max/min
-        if variable_width % 2 != 0:
-            variable_width += 1
-        if variable_width < minimum_width:
-            variable_width = minimum_width
-        elif variable_width > maximum_width:
-            variable_width = maximum_width
-        return int(variable_width)
-
-    @staticmethod
-    def variable_height(previous_height):
-        """This function returns a Quasi-Markov chain map height value, based upon the width of the previous map."""
-        # Hardcoded min/max
-        minimum_height = 35
-        maximum_height = 72 * 2
-        variable_height = previous_height
-        variable_height += np.normal(0, 5)
-
-        # Ensure that the height does not clip through the max/min
-        if variable_height % 2 != 0:
-            variable_height += 1
-        if variable_height < minimum_height:
-            variable_height = minimum_height
-        elif variable_height > maximum_height:
-            variable_height = maximum_height
-        return int(variable_height)
-
-    def next_floor(self, player):
-        self.dungeon_level += 1
-        entities = [player]
-
-        # Define randomly the new game map size
-        variable_width = self.variable_width(self.width)
-        variable_height = self.variable_height(self.height)
-        # Write the new sizes
-        self.width = variable_width
-        self.height = variable_height
-
-        # Make the new floor
-        self.tiles = self.initialize_tiles()
-        self.make_map(player, entities)
-        self.place_entities(self.width, self.height, entities)
-
-        # Heal on change of floors?
-        # player.fighter.heal(player.fighter.max_hp // 2)
-        return entities
-
-    def make_map(self, player, entities):
-        # Generate each floor's map by calling the appropriate chamber creation function.
-        x = uniform(0, 1)
-        if self.dungeon_level == 1:
-            self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
-            self.erode(1)
-            return
-        if self.current_biome == 'near_surface':
-            if x >= 0.25:
-                self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
-                self.erode(1)
-            elif x >= 0.5:
-                self.current_biome = 'ice_caves'
-                self.light_wall = tcod.white
-                self.floor_chars = ['~', ' ', ',', '`', ' ']
-                self.caves_chamber(45, 1)
-                self.erode(1)
-                self.rooms_chamber(16, 8, 75, player, entities)
-                self.erode(1)
-            else:
-                self.current_biome = 'chasms'
-                self.light_wall = tcod.dark_grey
-                self.floor_chars = [' ', '.', ',', '`']
-                self.rooms_chamber(8, 4, 50, player, entities)
-                self.caves_chamber(60, 2)
-                self.erode(1)
-        elif self.current_biome == 'ice_caves':
-            if x >= 0.8:
-                self.current_biome = 'near_surface'
-                self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
-                self.erode(1)
-            elif 0.8 > x >= 0.2:
-                self.caves_chamber(45, 1)
-                self.erode(1)
-                self.rooms_chamber(16, 8, 75, player, entities)
-                self.erode(1)
-            else:
-                self.current_biome = 'chasms'
-                self.light_ground = tcod.dark_grey
-                self.floor_chars = [' ', '.', ',', '`']
-                self.rooms_chamber(8, 4, 50, player, entities)
-                self.caves_chamber(60, 2)
-                self.erode(1)
-        elif self.current_biome == 'chasms':
-            if x >= 0.75:
-                self.current_biome = 'near_surface'
-                self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
-                self.erode(1)
-            else:
-                self.rooms_chamber(8, 4, 50, player, entities)
-                self.caves_chamber(60, 2)
-                self.erode(1)
-
-    def rooms_chamber(self, max_room_size, min_room_size, max_rooms, player, entities):
-        """A chamber which is filled with rectangular rooms of random sizes, joined with single-jointed corridors."""
-        rooms = []
-        num_rooms = 0
-        map_width = self.width
-        map_height = self.height
-        for r in range(max_rooms):
-            w = random.randint(min_room_size, max_room_size)
-            h = random.randint(min_room_size, max_room_size)
-            x = random.randint(0, map_width - w - 1)
-            y = random.randint(0, map_height - h - 1)
-
-            # "Rect" class makes rectangles easier to work with
-            new_room = Rect(x, y, w, h)
-
-            # Run through the other rooms and see if they intersect with this one
-            for other_room in rooms:
-                if new_room.intersect(other_room):
-                    break
-            else:
-                self.create_room(new_room)
-                (new_x, new_y) = new_room.center()
-                center_of_last_room_x = new_x
-                center_of_last_room_y = new_y
-
-                if num_rooms == 0:
-                    player.x = new_x
-                    player.y = new_y
-                else:
-                    # center coordinates of previous room
-                    (prev_x, prev_y) = rooms[num_rooms - 1].center()
-
-                    if random.randint(0, 1) == 1:
-                        # first move horizontally, then vertically
-                        self.create_h_tunnel(prev_x, new_x, prev_y)
-                        self.create_v_tunnel(prev_y, new_y, new_x)
-                    else:
-                        # first move vertically, then horizontally
-                        self.create_v_tunnel(prev_y, new_y, prev_x)
-                        self.create_h_tunnel(prev_x, new_x, new_y)
-
-                rooms.append(new_room)
-                num_rooms += 1
-
-        # if num_rooms > 0:
-        #     stairs_component = Stairs(self.dungeon_level + 1)
-        #     down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', tcod.white, 'Down Stairs',
-        #                          'There\'s a dark chasm here which will allow you to take a one-way trip to'
-        #                          'the next chamber of the SludgeWorks.', render_order=RenderOrder.STAIRS,
-        #                          stairs=stairs_component)
-        #     entities.append(down_stairs)
-        # else:
-        #     print('Map generation failed: No rooms generated.')
-
-    def find_neighbours(self, x, y):
-        xi = (0, -1, 1) if 0 < x < self.width - 1 else ((0, -1) if x > 0 else (0, 1))
-        yi = (0, -1, 1) if 0 < y < self.height - 1 else ((0, -1) if y > 0 else (0, 1))
-        for a in xi:
-            for b in yi:
-                if a == b == 0:
-                    continue
-                yield (x + a, y + b)
-
-    def to_down_stairs(self, player, entities, message_log):
-        """Create a Dijkstra path to the down stairs. Dijkstra was chosen over A* because tcod's built-in dijkstra
-        seems much faster."""
-        stairs_x = None
-        stairs_y = None
-        stairs_found = False
-        for entity in entities:
-            if entity.name == 'Down Stairs':
-                if self.tiles[entity.x][entity.y].explored:
-                    stairs_x = entity.x
-                    stairs_y = entity.y
-                    stairs_found = True
-
-        if stairs_found:
-            my_map = tcod.map_new(self.width, self.height)
-
-            for y in range(self.height):
-                for x in range(self.width):
-                    if self.tiles[x][y].explored:
-                        tcod.map_set_properties(my_map, x, y, not self.tiles[x][y].block_sight,
-                                                not self.tiles[x][y].blocked)
-
-            dij_path = tcod.dijkstra_new(my_map)
-            tcod.dijkstra_compute(dij_path, player.x, player.y)
-            tcod.dijkstra_path_set(dij_path, stairs_x, stairs_y)
-
-            if not tcod.dijkstra_is_empty(dij_path):
-                x, y = tcod.dijkstra_path_walk(dij_path)
-
-                # Move player along the path
-                if not x and not y:
-                    # message_log.add_message(
-                    # Message('You cannot safely reach the next set of down stairs from here.',
-                    #         tcod.yellow))
-                    return False
-                else:
-                    player.x = x
-                    player.y = y
-                    return True
-            elif player.x == stairs_x and player.y == stairs_y:
-                return False
-            else:
-                # message_log.add_message(Message('Path to stairs does not exist.', tcod.yellow))
-                return False
-        else:
-            # message_log.add_message(Message('You have not yet discovered the path to the next floor.', tcod.yellow))
-            return False
+# def find_neighbours(self, x, y):
+#     xi = (0, -1, 1) if 0 < x < self.width - 1 else ((0, -1) if x > 0 else (0, 1))
+#     yi = (0, -1, 1) if 0 < y < self.height - 1 else ((0, -1) if y > 0 else (0, 1))
+#     for a in xi:
+#         for b in yi:
+#             if a == b == 0:
+#                 continue
+#             yield (x + a, y + b)
+#
+# def to_down_stairs(self, player, entities, message_log):
+#     """Create a Dijkstra path to the down stairs. Dijkstra was chosen over A* because tcod's built-in dijkstra
+#     seems much faster."""
+#     stairs_x = None
+#     stairs_y = None
+#     stairs_found = False
+#     for entity in entities:
+#         if entity.name == 'Down Stairs':
+#             if self.tiles[entity.x][entity.y].explored:
+#                 stairs_x = entity.x
+#                 stairs_y = entity.y
+#                 stairs_found = True
+#
+#     if stairs_found:
+#         my_map = tcod.map_new(self.width, self.height)
+#
+#         for y in range(self.height):
+#             for x in range(self.width):
+#                 if self.tiles[x][y].explored:
+#                     tcod.map_set_properties(my_map, x, y, not self.tiles[x][y].block_sight,
+#                                             not self.tiles[x][y].blocked)
+#
+#         dij_path = tcod.dijkstra_new(my_map)
+#         tcod.dijkstra_compute(dij_path, player.x, player.y)
+#         tcod.dijkstra_path_set(dij_path, stairs_x, stairs_y)
+#
+#         if not tcod.dijkstra_is_empty(dij_path):
+#             x, y = tcod.dijkstra_path_walk(dij_path)
+#
+#             # Move player along the path
+#             if not x and not y:
+#                 # message_log.add_message(
+#                 # Message('You cannot safely reach the next set of down stairs from here.',
+#                 #         tcod.yellow))
+#                 return False
+#             else:
+#                 player.x = x
+#                 player.y = y
+#                 return True
+#         elif player.x == stairs_x and player.y == stairs_y:
+#             return False
+#         else:
+#             # message_log.add_message(Message('Path to stairs does not exist.', tcod.yellow))
+#             return False
+#     else:
+#         # message_log.add_message(Message('You have not yet discovered the path to the next floor.', tcod.yellow))
+#         return False
 
 
 class Tile:

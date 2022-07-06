@@ -82,34 +82,6 @@ class PopupMessage(BaseEventHandler):
 
 
 class EventHandler(BaseEventHandler):
-    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
-        """Handle an event, perform any actions, then return the next active event handler."""
-        action_or_state = self.dispatch(event)
-        if isinstance(action_or_state, EventHandler):
-            return action_or_state
-        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
-            if not core.g.engine.player.is_alive:
-                return GameOverEventHandler()
-            elif core.g.engine.player.level.requires_level_up:
-                return LevelUpEventHandler()
-            return MainGameEventHandler()  # Return to the main handler.
-
-        # Failsafe for recursion
-        if not core.g.engine.player.is_alive:
-            return GameOverEventHandler()
-        elif core.g.engine.player.level.requires_level_up:
-            return LevelUpEventHandler()
-
-        # Garbage collection for exiled entities
-        exiles = []
-        for entity in core.g.engine.game_map.entities:
-            if entity.name == ' ':
-                exiles.append(entity)
-        core.g.engine.game_map.entities = set([x for x in core.g.engine.game_map.entities
-                                               if x not in exiles])
-
-        return self
-
     def handle_action(self, action: Action) -> EventHandler:
         """Handle actions returned from event methods."""
         try:
@@ -274,6 +246,34 @@ class ExploreEventHandler(EventHandler):
 
 
 class MainGameEventHandler(EventHandler):
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        # Failsafe for recursion
+        if not core.g.engine.player.is_alive:
+            return GameOverEventHandler()
+        elif core.g.engine.player.level.requires_level_up:
+            return LevelUpEventHandler()
+
+        # Garbage collection for exiled entities
+        exiles = []
+        for entity in core.g.engine.game_map.entities:
+            if entity.name == ' ':
+                exiles.append(entity)
+        core.g.engine.game_map.entities = set([x for x in core.g.engine.game_map.entities
+                                               if x not in exiles])
+
+        return self
+
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         action: Optional[Action] = None
 
@@ -336,6 +336,19 @@ class MainGameEventHandler(EventHandler):
 
 class AskUserEventHandler(EventHandler):
     """Handles user input for actions which require special input."""
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        return self
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         """By default any key exits this input handler."""
@@ -366,6 +379,20 @@ class AskUserEventHandler(EventHandler):
 
 class CharacterScreenEventHandler(AskUserEventHandler):
     TITLE = "Character Sheet"
+
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        return self
 
     def on_render(self, console: tcod.Console) -> None:
         super().on_render(console)
@@ -398,14 +425,29 @@ class CharacterScreenEventHandler(AskUserEventHandler):
 
 
 class LevelUpEventHandler(AskUserEventHandler):
-    TITLE = "Level Up"
+
+    TITLE = "<Untitled>"
+
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        return self
 
     def on_render(self, console: tcod.Console) -> None:
         super().on_render(console)
 
-        attr_str = "You have gained a level! Select an attribute to increase."
+        attr_str = "Select an attribute to increase."
 
-        width = len(attr_str) + 4
+        width = len(attr_str) + 15
         x = console.width // 2 - int(width / 2)
         y = console.height // 2 - 4
 
@@ -413,30 +455,37 @@ class LevelUpEventHandler(AskUserEventHandler):
             x=x,
             y=y,
             width=width,
-            height=8,
-            title=self.TITLE,
+            height=9,
+            title='',
             clear=True,
-            fg=(255, 255, 255),
+            fg=tcod.yellow,
             bg=(0, 0, 0),
         )
+        console.print(x=console.width // 2, y=y, string="┤Level Up!├", alignment=tcod.constants.CENTER)
 
-        console.print(x=x + 1, y=y + 1, string="You channel the power of your slain foes...")
-        console.print(x=x + 1, y=y + 2, string=attr_str)
+        console.print(x=console.width // 2, y=y + 2, string="You channel the power of your slain foes...",
+                      fg=tcod.white, alignment=tcod.constants.CENTER)
+        console.print(x=console.width // 2, y=y + 3, string=attr_str,
+                      fg=tcod.white, alignment=tcod.constants.CENTER)
 
-        console.print(
-            x=x + 1,
-            y=y + 4,
-            string=f"a) Vitality (+20 HP, from {core.g.engine.player.fighter.max_hp})",
-        )
         console.print(
             x=x + 1,
             y=y + 5,
-            string=f"b) Strength (+1 attack, from {core.g.engine.player.fighter.base_strength})",
+            string=f"a) Vitality (+{core.g.engine.player.fighter.base_vitality}, "
+                   f"from {core.g.engine.player.fighter.max_hp})",
+            fg=tcod.light_pink,
         )
         console.print(
             x=x + 1,
             y=y + 6,
+            string=f"b) Strength (+1 attack, from {core.g.engine.player.fighter.base_strength})",
+            fg=tcod.light_red,
+        )
+        console.print(
+            x=x + 1,
+            y=y + 7,
             string=f"c) Dexterity (+1 defense, from {core.g.engine.player.fighter.base_dexterity})",
+            fg=tcod.light_green,
         )
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
@@ -473,6 +522,20 @@ class InventoryEventHandler(AskUserEventHandler):
 
     TITLE = "<missing title>"
 
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        return self
+
     def on_render(self, console: tcod.Console) -> None:
         """
         Render an inventory menu, which displays the items in the inventory, and the letter to select them.
@@ -501,7 +564,7 @@ class InventoryEventHandler(AskUserEventHandler):
             fg=(255, 255, 255),
             bg=(0, 0, 0),
         )
-        console.print(x + 1, y, f" {self.TITLE}. TAB to sort ")
+        console.print(x + 1, y, f"┤{self.TITLE}. TAB to sort├")
 
         if number_of_items_in_inventory > 0:
             for i, item in enumerate(core.g.engine.player.inventory.items):
@@ -530,6 +593,8 @@ class InventoryEventHandler(AskUserEventHandler):
             return self.on_item_selected(selected_item)
         elif key == tcod.event.KeySym.TAB:
             player.inventory.items = parts.inventory.autosort(player.inventory.items)
+            core.g.engine.message_log.add_message("You reorganize your inventory.",
+                                                  config.colour.use)
             return None
         return super().ev_keydown(event)
 
@@ -542,6 +607,20 @@ class InventoryActivateHandler(InventoryEventHandler):
     """Handle using an inventory item."""
 
     TITLE = "Select an item to use:"
+
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        return self
 
     def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
         if item.consumable:
@@ -558,6 +637,20 @@ class InventoryDropHandler(InventoryEventHandler):
 
     TITLE = "Select an item to drop"
 
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        return self
+
     def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
         """Drop this item."""
         return core.actions.DropItem(core.g.engine.player, item)
@@ -565,6 +658,16 @@ class InventoryDropHandler(InventoryEventHandler):
 
 class SelectIndexHandler(AskUserEventHandler):
     """Handles asking the user for an index on the map."""
+
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            return MainGameEventHandler()
+
+        return MainGameEventHandler()
 
     def __init__(self):
         """Sets the cursor to the player when this handler is constructed."""
@@ -621,6 +724,20 @@ class LookHandler(SelectIndexHandler):
     Lets the player look around using the keyboard.
     """
 
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        return self
+
     def on_index_selected(self, x: int, y: int) -> MainGameEventHandler:
         """Return to main handler."""
         return MainGameEventHandler()
@@ -628,6 +745,20 @@ class LookHandler(SelectIndexHandler):
 
 class SingleRangedAttackHandler(SelectIndexHandler):
     """Handles targeting a single enemy. Only the enemy selected will be affected."""
+
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        return self
 
     def __init__(self, callback: Callable[[Tuple[int, int]], Optional[Action]]):
         super().__init__()
@@ -640,6 +771,20 @@ class SingleRangedAttackHandler(SelectIndexHandler):
 
 class AreaRangedAttackHandler(SelectIndexHandler):
     """Handles targeting an area within a given radius. Any entity within the area will be affected."""
+
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        return self
 
     def __init__(self, radius: int, callback: Callable[[Tuple[int, int]], Optional[Action]]):
         super().__init__()
@@ -669,7 +814,22 @@ class AreaRangedAttackHandler(SelectIndexHandler):
 
 
 class HoleJumpEventHandler(AskUserEventHandler):
-    TITLE = "You stand on the edge of a deep chasm."
+
+    TITLE = "<Untitled>"
+
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        return self
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
         if event.sym in config.inputs.YESNO_KEYS:
@@ -686,7 +846,7 @@ class HoleJumpEventHandler(AskUserEventHandler):
         # x = round(self.engine.game_map.width / 2)
         # y = round(self.engine.game_map.height)
 
-        width = len(self.TITLE) + 6
+        width = len(self.TITLE) + 34
         x = console.width // 2 - int(width / 2)
         y = console.height // 2
 
@@ -694,16 +854,23 @@ class HoleJumpEventHandler(AskUserEventHandler):
             x=x,
             y=y,
             width=width,
-            height=4,
-            title=self.TITLE,
+            height=6,
+            title='',
             clear=True,
-            fg=(255, 255, 255),
+            fg=tcod.gray,
             bg=(0, 0, 0),
         )
+        console.print(console.width // 2, y, f"┤You stand on the edge of a deep chasm.├",
+                      alignment=tcod.constants.CENTER, fg=tcod.gray)
 
-        console.print(x=x + 1, y=y + 1, string=f"Are you sure you want to jump down the hole?")
-        console.print(x=x + int(width / 4), y=y + 3, string=f"[Y]: Yes")
-        console.print(x=x + int(width / 2), y=y + 3, string=f"[N]: No")
+        console.print(x=console.width // 2, y=y + 2, string=f"Are you sure you want to",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2, y=y + 3, string=f"jump down the hole?",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 - 6, y=y + 5, string=f"[Y]: Yes",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 + 6, y=y + 5, string=f"[N]: No",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
 
 
 class GameOverEventHandler(EventHandler):
@@ -773,13 +940,6 @@ class HistoryViewer(EventHandler):
 
 # TODO: Restore autoexplore
 # TODO: Restore autostairs
-def handle_event():
-    """
-    For every player event, first determine the game state in order to provide the context for the actions, and then
-    act accordingly.
-    """
-    pass
-
 # TODO: Show inventory and message log on player death
 # TODO: Show library of highscores for single player
 # def handle_player_dead_events(event):
@@ -788,39 +948,6 @@ def handle_event():
 #             return {'show_inventory': True}
 #         case tcod.event.K_ESCAPE:
 #             return {'quit': True}
-#         case tcod.event.K_F11:
-#             return {'fullscreen': True}
-#     return {}
-
-# TODO: Main menu
-# def handle_main_menu(event):
-#     match event:
-#         case tcod.event.K_a:
-#             return {'new_game': True}
-#         case tcod.event.K_b:
-#             return {'load_game': True}
-#         case (tcod.event.K_c, tcod.event.K_q, tcod.event.K_ESCAPE):
-#             return {'exit': True}
-#         case tcod.event.K_F11:
-#             return {'fullscreen': True}
-#     return {}
-
-# TODO: Level-up menu
-# def handle_level_up_menu(event):
-#     match event:
-#         case tcod.event.K_a:
-#             return {'level_up': 'str'}
-#         case tcod.event.K_b:
-#             return {'level_up': 'agi'}
-#         case tcod.event.K_F11:
-#             return {'fullscreen': True}
-#     return {}
-
-# TODO: Display character sheet
-# def handle_character_screen(event):
-#     match event:
-#         case tcod.event.K_ESCAPE:
-#             return {'exit': True}
 #         case tcod.event.K_F11:
 #             return {'fullscreen': True}
 #     return {}

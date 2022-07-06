@@ -8,7 +8,7 @@ a = Analysis(
     ['sludgeworks.py'],
     pathex=[],
     binaries=[],
-    datas=[('assets/', 'assets/'), ('fonts', 'fonts')],
+    datas=[('assets/', 'assets/'), ('fonts', 'fonts'), ('savegames', 'savegames')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

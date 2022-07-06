@@ -20,4 +20,4 @@ python32.def
 # pyinstaller
 build/
 dist/
-sludgeworks.spec
+.build

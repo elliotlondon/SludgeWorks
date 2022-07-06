@@ -15,6 +15,7 @@ utils/__pycache/
 lib/
 sludgeworks37/
 lib64/
+python32.def
 
 # pyinstaller
 build/

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import List, TYPE_CHECKING
 
-from parts.base_component import BaseComponent
 import core.g
+from parts.base_component import BaseComponent
 
 if TYPE_CHECKING:
     from parts.entity import Actor, Item
@@ -158,3 +158,31 @@ class Inventory(BaseComponent):
     #         item.x = entity.x
     #         item.y = entity.y
     #         entities.append(item)
+
+
+def autosort(items: List[Item]) -> List[Item]:
+    """Automatically sorts a list of items according to internal rules."""
+
+    # First sort list into consumables and weapons/armour
+    equipment = []
+    consumeables = []
+    for item in items:
+        if item.equippable:
+            equipment.append(item)
+        else:
+            consumeables.append(item)
+
+    # Now split weapons/armour lists
+    weapons = []
+    armour = []
+    for item in equipment:
+        if item.equippable.damage_dice:
+            weapons.append(item)
+        else:
+            armour.append(item)
+
+    # Sort all lists according to item depth and rarity
+    sorted(weapons, key=lambda x: (x.depth, x.rarity))
+    sorted(armour, key=lambda x: (x.depth, x.rarity))
+    sorted(consumeables, key=lambda x: (x.depth, x.rarity))
+    return weapons + armour + consumeables

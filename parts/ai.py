@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import logging
 import random
 from random import randint
 from typing import Optional, List, Tuple, TYPE_CHECKING
 
 import numpy as np  # type: ignore
 import tcod
-import logging
 
 import core.g
 from core.actions import Action, BumpAction, MeleeAction, MovementAction, WaitAction

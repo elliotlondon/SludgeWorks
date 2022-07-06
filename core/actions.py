@@ -5,11 +5,11 @@ from typing import Optional, Tuple, TYPE_CHECKING
 
 import numpy as np
 
-from core.action import Action, ItemAction
 import config.colour
-from config.exceptions import Impossible
-from utils.random_utils import roll_dice
 import core.g
+from config.exceptions import Impossible
+from core.action import Action, ItemAction
+from utils.random_utils import roll_dice
 
 if TYPE_CHECKING:
     from parts.entity import Entity, Actor, Item
@@ -185,50 +185,50 @@ class MeleeAction(ActionWithDirection):
                 if crit:
                     if attacker.name.capitalize() == 'Player':
                         core.g.engine.message_log.add_message(f'You crit the {defender.name.capitalize()} for '
-                                                            f'{str(damage)} damage!', config.colour.player_atk)
+                                                              f'{str(damage)} damage!', config.colour.player_atk)
                     elif defender.name.capitalize() == 'Player':
                         core.g.engine.message_log.add_message(f'The {attacker.name} crits you for '
-                                                            f'{str(damage)} damage!', config.colour.enemy_crit)
+                                                              f'{str(damage)} damage!', config.colour.enemy_crit)
                     else:
                         core.g.engine.message_log.add_message(f'The {attacker.name} crits the {defender.name}'
-                                                            f'{str(damage)} damage!', config.colour.enemy_crit)
+                                                              f'{str(damage)} damage!', config.colour.enemy_crit)
                 else:
                     if attacker.name.capitalize() == 'Player':
                         core.g.engine.message_log.add_message(f'You attack the {defender.name.capitalize()} for '
-                                                            f'{str(damage)} damage.', config.colour.player_atk)
+                                                              f'{str(damage)} damage.', config.colour.player_atk)
                     elif defender.name.capitalize() == 'Player':
                         core.g.engine.message_log.add_message(f'The {attacker.name} attacks you for '
-                                                            f'{str(damage)} damage.', config.colour.enemy_atk)
+                                                              f'{str(damage)} damage.', config.colour.enemy_atk)
                     else:
                         core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
-                                                            f'{str(damage)} damage.', config.colour.enemy_atk)
+                                                              f'{str(damage)} damage.', config.colour.enemy_atk)
                 defender.fighter.hp -= damage
             else:
                 if attacker.name.capitalize() == 'Player':
                     core.g.engine.message_log.add_message(f'You attack the {defender.name.capitalize()} '
-                                                        f'but do no damage.', config.colour.enemy_evade)
+                                                          f'but do no damage.', config.colour.enemy_evade)
                 elif defender.name.capitalize() == 'Player':
                     core.g.engine.message_log.add_message(f'The {attacker.name} attacks you '
-                                                        f'but does no damage!', config.colour.player_evade)
+                                                          f'but does no damage!', config.colour.player_evade)
                 else:
                     core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
-                                                        f'but does no damage.', config.colour.enemy_evade)
+                                                          f'but does no damage.', config.colour.enemy_evade)
                 if logging.DEBUG >= logging.root.level:
                     core.g.engine.message_log.add_message(f"DEBUG: Roll [{attack_roll} vs. {defence_roll}].",
-                                                        config.colour.debug)
+                                                          config.colour.debug)
         else:
             if attacker.name.capitalize() == 'Player':
                 core.g.engine.message_log.add_message(f'You attack the {defender.name.capitalize()} '
-                                                    f'but the attack is evaded.', config.colour.enemy_evade)
+                                                      f'but the attack is evaded.', config.colour.enemy_evade)
             elif defender.name.capitalize() == 'Player':
                 core.g.engine.message_log.add_message(f'You evade the {attacker.name.capitalize()}\'s attack.',
-                                                    config.colour.player_evade)
+                                                      config.colour.player_evade)
             else:
                 core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
-                                                    f'but the attack is evaded.', config.colour.enemy_evade)
+                                                      f'but the attack is evaded.', config.colour.enemy_evade)
             if logging.DEBUG >= logging.root.level:
                 core.g.engine.message_log.add_message(f"DEBUG: Roll [{attack_roll} vs. {dodge_roll}].",
-                                                    config.colour.debug)
+                                                      config.colour.debug)
 
 
 class MovementAction(ActionWithDirection):

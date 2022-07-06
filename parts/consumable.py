@@ -3,15 +3,15 @@ from __future__ import annotations
 import random
 from typing import Optional, TYPE_CHECKING
 
-from utils.random_utils import dnd_bonus_calc
 import config.colour
+import core.g
 import parts.ai
 import parts.inventory
 from config.exceptions import Impossible
 from core.actions import ItemAction
 from core.input_handlers import ActionOrHandler, AreaRangedAttackHandler, SingleRangedAttackHandler
 from parts.base_component import BaseComponent
-import core.g
+from utils.random_utils import dnd_bonus_calc
 
 if TYPE_CHECKING:
     from entity import Actor, Item

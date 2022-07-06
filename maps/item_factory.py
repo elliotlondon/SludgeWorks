@@ -1,5 +1,6 @@
 import tcod
 
+import config.colour
 import parts.equippable
 import parts.consumable
 from parts.entity import Item
@@ -10,6 +11,8 @@ healing_mud = Item(
     colour=tcod.orange,
     name="Healing Mud",
     consumable=parts.consumable.RandomHealConsumable(8, 12),
+    depth=1,
+    rarity=1,
     usetext="You slather yourself in the healing mud..."
 )
 
@@ -18,6 +21,8 @@ lightning_twig = Item(
     colour=tcod.dark_yellow,
     name="Crackling Imbued Twig",
     consumable=parts.consumable.LightningDamageConsumable(damage=20, maximum_range=5),
+    depth=1,
+    rarity=2,
     usetext="You snap the twig..."
 )
 
@@ -26,6 +31,8 @@ confusing_twig = Item(
     colour=tcod.dark_fuchsia,
     name="Warping Imbued Twig",
     consumable=parts.consumable.ConfusionConsumable(number_of_turns=6),
+    depth=1,
+    rarity=2,
     usetext="You snap the twig..."
 )
 
@@ -34,6 +41,8 @@ fireball_twig = Item(
     colour=tcod.dark_red,
     name="Burnt Imbued Twig",
     consumable=parts.consumable.FireballDamageConsumable(lower_bound=10, upper_bound=16, radius=3),
+    depth=2,
+    rarity=3,
     usetext="You snap the twig..."
 )
 
@@ -42,14 +51,18 @@ dagger = Item(
     char="/",
     colour=tcod.light_grey,
     name="Dagger",
-    equippable=parts.equippable.Dagger()
+    equippable=parts.equippable.Dagger(),
+    depth = 1,
+    rarity = 1,
 )
 
 longsword = Item(
     char="/",
     colour=tcod.light_grey,
     name="Sword",
-    equippable=parts.equippable.LongSword()
+    equippable=parts.equippable.LongSword(),
+    depth=1,
+    rarity=2,
 )
 
 leather_armor = Item(
@@ -57,13 +70,17 @@ leather_armor = Item(
     colour=tcod.dark_orange,
     name="Leather Armor",
     equippable=parts.equippable.LeatherArmour(),
+    depth=1,
+    rarity=1,
 )
 
 cuirass = Item(
     char="]",
     colour=tcod.silver,
     name="Steel Cuirass",
-    equippable=parts.equippable.Cuirass()
+    equippable=parts.equippable.Cuirass(),
+    depth = 3,
+    rarity = 3,
 )
 
 # def steel_cuirass(x, y):

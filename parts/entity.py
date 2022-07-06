@@ -232,6 +232,8 @@ class Item(Entity):
         name: str = "<Unnamed>",
         consumable: Optional[Consumable] = None,
         equippable: Optional[Equippable] = None,
+        depth = 0,
+        rarity = None,
         usetext: str = "<Undefined>",
     ):
         super().__init__(
@@ -251,6 +253,13 @@ class Item(Entity):
         self.equippable = equippable
         if self.equippable:
             self.equippable.parent = self
+
+        # Item string colour when viewed in a menu. Defaults to object colour
+        self.str_colour = colour
+
+        # Quality
+        self.depth = depth
+        self.rarity = rarity
 
         self.usetext = usetext
 

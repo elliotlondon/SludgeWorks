@@ -12,9 +12,10 @@ import config.colour
 import config.inputs
 import core.actions
 import core.g
-from core.rendering import render_map, render_ui
+import parts.inventory
 from config.exceptions import Impossible
 from core.actions import Action
+from core.rendering import render_map, render_ui
 
 if TYPE_CHECKING:
     from parts.entity import Item
@@ -486,7 +487,7 @@ class InventoryEventHandler(AskUserEventHandler):
         if height <= 3:
             height = 3
 
-        width = len(self.TITLE) + 16
+        width = len(self.TITLE) + 20
         x = console.width // 2 - int(width / 2)
         y = console.height // 2
 
@@ -495,12 +496,12 @@ class InventoryEventHandler(AskUserEventHandler):
             y=y,
             width=width,
             height=height,
-            title=self.TITLE,
+            title='',
             clear=True,
             fg=(255, 255, 255),
             bg=(0, 0, 0),
         )
-        console.print(x + 1, y, f" {self.TITLE} ", fg=(0, 0, 0), bg=(255, 255, 255))
+        console.print(x + 1, y, f" {self.TITLE}. TAB to sort ")
 
         if number_of_items_in_inventory > 0:
             for i, item in enumerate(core.g.engine.player.inventory.items):
@@ -511,7 +512,7 @@ class InventoryEventHandler(AskUserEventHandler):
                 if is_equipped:
                     item_string = f"{item_string} (E)"
 
-                console.print(x + 1, y + i + 1, item_string)
+                console.print(x + 1, y + i + 1, item_string, fg=item.str_colour)
         else:
             console.print(x + 1, y + 1, "(Empty)")
 
@@ -527,6 +528,9 @@ class InventoryEventHandler(AskUserEventHandler):
                 core.g.engine.message_log.add_message("Invalid entry.", config.colour.invalid)
                 return None
             return self.on_item_selected(selected_item)
+        elif key == tcod.event.KeySym.TAB:
+            player.inventory.items = parts.inventory.autosort(player.inventory.items)
+            return None
         return super().ev_keydown(event)
 
     def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:

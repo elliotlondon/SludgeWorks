@@ -17,7 +17,7 @@ from config.exceptions import Impossible
 from core.actions import Action
 
 if TYPE_CHECKING:
-    from lib.entity import Item
+    from parts.entity import Item
 
 ActionOrHandler = Union[Action, "BaseEventHandler"]
 """

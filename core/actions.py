@@ -12,7 +12,7 @@ from utils.random_utils import roll_dice
 import core.g
 
 if TYPE_CHECKING:
-    from lib.entity import Entity, Actor, Item
+    from parts.entity import Entity, Actor, Item
 
 
 class PickupAction(Action):

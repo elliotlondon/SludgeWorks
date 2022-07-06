@@ -9,7 +9,7 @@ from config.exceptions import Impossible
 from gui.message_log import MessageLog
 
 if TYPE_CHECKING:
-    from lib.entity import Actor
+    from parts.entity import Actor
     from maps.game_map import SimpleGameMap, GameWorld
 
 

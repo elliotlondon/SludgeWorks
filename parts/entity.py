@@ -4,11 +4,11 @@ import copy
 import math
 from random import randint
 from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union
-from parts.level import Level
 
 import tcod
 
 from core.render_functions import RenderOrder
+from parts.level import Level
 
 if TYPE_CHECKING:
     from parts.ai import BaseAI
@@ -28,18 +28,19 @@ class Entity:
     """
 
     parent: Union[SimpleGameMap, Inventory]
+
     def __init__(self,
-                parent: Optional[SimpleGameMap] = None,
-                x: int = 0,
-                y: int = 0,
-                char: str = "?",
-                colour: Tuple[int, int, int] = (255, 255, 255),
-                name: str = "<Unnamed>",
-                blocks_movement: bool = False,
-                description = "<Blank>",
-                render_order=RenderOrder.CORPSE,
-                fighter=None, ai=None, item=None, inventory=None, loadout=None,
-                equipment=None, equippable=None, regenerates=False, errasticity=None):
+                 parent: Optional[SimpleGameMap] = None,
+                 x: int = 0,
+                 y: int = 0,
+                 char: str = "?",
+                 colour: Tuple[int, int, int] = (255, 255, 255),
+                 name: str = "<Unnamed>",
+                 blocks_movement: bool = False,
+                 description="<Blank>",
+                 render_order=RenderOrder.CORPSE,
+                 fighter=None, ai=None, item=None, inventory=None, loadout=None,
+                 equipment=None, equippable=None, regenerates=False, errasticity=None):
         self.x = x
         self.y = y
         self.char = char
@@ -115,6 +116,10 @@ class Entity:
         self.y += dy
         self.x += dx
 
+    def teleport(self, x, y) -> None:
+        self.y = y
+        self.x = x
+
     def move_random(self, game_map):
         if randint(0, 100) < self.errasticity:
             dx = randint(-1, 1)
@@ -182,18 +187,18 @@ class Entity:
 
 class Actor(Entity):
     def __init__(
-        self,
-        *,
-        x: int = 0,
-        y: int = 0,
-        char: str = "?",
-        colour: Tuple[int, int, int] = (255, 255, 255),
-        name: str = "<Unnamed>",
-        ai_cls: Type[BaseAI],
-        equipment: Equipment,
-        fighter: Fighter,
-        inventory: Inventory,
-        level: Level,
+            self,
+            *,
+            x: int = 0,
+            y: int = 0,
+            char: str = "?",
+            colour: Tuple[int, int, int] = (255, 255, 255),
+            name: str = "<Unnamed>",
+            ai_cls: Type[BaseAI],
+            equipment: Equipment,
+            fighter: Fighter,
+            inventory: Inventory,
+            level: Level,
     ):
         super().__init__(
             x=x,
@@ -223,18 +228,18 @@ class Actor(Entity):
 
 class Item(Entity):
     def __init__(
-        self,
-        *,
-        x: int = 0,
-        y: int = 0,
-        char: str = "?",
-        colour: Tuple[int, int, int] = (255, 255, 255),
-        name: str = "<Unnamed>",
-        consumable: Optional[Consumable] = None,
-        equippable: Optional[Equippable] = None,
-        depth = 0,
-        rarity = None,
-        usetext: str = "<Undefined>",
+            self,
+            *,
+            x: int = 0,
+            y: int = 0,
+            char: str = "?",
+            colour: Tuple[int, int, int] = (255, 255, 255),
+            name: str = "<Unnamed>",
+            consumable: Optional[Consumable] = None,
+            equippable: Optional[Equippable] = None,
+            depth=0,
+            rarity=None,
+            usetext: str = "<Undefined>",
     ):
         super().__init__(
             x=x,

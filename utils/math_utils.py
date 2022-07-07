@@ -4,6 +4,7 @@ from scipy.ndimage.measurements import label
 
 class Graph:
     """Program to perform depth first search according to value in a boolean 2D matrix."""
+
     def __init__(self, row, col, g):
         self.rows = row
         self.columns = col

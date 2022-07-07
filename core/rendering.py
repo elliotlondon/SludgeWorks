@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-from typing import Any
-
 import numpy as np
 import tcod
-from numpy.typing import NDArray
 
 import config.colour
-from maps.tiles import SHROUD
 import core.engine
-import maps.game_map
 import core.render_functions
+import maps.game_map
+from maps.tiles import SHROUD
+
 
 # tile_graphics: NDArray[Any] = np.array(
 #     [
@@ -82,4 +80,3 @@ def render_ui(console: tcod.Console, engine: core.engine.Engine) -> None:
     )
 
     core.render_functions.render_names_at_mouse_location(console=console, x=21, y=44, engine=engine)
-

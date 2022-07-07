@@ -210,3 +210,39 @@ class ConfusionConsumable(Consumable):
                 entity=target, previous_ai=target.ai, turns_remaining=self.calc_turns,
             )
         self.consume()
+
+
+class TeleportOtherConsumable(Consumable):
+    def get_action(self, consumer: Actor) -> SingleRangedAttackHandler:
+        core.g.engine.message_log.add_message("Select a target location.", config.colour.needs_target)
+        return SingleRangedAttackHandler(callback=lambda xy: ItemAction(consumer, self.parent, xy))
+
+    def activate(self, action: ItemAction) -> None:
+        consumer = action.entity
+        target = action.target_actor
+
+        if not core.g.engine.game_map.visible[action.target_xy]:
+            raise Impossible("You cannot target an area that you cannot see.")
+        if not target:
+            raise Impossible("No enemy at location (You must select an enemy to target).")
+        if target is consumer:
+            raise Impossible("You can't bring yourself to target yourself.")
+
+        # Display message for use whenever Item is consumed
+        core.g.engine.message_log.add_message(self.parent.usetext, config.colour.use)
+
+        # Logic for whether enemy can be teleported
+        if isinstance(target.ai, parts.ai.PassiveStationary) or isinstance(target.ai, parts.ai.HostileStationary):
+            core.g.engine.message_log.add_message(
+                f"The {self.parent.name} has no effect...",
+                config.colour.enemy_evade,
+            )
+        else:
+            core.g.engine.message_log.add_message(f"The space around {target.name} warps and it disappears from view!",
+                                                  config.colour.status_effect_applied,
+                                                  )
+
+            # Get a random walkable tile that is not in the player's FOV
+            random_x, random_y = core.g.engine.game_map.get_random_unoccupied_nonfov_tile()
+            target.teleport(random_x, random_y)
+        self.consume()

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import traceback
-from logging import basicConfig, DEBUG
-
-import tcod
 from pathlib import Path
 
-import core.g
+import tcod
+
 import config.colour
 import config.exceptions
 import config.setup_game
+import core.g
 import core.input_handlers
+
 
 # Enable global debug
 # basicConfig(level=DEBUG)

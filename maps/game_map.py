@@ -51,7 +51,8 @@ class SimpleGameMap:
         yield from (
             entity
             for entity in self.entities
-            if isinstance(entity, parts.entity.Actor) and entity.is_alive and not isinstance(entity.ai, PassiveStationary)
+            if
+            isinstance(entity, parts.entity.Actor) and entity.is_alive and not isinstance(entity.ai, PassiveStationary)
         )
 
     @property
@@ -71,6 +72,13 @@ class SimpleGameMap:
                 return actor
 
         return None
+
+    def get_occupied(self):
+        """Return all tiles which have an entity at their coordinates."""
+        tiles = np.full((self.width, self.height), fill_value=False, order="F")
+        for actor in self.actors:
+            tiles[actor.x, actor.y] = True
+        return tiles
 
     def in_bounds(self, x: int, y: int) -> bool:
         """Return True if x and y are within map bounds."""
@@ -93,6 +101,16 @@ class SimpleGameMap:
         index = random.randint(0, len(walkable[0]) - 1)
         x = walkable[0][index]
         y = walkable[1][index]
+
+        return (x, y)
+
+    def get_random_unoccupied_nonfov_tile(self) -> Tuple[int, int]:
+        """Return the coordinates of a random walkable tile within the current floor."""
+        walkable = np.logical_and(self.tiles['walkable'], self.tiles['name'] != 'hole')
+        unoccupied = np.nonzero(np.logical_xor(walkable, self.get_occupied()))
+        index = random.randint(0, len(unoccupied[0]) - 1)
+        x = unoccupied[0][index]
+        y = unoccupied[1][index]
 
         return (x, y)
 

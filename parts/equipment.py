@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
 
+import core.g
 from parts.base_component import BaseComponent
 from parts.equipment_types import EquipmentType
-import core.g
 
 if TYPE_CHECKING:
     from entity import Actor, Item
@@ -177,4 +177,3 @@ class Equipment(BaseComponent):
     #                 setattr(entity.equipment, x.lower(), None)
     #             else:
     #                 setattr(entity.equipment, x.lower(), equippable_entity)
-

@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+import random
 from typing import TYPE_CHECKING
 
 import tcod
-import random
 
+import core.g
 from config.colour import player_die, enemy_die
 from core.render_functions import RenderOrder
+from maps.tiles import verdant_chars
 from parts.ai import HostileStationary, PassiveStationary
 from parts.base_component import BaseComponent
 from utils.random_utils import roll_dice, dnd_bonus_calc
-import core.g
-from maps.tiles import verdant_chars
 
 if TYPE_CHECKING:
     from entity import Actor

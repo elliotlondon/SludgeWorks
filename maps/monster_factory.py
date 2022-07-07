@@ -4,10 +4,10 @@ import tcod
 
 from parts.ai import HostileEnemy, NPC, HostileStationary, PassiveStationary
 from parts.entity import Actor
+from parts.equipment import Equipment
 from parts.fighter import Fighter
 from parts.inventory import Inventory
 from parts.level import Level
-from parts.equipment import Equipment
 
 # Player
 player = Actor(char="@", colour=(255, 255, 255), name="Player",
@@ -32,11 +32,11 @@ whip_vine = Actor(char='V', colour=(150, 50, 100), name='Whip Vine', ai_cls=Host
                   level=Level(xp_given=25))
 bluebell = Actor(char='b', colour=tcod.light_azure, name='Glowing Bluebells',
                  ai_cls=PassiveStationary, equipment=Equipment(),
-               fighter=Fighter(hp=1, max_hp=1, damage_dice=0, damage_sides=0, armour=0,
-                               strength=0, dexterity=0, vitality=10, intellect=0, perception=16, xp=0,
-                               dodges=False),
-               inventory=Inventory(capacity=0),
-               level=Level(xp_given=0))
+                 fighter=Fighter(hp=1, max_hp=1, damage_dice=0, damage_sides=0, armour=0,
+                                 strength=0, dexterity=0, vitality=10, intellect=0, perception=16, xp=0,
+                                 dodges=False),
+                 inventory=Inventory(capacity=0),
+                 level=Level(xp_given=0))
 
 # Scavengers
 wretch = Actor(char='w', colour=(127, 0, 0), name="Wretch",

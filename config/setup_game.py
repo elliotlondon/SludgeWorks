@@ -63,6 +63,11 @@ def new_game() -> Engine:
     player.inventory.items.append(leather_armor)
     player.equipment.toggle_equip(leather_armor, add_message=False)
 
+    # Debug stuff
+    twig = copy.deepcopy(maps.item_factory.teleother_twig)
+    twig.parent = player.inventory
+    player.inventory.items.append(twig)
+
     core.g.engine = engine
     return engine
 

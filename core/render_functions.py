@@ -190,6 +190,7 @@ def render_all(con, panel, player, entities, game_map, message_log, hp_bar, xp_b
     elif GameStates.current_state == GameStates.HELP_MENU:
         help_menu(con, root_width, root_height, root_width, root_height)
 
+
 # TODO: Implement movable screen depending upon map size
 def move_camera(player, game_map, game_window_width, game_window_height):
     if player.x < int(game_window_width / 2):

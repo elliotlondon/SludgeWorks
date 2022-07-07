@@ -350,6 +350,7 @@ class MainGameEventHandler(EventHandler):
 
 class AskUserEventHandler(EventHandler):
     """Handles user input for actions which require special input."""
+
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         """By default any key exits this input handler."""
         if event.sym in {  # Ignore modifier keys.
@@ -584,6 +585,7 @@ class InventoryDropHandler(InventoryEventHandler):
 
 class SelectIndexHandler(AskUserEventHandler):
     """Handles asking the user for an index on the map."""
+
     def __init__(self):
         """Sets the cursor to the player when this handler is constructed."""
         super().__init__()
@@ -663,6 +665,7 @@ class SelectIndexHandler(AskUserEventHandler):
 
 class LookHandler(SelectIndexHandler):
     """Lets the player look around using the keyboard."""
+
     def on_index_selected(self, x: int, y: int) -> MainGameEventHandler:
         """Return to main handler."""
         return MainGameEventHandler()
@@ -670,6 +673,7 @@ class LookHandler(SelectIndexHandler):
 
 class SingleRangedAttackHandler(SelectIndexHandler):
     """Handles targeting a single enemy. Only the enemy selected will be affected."""
+
     def __init__(self, callback: Callable[[Tuple[int, int]], Optional[Action]]):
         super().__init__()
         self.callback = callback
@@ -680,6 +684,7 @@ class SingleRangedAttackHandler(SelectIndexHandler):
 
 class AreaRangedAttackHandler(SelectIndexHandler):
     """Handles targeting an area within a given radius. Any entity within the area will be affected."""
+
     def __init__(self, radius: int, callback: Callable[[Tuple[int, int]], Optional[Action]]):
         super().__init__()
 
@@ -815,7 +820,6 @@ class HistoryViewer(EventHandler):
         else:  # Any other key moves back to the main game state.
             return MainGameEventHandler()
         return None
-
 
 # TODO: Restore autoexplore
 # TODO: Restore autostairs

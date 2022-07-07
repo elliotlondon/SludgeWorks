@@ -1,8 +1,7 @@
 import tcod
 
-import config.colour
-import parts.equippable
 import parts.consumable
+import parts.equippable
 from parts.entity import Item
 
 # Consumables
@@ -46,14 +45,24 @@ fireball_twig = Item(
     usetext="You snap the twig..."
 )
 
+teleother_twig = Item(
+    char="√",
+    colour=tcod.light_blue,
+    name="Repelling Imbued Twig",
+    consumable=parts.consumable.TeleportOtherConsumable(),
+    depth=2,
+    rarity=3,
+    usetext="You snap the twig..."
+)
+
 # Equipment
 dagger = Item(
     char="/",
     colour=tcod.light_grey,
     name="Dagger",
     equippable=parts.equippable.Dagger(),
-    depth = 1,
-    rarity = 1,
+    depth=1,
+    rarity=1,
 )
 
 longsword = Item(
@@ -79,8 +88,8 @@ cuirass = Item(
     colour=tcod.silver,
     name="Steel Cuirass",
     equippable=parts.equippable.Cuirass(),
-    depth = 3,
-    rarity = 3,
+    depth=3,
+    rarity=3,
 )
 
 # def steel_cuirass(x, y):

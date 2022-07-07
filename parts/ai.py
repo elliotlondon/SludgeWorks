@@ -65,15 +65,8 @@ class HostileEnemy(BaseAI):
                 return MeleeAction(self.entity, dx, dy).perform()
 
             self.path = self.get_path_to(target.x, target.y)
-
-        if self.path:
-            dest_x, dest_y = self.path.pop(0)
-            return MovementAction(
-                self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
-            ).perform()
-
         # Wander: either wait or move randomly
-        if randint(0, 100) <= 50:
+        elif randint(0, 100) <= 50:
             return WaitAction(self.entity).perform()
         else:
             dest_x = self.entity.x + randint(-1, 1)
@@ -82,6 +75,12 @@ class HostileEnemy(BaseAI):
                 return MovementAction(self.entity, dest_x - self.entity.x, dest_y - self.entity.y).perform()
             else:
                 return WaitAction(self.entity).perform()
+
+        if self.path:
+            dest_x, dest_y = self.path.pop(0)
+            return MovementAction(
+                self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+            ).perform()
 
 
 class HostileStationary(BaseAI):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import random
 from typing import Optional, TYPE_CHECKING
 
@@ -9,7 +10,7 @@ import parts.ai
 import parts.inventory
 from config.exceptions import Impossible
 from core.actions import ItemAction
-from core.input_handlers import ActionOrHandler, AreaRangedAttackHandler, SingleRangedAttackHandler
+import core.input_handlers
 from parts.base_component import BaseComponent
 from utils.random_utils import dnd_bonus_calc
 
@@ -24,7 +25,7 @@ class Consumable(BaseComponent):
         assert isinstance(self.parent, parts.entity.Item)
         return self.parent
 
-    def get_action(self, consumer: Actor) -> Optional[ActionOrHandler]:
+    def get_action(self, consumer: Actor) -> Optional[core.input_handlers.ActionOrHandler]:
         """Try to return the action for this item."""
         return ItemAction(consumer, self.parent)
 
@@ -93,11 +94,11 @@ class FireballDamageConsumable(Consumable):
     def damage(self):
         return random.randint(self.lower_bound, self.upper_bound)
 
-    def get_action(self, consumer: Actor) -> AreaRangedAttackHandler:
+    def get_action(self, consumer: Actor) -> core.input_handlers.AreaRangedAttackHandler:
         core.g.engine.message_log.add_message(
             "Select a target location.", config.colour.needs_target
         )
-        return AreaRangedAttackHandler(
+        return core.input_handlers.AreaRangedAttackHandler(
             radius=self.radius,
             callback=lambda xy: ItemAction(consumer, self.parent, xy),
         )
@@ -175,9 +176,9 @@ class ConfusionConsumable(Consumable):
             self.save_bonus = 0
         return self.base_turns - self.save_bonus
 
-    def get_action(self, consumer: Actor) -> SingleRangedAttackHandler:
+    def get_action(self, consumer: Actor) -> core.input_handlers.SingleRangedAttackHandler:
         core.g.engine.message_log.add_message("Select a target location.", config.colour.needs_target)
-        return SingleRangedAttackHandler(callback=lambda xy: ItemAction(consumer, self.parent, xy))
+        return core.input_handlers.SingleRangedAttackHandler(callback=lambda xy: ItemAction(consumer, self.parent, xy))
 
     def activate(self, action: ItemAction) -> None:
         consumer = action.entity
@@ -213,9 +214,9 @@ class ConfusionConsumable(Consumable):
 
 
 class TeleportOtherConsumable(Consumable):
-    def get_action(self, consumer: Actor) -> SingleRangedAttackHandler:
+    def get_action(self, consumer: Actor) -> core.input_handlers.TeleotherEventHandler:
         core.g.engine.message_log.add_message("Select a target location.", config.colour.needs_target)
-        return SingleRangedAttackHandler(callback=lambda xy: ItemAction(consumer, self.parent, xy))
+        return core.input_handlers.TeleotherEventHandler(callback=lambda xy: ItemAction(consumer, self.parent, xy))
 
     def activate(self, action: ItemAction) -> None:
         consumer = action.entity

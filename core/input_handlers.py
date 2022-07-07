@@ -712,6 +712,17 @@ class AreaRangedAttackHandler(SelectIndexHandler):
         return self.callback((x, y))
 
 
+class TeleotherEventHandler(SelectIndexHandler):
+    """Handles targeting a single enemy. Only the enemy selected will be affected."""
+
+    def __init__(self, callback: Callable[[Tuple[int, int]], Optional[Action]]):
+        super().__init__()
+        self.callback = callback
+
+    def on_index_selected(self, x: int, y: int) -> Optional[Action]:
+        return self.callback((x, y))
+
+
 class HoleJumpEventHandler(AskUserEventHandler):
     TITLE = "<Untitled>"
 

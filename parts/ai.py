@@ -48,6 +48,18 @@ class BaseAI(Action):
         # Convert from List[List[int]] to List[Tuple[int, int]].
         return [(index[0], index[1]) for index in path]
 
+    def path_isvalid(self, path) -> bool:
+        """Helper tool to find out whether a path is valid. This is important as teleportation
+        and forced movement actions can cause the path to move entities to incorrect tiles."""
+
+        next_x = abs(self.entity.x - path[0][0])
+        next_y = abs(self.entity.y - path[0][1])
+
+        if next_x > 1 or next_y > 1:
+            return False
+        else:
+            return True
+
 
 class HostileEnemy(BaseAI):
     def __init__(self, entity: Actor):
@@ -65,8 +77,18 @@ class HostileEnemy(BaseAI):
                 return MeleeAction(self.entity, dx, dy).perform()
 
             self.path = self.get_path_to(target.x, target.y)
+
+        if self.path:
+            if not self.path_isvalid(self.path):
+                self.path = None
+            else:
+                dest_x, dest_y = self.path.pop(0)
+                return MovementAction(
+                    self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+                ).perform()
+
         # Wander: either wait or move randomly
-        elif randint(0, 100) <= 50:
+        if randint(0, 100) <= 50:
             return WaitAction(self.entity).perform()
         else:
             dest_x = self.entity.x + randint(-1, 1)
@@ -75,12 +97,6 @@ class HostileEnemy(BaseAI):
                 return MovementAction(self.entity, dest_x - self.entity.x, dest_y - self.entity.y).perform()
             else:
                 return WaitAction(self.entity).perform()
-
-        if self.path:
-            dest_x, dest_y = self.path.pop(0)
-            return MovementAction(
-                self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
-            ).perform()
 
 
 class HostileStationary(BaseAI):

@@ -5,6 +5,16 @@ import parts.equippable
 from parts.entity import Item
 
 # Consumables
+surface_medkit = Item(
+    char='+',
+    colour=tcod.light_red,
+    name="Surface Medkit",
+    consumable=parts.consumable.HealingConsumable(5),
+    depth=0,
+    rarity=1,
+    usetext="You use the medkit to heal yourself."
+)
+
 healing_mud = Item(
     char="‼",
     colour=tcod.orange,

@@ -6,6 +6,7 @@ from typing import Dict, Tuple, Iterator, List, TYPE_CHECKING
 
 import numpy as np
 
+from maps.game_map import GameWorld
 import config.colour
 import maps.item_factory
 import maps.monster_factory
@@ -229,6 +230,58 @@ class RectangularRoom:
         )
 
 
+def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map_width: int, map_height: int,
+                     engine: Engine) -> SimpleGameMap:
+    """
+    Generate a new dungeon map.
+    """
+    player = engine.player
+    cave_smoothing = engine.game_world.cave_smoothing
+    cave_p = engine.game_world.cave_p
+
+    tries = 1
+    while tries <= 10:
+        # Initialize map
+        dungeon = SimpleGameMap(engine, map_width, map_height, entities=[player])
+        dungeon = add_caves(dungeon, smoothing=cave_smoothing, p=cave_p)
+        dungeon = add_rooms(dungeon, max_rooms, room_min_size, room_max_size)
+
+        # Smooth edges
+        # dungeon = erode(dungeon, 1)
+
+        # Add rocks/water
+        dungeon = add_rubble(dungeon, events=7)
+        dungeon = add_hazards(dungeon, floods=5, holes=3)
+        dungeon = add_features(dungeon)
+
+        # Place player
+        engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
+
+        # Populate dungeon
+        place_flora(dungeon, engine.game_world.current_floor, areas=3)
+        place_fauna(dungeon, engine.game_world.current_floor)
+        place_items(dungeon, engine.game_world.current_floor)
+
+        # Finally, add stairs
+        dungeon = add_stairs(dungeon)
+        if isinstance(dungeon, SimpleGameMap):
+            # Mapgen successful, use this floor
+
+            # Calculate accessible area for future use
+            dungeon.accessible = dungeon.calc_accessible()
+
+            return dungeon
+        elif isinstance(dungeon, MapGenError):
+            # Mapgen unsuccessful, try again until max tries are reached
+            if logging.DEBUG >= logging.root.level:
+                print(f"DEBUG: Floor generation failed. Attempt: {tries}.", config.colour.debug)
+            tries += 1
+            continue
+
+    # Something went wrong with mapgen, sysexit
+    raise FatalMapGenError(f"Dungeon generation failed! Reason: floor attempts exceeded.")
+
+
 def place_flora(dungeon: SimpleGameMap, floor_number: int, areas: int) -> None:
     """
     Fill the current floor with plants, both hostile and decorative.
@@ -359,56 +412,6 @@ def tunnel_between(start: Tuple[int, int], end: Tuple[int, int]) -> Iterator[Tup
         yield x, y
     for x, y in tcod.los.bresenham((corner_x, corner_y), (x2, y2)).tolist():
         yield x, y
-
-
-def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map_width: int, map_height: int,
-                     engine: Engine) -> SimpleGameMap:
-    """
-    Generate a new dungeon map.
-    """
-    player = engine.player
-
-    tries = 1
-    while tries <= 10:
-        # Initialize map
-        dungeon = SimpleGameMap(engine, map_width, map_height, entities=[player])
-        dungeon = add_caves(dungeon, smoothing=1, p=60)
-        dungeon = add_rooms(dungeon, max_rooms, room_min_size, room_max_size)
-
-        # Smooth edges
-        # dungeon = erode(dungeon, 1)
-
-        # Add rocks/water
-        dungeon = add_rubble(dungeon, events=7)
-        dungeon = add_hazards(dungeon, floods=5, holes=3)
-        dungeon = add_features(dungeon)
-
-        # Place player
-        engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
-
-        # Populate dungeon
-        place_flora(dungeon, engine.game_world.current_floor, areas=3)
-        place_fauna(dungeon, engine.game_world.current_floor)
-        place_items(dungeon, engine.game_world.current_floor)
-
-        # Finally, add stairs
-        dungeon = add_stairs(dungeon)
-        if isinstance(dungeon, SimpleGameMap):
-            # Mapgen successful, use this floor
-
-            # Calculate accessible area for future use
-            dungeon.accessible = dungeon.calc_accessible()
-
-            return dungeon
-        elif isinstance(dungeon, MapGenError):
-            # Mapgen unsuccessful, try again until max tries are reached
-            if logging.DEBUG >= logging.root.level:
-                print(f"DEBUG: Floor generation failed. Attempt: {tries}.", config.colour.debug)
-            tries += 1
-            continue
-
-    # Something went wrong with mapgen, sysexit
-    raise FatalMapGenError(f"Dungeon generation failed! Reason: floor attempts exceeded.")
 
 
 def add_rooms(dungeon: SimpleGameMap, max_rooms: int,

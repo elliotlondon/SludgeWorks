@@ -24,38 +24,35 @@ background_image = tcod.image.load("assets/sludge_background.png")[:, :, :3]
 
 def new_game() -> Engine:
     """Return a brand new game session as an Engine instance."""
-    map_width = 80
-    map_height = 43
-
-    room_max_size = 10
-    room_min_size = 6
-    max_rooms = 25
 
     player = copy.deepcopy(maps.monster_factory.player)
-
     engine = Engine(player=player)
 
+    # Settings for the first floor go here
     engine.game_world = GameWorld(
-        engine=engine,
-        max_rooms=max_rooms,
-        room_min_size=room_min_size,
-        room_max_size=room_max_size,
-        map_width=map_width,
-        map_height=map_height,
+        max_rooms=25,
+        room_min_size=6,
+        room_max_size=10,
+        map_width=80,
+        map_height=43,
+        engine=engine
     )
     engine.game_world.generate_floor()
     engine.update_fov()
 
     engine.message_log.add_message(
-        "You enter the Sludgeworks, unable to climb back out. You must progress deeper...", config.colour.welcome_text
+        "You enter the Sludgeworks, unable to climb back out. "
+        "Your only choice is to descend...", config.colour.welcome_text
     )
 
     # Spawn starting player equipment
     dagger = copy.deepcopy(maps.item_factory.dagger)
     leather_armor = copy.deepcopy(maps.item_factory.leather_armor)
+    medkit = copy.deepcopy(maps.item_factory.surface_medkit)
 
     dagger.parent = player.inventory
     leather_armor.parent = player.inventory
+    medkit.parent = player.inventory
 
     player.inventory.items.append(dagger)
     player.equipment.toggle_equip(dagger, add_message=False)
@@ -63,10 +60,12 @@ def new_game() -> Engine:
     player.inventory.items.append(leather_armor)
     player.equipment.toggle_equip(leather_armor, add_message=False)
 
-    # Debug stuff
-    twig = copy.deepcopy(maps.item_factory.teleother_twig)
-    twig.parent = player.inventory
-    player.inventory.items.append(twig)
+    player.inventory.items.extend([medkit, medkit])
+
+    # # Debug stuff
+    # twig = copy.deepcopy(maps.item_factory.teleother_twig)
+    # twig.parent = player.inventory
+    # player.inventory.items.append(twig)
 
     core.g.engine = engine
     return engine

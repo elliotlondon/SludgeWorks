@@ -36,23 +36,3 @@ class Equippable:
         """Pass in a slot object and get its name as a nice string in return"""
         string = str(slot).replace('EquipmentType.', '').replace('_', ' ')
         return string
-
-
-class Dagger(Equippable):
-    def __init__(self) -> None:
-        super().__init__(equipment_type=EquipmentType.Main_Hand, damage_dice=1, damage_sides=3)
-
-
-class LongSword(Equippable):
-    def __init__(self) -> None:
-        super().__init__(equipment_type=EquipmentType.Main_Hand, damage_dice=1, damage_sides=4, strength_bonus=1)
-
-
-class LeatherArmour(Equippable):
-    def __init__(self) -> None:
-        super().__init__(equipment_type=EquipmentType.Head, armour_bonus=1)
-
-
-class Cuirass(Equippable):
-    def __init__(self) -> None:
-        super().__init__(equipment_type=EquipmentType.Torso, armour_bonus=3)

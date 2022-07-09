@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import copy
 import math
 from random import randint
@@ -40,7 +41,7 @@ class Entity:
                  description="<Blank>",
                  render_order=RenderOrder.CORPSE,
                  fighter=None, ai=None, item=None, inventory=None, loadout=None,
-                 equipment=None, equippable=None, regenerates=False, errasticity=None):
+                 equipment=None, equippable=None):
         self.x = x
         self.y = y
         self.char = char
@@ -60,8 +61,6 @@ class Entity:
         self.loadout = loadout
         self.equipment = equipment
         self.equippable = equippable
-        self.regenerates = regenerates
-        self.errasticity = errasticity
 
         if self.fighter:
             self.fighter.owner = self
@@ -119,15 +118,6 @@ class Entity:
     def teleport(self, x, y) -> None:
         self.y = y
         self.x = x
-
-    def move_random(self, game_map):
-        if randint(0, 100) < self.errasticity:
-            dx = randint(-1, 1)
-            dy = randint(-1, 1)
-            if not game_map.is_blocked(self.x + dx, self.y + dy):
-                self.y += dy
-            if not game_map.is_blocked(self.x + dx, self.y):
-                self.x += dx
 
     def move_towards(self, target_x, target_y, game_map, entities):
         dx = target_x - self.x

@@ -1,106 +1,102 @@
-import tcod
+import json
 
 import parts.consumable
 import parts.equippable
+from config.exceptions import DataLoadError
 from parts.entity import Item
+from parts.equipment_types import EquipmentType
+from parts.equippable import Equippable
 
-# Consumables
-surface_medkit = Item(
-    char='+',
-    colour=tcod.light_red,
-    name="Surface Medkit",
-    consumable=parts.consumable.HealingConsumable(5),
-    depth=0,
-    rarity=1,
-    usetext="You use the medkit to heal yourself."
-)
 
-healing_mud = Item(
-    char="‼",
-    colour=tcod.orange,
-    name="Healing Mud",
-    consumable=parts.consumable.RandomHealConsumable(8, 12),
-    depth=1,
-    rarity=1,
-    usetext="You slather yourself in the healing mud..."
-)
+def create_item_from_json(path: str, request: str) -> Item:
+    f = open(path)
+    consumables_dict = json.load(f)
 
-lightning_twig = Item(
-    char="√",
-    colour=tcod.dark_yellow,
-    name="Crackling Imbued Twig",
-    consumable=parts.consumable.LightningDamageConsumable(damage=20, maximum_range=5),
-    depth=1,
-    rarity=2,
-    usetext="You snap the twig..."
-)
+    for i in range(len(consumables_dict)):
+        if request in consumables_dict[i]:
+            data = consumables_dict[i][request]
 
-confusing_twig = Item(
-    char="√",
-    colour=tcod.dark_fuchsia,
-    name="Warping Imbued Twig",
-    consumable=parts.consumable.ConfusionConsumable(number_of_turns=6),
-    depth=1,
-    rarity=2,
-    usetext="You snap the twig..."
-)
+            # Determine item type
+            if 'equipment_type' in data:
+                item = create_equipment(data)
+            elif 'consumable' in data:
+                item = create_consumable(data)
+            else:
+                raise DataLoadError
+            return item
 
-fireball_twig = Item(
-    char="√",
-    colour=tcod.dark_red,
-    name="Burnt Imbued Twig",
-    consumable=parts.consumable.FireballDamageConsumable(lower_bound=10, upper_bound=16, radius=3),
-    depth=2,
-    rarity=3,
-    usetext="You snap the twig..."
-)
 
-teleother_twig = Item(
-    char="√",
-    colour=tcod.light_blue,
-    name="Repelling Imbued Twig",
-    consumable=parts.consumable.TeleportOtherConsumable(),
-    depth=2,
-    rarity=3,
-    usetext="You snap the twig..."
-)
+def create_equipment(data) -> Item:
+    # Find out which slot the item goes in
+    equipment_type = data['equipment_type']
+    if "MainHand" in equipment_type:
+        equipment_type = EquipmentType.Main_Hand
+    elif "OffHand" in equipment_type:
+        equipment_type = EquipmentType.Off_Hand
+    elif "Head" in equipment_type:
+        equipment_type = EquipmentType.Head
+    elif "Torso" in equipment_type:
+        equipment_type = EquipmentType.Torso
+    elif "Hands" in equipment_type:
+        equipment_type = EquipmentType.Hands
+    elif "Legs" in equipment_type:
+        equipment_type = EquipmentType.Legs
+    elif "Feet" in equipment_type:
+        equipment_type = EquipmentType.Feet
+    elif "Left_Ring" in equipment_type:
+        equipment_type = EquipmentType.Left_Ring
+    elif "Right_Ring" in equipment_type:
+        equipment_type = EquipmentType.Right_Ring
 
-# Equipment
-dagger = Item(
-    char="/",
-    colour=tcod.light_grey,
-    name="Dagger",
-    equippable=parts.equippable.Dagger(),
-    depth=1,
-    rarity=1,
-)
+    item = Item(
+        char=data['char'],
+        colour=(data['colour'][0], data['colour'][1], data['colour'][2]),
+        name=data['name'],
+        equippable=Equippable(
+            equipment_type=equipment_type,
+            damage_dice=data['equipment']['damage_dice'],
+            damage_sides=data['equipment']['damage_sides'],
+            strength_bonus=data['equipment']['strength_bonus'],
+            dexterity_bonus=data['equipment']['dexterity_bonus'],
+            vitality_bonus=data['equipment']['vitality_bonus'],
+            intellect_bonus=data['equipment']['intellect_bonus']
+        ),
+        depth=data['depth'],
+        rarity=data['rarity']
+    )
+    return item
 
-longsword = Item(
-    char="/",
-    colour=tcod.light_grey,
-    name="Sword",
-    equippable=parts.equippable.LongSword(),
-    depth=1,
-    rarity=2,
-)
 
-leather_armor = Item(
-    char="]",
-    colour=tcod.dark_orange,
-    name="Leather Armor",
-    equippable=parts.equippable.LeatherArmour(),
-    depth=1,
-    rarity=1,
-)
+def create_consumable(data: dict) -> Item:
+    # Unpack non-json values
+    if "Healing" in data['consumable']['type']:
+        consumable = parts.consumable.HealingConsumable(data['consumable']['amount'])
+    elif "RandomHeal" in data['consumable']['type']:
+        consumable = parts.consumable.RandomHealConsumable(data['consumable']['upper_bound'],
+                                                           data['consumable']['lower_bound'])
+    elif "Lightning" in data['consumable']['type']:
+        consumable = parts.consumable.LightningDamageConsumable(data['consumable']['upper_bound'],
+                                                                data['consumable']['lower_bound'],
+                                                                data['consumable']['range'])
+    elif "Confusion" in data['consumable']['type']:
+        consumable = parts.consumable.ConfusionConsumable(data['consumable']['number_of_turns'])
+    elif "Fireball" in data['consumable']['type']:
+        consumable = parts.consumable.FireballDamageConsumable(data['consumable']['upper_bound'],
+                                                               data['consumable']['lower_bound'],
+                                                               data['consumable']['radius'])
+    elif "Teleother" in data['consumable']['type']:
+        consumable = parts.consumable.TeleportOtherConsumable()
 
-cuirass = Item(
-    char="]",
-    colour=tcod.silver,
-    name="Steel Cuirass",
-    equippable=parts.equippable.Cuirass(),
-    depth=3,
-    rarity=3,
-)
+    item = Item(
+        char=data['char'],
+        colour=(data['colour'][0], data['colour'][1], data['colour'][2]),
+        name=data['name'],
+        consumable=consumable,
+        depth=data['depth'],
+        rarity=data['rarity'],
+        usetext=data['usetext']
+    )
+    return item
 
 # def steel_cuirass(x, y):
 #     equippable_component = Equippable(EquipmentSlots.Torso, armour_bonus=3)

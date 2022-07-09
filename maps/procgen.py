@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+import copy
+import json
 import logging
 import random
 from typing import Dict, Tuple, Iterator, List, TYPE_CHECKING
 
 import numpy as np
 
-from maps.game_map import GameWorld
 import config.colour
-import maps.item_factory
-import maps.monster_factory
+from data.item_factory import create_item_from_json
+import data.monster_factory
 import maps.tiles
 from config.exceptions import MapGenError, FatalMapGenError
 from maps.game_map import SimpleGameMap
@@ -40,25 +41,6 @@ max_monsters_by_floor = [
     (4, 50),
 ]
 
-item_chances: Dict[int, List[Tuple[Entity, int]]] = {
-    0: [(maps.item_factory.healing_mud, 50),
-        (maps.item_factory.confusing_twig, 5),
-        (maps.item_factory.lightning_twig, 5)],
-    1: [(maps.item_factory.longsword, 10)],
-    2: [(maps.item_factory.fireball_twig, 5)],
-    3: [(maps.item_factory.longsword, 5),
-        (maps.item_factory.cuirass, 5)],
-    4: [(maps.item_factory.longsword, 0),
-        (maps.item_factory.confusing_twig, 10),
-        (maps.item_factory.lightning_twig, 10),
-        (maps.item_factory.fireball_twig, 5)],
-    5: [(maps.item_factory.cuirass, 10)],
-    6: [(maps.item_factory.lightning_twig, 15),
-        (maps.item_factory.fireball_twig, 10)],
-    7: [(maps.item_factory.cuirass, 5)],
-    8: [(maps.item_factory.cuirass, 0)]
-}
-
 # item_chances = {
 #     'steel_longsword': from_dungeon_level([[5, 2], [10, 3], [15, 4], [10, 5], [5, 6], [0, 7]],
 #                                           self.dungeon_level),
@@ -80,73 +62,73 @@ item_chances: Dict[int, List[Tuple[Entity, int]]] = {
 # }
 
 monster_chances: Dict[int, List[Tuple[Entity, int]]] = {
-    0: [(maps.monster_factory.wretch, 80),
-        (maps.monster_factory.sludge_fiend, 35),
-        (maps.monster_factory.risen_sacrifice, 10)],
-    2: [(maps.monster_factory.moire_beast, 3),
-        (maps.monster_factory.lupine_terror, 1),
-        (maps.monster_factory.risen_sacrifice, 10),
-        (maps.monster_factory.hunchback, 10),
-        (maps.monster_factory.celebrant, 10),
-        (maps.monster_factory.kidnapper, 10)],
-    3: [(maps.monster_factory.moire_beast, 5),
-        (maps.monster_factory.lupine_terror, 5),
-        (maps.monster_factory.hunchback, 10),
-        (maps.monster_factory.celebrant, 25),
-        (maps.monster_factory.kidnapper, 10)],
-    4: [(maps.monster_factory.wretch, 35),
-        (maps.monster_factory.sludge_fiend, 50),
-        (maps.monster_factory.thresher, 5),
-        (maps.monster_factory.moire_beast, 10),
-        (maps.monster_factory.lupine_terror, 10),
-        (maps.monster_factory.bloodseeker, 1),
-        (maps.monster_factory.hunchback, 30),
-        (maps.monster_factory.kidnapper, 20),
-        (maps.monster_factory.crusader, 5)],
-    5: [(maps.monster_factory.wretch, 35),
-        (maps.monster_factory.purifier, 5),
-        (maps.monster_factory.duelist, 5)],
-    6: [(maps.monster_factory.wretch, 20),
-        (maps.monster_factory.sludge_fiend, 35),
-        (maps.monster_factory.thresher, 15),
-        (maps.monster_factory.moire_beast, 20),
-        (maps.monster_factory.lupine_terror, 25),
-        (maps.monster_factory.bloodseeker, 3),
-        (maps.monster_factory.hunchback, 50),
-        (maps.monster_factory.risen_sacrifice, 30),
-        (maps.monster_factory.celebrant, 30),
-        (maps.monster_factory.kidnapper, 40),
-        (maps.monster_factory.crusader, 15),
-        (maps.monster_factory.purifier, 10)],
-    7: [(maps.monster_factory.risen_sacrifice, 15),
-        (maps.monster_factory.celebrant, 15),
-        (maps.monster_factory.duelist, 10)],
-    8: [(maps.monster_factory.wretch, 10),
-        (maps.monster_factory.sludge_fiend, 10),
-        (maps.monster_factory.thresher, 30),
-        (maps.monster_factory.moire_beast, 25),
-        (maps.monster_factory.lupine_terror, 30),
-        (maps.monster_factory.bloodseeker, 5),
-        (maps.monster_factory.hunchback, 40),
-        (maps.monster_factory.kidnapper, 20),
-        (maps.monster_factory.crusader, 30),
-        (maps.monster_factory.purifier, 20),
-        (maps.monster_factory.duelist, 25),
-        (maps.monster_factory.alanwric, 5),
-        (maps.monster_factory.teague, 5),
-        (maps.monster_factory.dymacia, 5)],
-    10: [(maps.monster_factory.wretch, 0),
-         (maps.monster_factory.sludge_fiend, 0),
-         (maps.monster_factory.thresher, 50),
-         (maps.monster_factory.crusader, 50),
-         (maps.monster_factory.purifier, 50),
-         (maps.monster_factory.duelist, 50)]
+    0: [(data.monster_factory.wretch, 80),
+        (data.monster_factory.sludge_fiend, 35),
+        (data.monster_factory.risen_sacrifice, 10)],
+    2: [(data.monster_factory.moire_beast, 3),
+        (data.monster_factory.lupine_terror, 1),
+        (data.monster_factory.risen_sacrifice, 10),
+        (data.monster_factory.hunchback, 10),
+        (data.monster_factory.celebrant, 10),
+        (data.monster_factory.kidnapper, 10)],
+    3: [(data.monster_factory.moire_beast, 5),
+        (data.monster_factory.lupine_terror, 5),
+        (data.monster_factory.hunchback, 10),
+        (data.monster_factory.celebrant, 25),
+        (data.monster_factory.kidnapper, 10)],
+    4: [(data.monster_factory.wretch, 35),
+        (data.monster_factory.sludge_fiend, 50),
+        (data.monster_factory.thresher, 5),
+        (data.monster_factory.moire_beast, 5),
+        (data.monster_factory.lupine_terror, 10),
+        (data.monster_factory.bloodseeker, 1),
+        (data.monster_factory.hunchback, 30),
+        (data.monster_factory.kidnapper, 20),
+        (data.monster_factory.crusader, 5)],
+    5: [(data.monster_factory.wretch, 35),
+        (data.monster_factory.purifier, 5),
+        (data.monster_factory.duelist, 5)],
+    6: [(data.monster_factory.wretch, 20),
+        (data.monster_factory.sludge_fiend, 35),
+        (data.monster_factory.thresher, 15),
+        (data.monster_factory.moire_beast, 20),
+        (data.monster_factory.lupine_terror, 25),
+        (data.monster_factory.bloodseeker, 3),
+        (data.monster_factory.hunchback, 50),
+        (data.monster_factory.risen_sacrifice, 30),
+        (data.monster_factory.celebrant, 30),
+        (data.monster_factory.kidnapper, 40),
+        (data.monster_factory.crusader, 15),
+        (data.monster_factory.purifier, 10)],
+    7: [(data.monster_factory.risen_sacrifice, 15),
+        (data.monster_factory.celebrant, 15),
+        (data.monster_factory.duelist, 10)],
+    8: [(data.monster_factory.wretch, 10),
+        (data.monster_factory.sludge_fiend, 10),
+        (data.monster_factory.thresher, 30),
+        (data.monster_factory.moire_beast, 25),
+        (data.monster_factory.lupine_terror, 30),
+        (data.monster_factory.bloodseeker, 5),
+        (data.monster_factory.hunchback, 40),
+        (data.monster_factory.kidnapper, 20),
+        (data.monster_factory.crusader, 30),
+        (data.monster_factory.purifier, 20),
+        (data.monster_factory.duelist, 25),
+        (data.monster_factory.alanwric, 5),
+        (data.monster_factory.teague, 5),
+        (data.monster_factory.dymacia, 5)],
+    10: [(data.monster_factory.wretch, 0),
+         (data.monster_factory.sludge_fiend, 0),
+         (data.monster_factory.thresher, 50),
+         (data.monster_factory.crusader, 50),
+         (data.monster_factory.purifier, 50),
+         (data.monster_factory.duelist, 50)]
 }
 
 plant_chances: Dict[int, List[Tuple[Entity, int]]] = {
-    0: [(maps.monster_factory.bluebell, 50), (maps.monster_factory.bluebell, 50)],
-    4: [(maps.monster_factory.bluebell, 35), (maps.monster_factory.bluebell, 35)],
-    6: [(maps.monster_factory.bluebell, 20), (maps.monster_factory.bluebell, 20)]
+    0: [(data.monster_factory.bluebell, 50), (data.monster_factory.bluebell, 50)],
+    4: [(data.monster_factory.bluebell, 35), (data.monster_factory.bluebell, 35)],
+    6: [(data.monster_factory.bluebell, 20), (data.monster_factory.bluebell, 20)]
 }
 
 
@@ -185,6 +167,40 @@ def get_entities_at_random(
     chosen_entities = random.choices(entities, weights=entity_weighted_chance_values, k=number_of_entities)
 
     return chosen_entities
+
+
+def get_items_at_random(engine: Engine, number_of_entities: int) -> [List[str], List[str]]:
+    # Load drop table for current floor
+    f = open('data/items/spawn_table.json')
+    spawn_table = json.load(f)[0]
+
+    # Current final floor is FLOOR 8. Keep spawning unchanged for floors beyond this.
+    if engine.game_world.current_floor > 8:
+        floor_value = 8
+    else:
+        floor_value = engine.game_world.current_floor
+    spawn_table = spawn_table[f"{floor_value}"]
+
+    entity_types = []
+    entity_weighted_chances = {}
+    for key, value in spawn_table.items():
+        entity_types.append(value[0])
+        entity_weighted_chances[key] = value[1]
+
+    entities = list(entity_weighted_chances.keys())
+    entity_weighted_chance_values = list(entity_weighted_chances.values())
+
+    # Generate a random selection across the item and item type arrays simultaneously
+    idx = random.choices(np.arange(len(entities)),
+                         weights=entity_weighted_chance_values, k=number_of_entities)
+    # Now construct the lists of item and type
+    chosen_items = []
+    chosen_types = []
+    for i in idx:
+        chosen_items.append(entities[i])
+        chosen_types.append(entity_types[i])
+
+    return chosen_items, chosen_types
 
 
 class RectangularRoom:
@@ -260,7 +276,7 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
         # Populate dungeon
         place_flora(dungeon, engine.game_world.current_floor, areas=3)
         place_fauna(dungeon, engine.game_world.current_floor)
-        place_items(dungeon, engine.game_world.current_floor)
+        place_items(dungeon, engine)
 
         # Finally, add stairs
         dungeon = add_stairs(dungeon)
@@ -371,12 +387,14 @@ def place_fauna(dungeon: SimpleGameMap, floor_number: int) -> None:
             entity.spawn(dungeon, x, y)
 
 
-def place_items(dungeon: SimpleGameMap, floor_number: int) -> None:
-    max_items = get_max_value_for_floor(max_items_by_floor, floor_number)
+def place_items(dungeon: SimpleGameMap, engine: Engine) -> None:
+    current_floor = engine.game_world.current_floor
+    max_items = get_max_value_for_floor(max_items_by_floor, current_floor)
     number_of_items = random.randint(int(max_items / 2), max_items)
-    items: List[Entity] = get_entities_at_random(item_chances, number_of_items, floor_number)
 
-    for entity in items:
+    items, item_types = get_items_at_random(engine, number_of_items)
+
+    for i in range(len(items)):
         # Get random walkable tile
         x, y = dungeon.get_random_walkable_tile()
 
@@ -391,7 +409,11 @@ def place_items(dungeon: SimpleGameMap, floor_number: int) -> None:
 
         # Spawn in free, non-blocked location
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities) and dungeon.tiles[x, y]['walkable']:
-            entity.spawn(dungeon, x, y)
+            # Create entity
+            item = copy.deepcopy(create_item_from_json(f"data/items/{item_types[i]}.json", items[i]))
+
+            # Spawn entity
+            item.spawn(dungeon, x, y)
 
 
 def tunnel_between(start: Tuple[int, int], end: Tuple[int, int]) -> Iterator[Tuple[int, int]]:

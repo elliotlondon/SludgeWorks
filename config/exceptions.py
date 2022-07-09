@@ -11,5 +11,9 @@ class FatalMapGenError(SystemExit):
     """Exception raised when something fails catastrophically during map generation"""
 
 
+class DataLoadError(SystemExit):
+    """Exception raised when data could not be loaded from a given request."""
+
+
 class QuitWithoutSaving(SystemExit):
     """Can be raised to exit the game without automatically saving."""

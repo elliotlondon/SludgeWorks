@@ -13,8 +13,8 @@ import tcod
 import config.colour
 import core.g
 import core.input_handlers
-import maps.item_factory
-import maps.monster_factory
+from data.item_factory import create_item_from_json
+import data.monster_factory
 from core.engine import Engine
 from maps.game_map import GameWorld
 
@@ -24,8 +24,7 @@ background_image = tcod.image.load("assets/sludge_background.png")[:, :, :3]
 
 def new_game() -> Engine:
     """Return a brand new game session as an Engine instance."""
-
-    player = copy.deepcopy(maps.monster_factory.player)
+    player = copy.deepcopy(data.monster_factory.player)
     engine = Engine(player=player)
 
     # Settings for the first floor go here
@@ -46,9 +45,9 @@ def new_game() -> Engine:
     )
 
     # Spawn starting player equipment
-    dagger = copy.deepcopy(maps.item_factory.dagger)
-    leather_armor = copy.deepcopy(maps.item_factory.leather_armor)
-    medkit = copy.deepcopy(maps.item_factory.surface_medkit)
+    dagger = copy.deepcopy(create_item_from_json('data/items/weapons.json', 'dagger'))
+    leather_armor = copy.deepcopy(create_item_from_json('data/items/armour.json', 'leather_armour'))
+    medkit = copy.deepcopy(create_item_from_json('data/items/healing.json', 'medkit'))
 
     dagger.parent = player.inventory
     leather_armor.parent = player.inventory

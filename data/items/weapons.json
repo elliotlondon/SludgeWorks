@@ -1,0 +1,48 @@
+[
+  {
+    "dagger": {
+      "char": "-",
+      "colour": [
+        159,
+        159,
+        159
+      ],
+      "name": "Dagger",
+      "equipment_type": "MainHand",
+      "equipment": {
+        "damage_dice": 1,
+        "damage_sides": 3,
+        "strength_bonus": 0,
+        "dexterity_bonus": 0,
+        "vitality_bonus": 0,
+        "intellect_bonus": 0,
+        "armour_bonus": 0
+      },
+      "depth": 1,
+      "rarity": 1
+    }
+  },
+  {
+    "longsword": {
+      "char": "/",
+      "colour": [
+        159,
+        159,
+        159
+      ],
+      "name": "Longsword",
+      "equipment_type": "MainHand",
+      "equipment": {
+        "damage_dice": 1,
+        "damage_sides": 4,
+        "strength_bonus": 1,
+        "dexterity_bonus": 0,
+        "vitality_bonus": 0,
+        "intellect_bonus": 0,
+        "armour_bonus": 0
+      },
+      "depth": 1,
+      "rarity": 2
+    }
+  }
+]

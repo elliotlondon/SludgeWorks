@@ -1,0 +1,200 @@
+[
+  {
+    "1": {
+      "healing_mud": [
+        "healing",
+        50
+      ],
+      "confusing_twig": [
+        "twigs",
+        5
+      ],
+      "lightning_twig": [
+        "twigs",
+        5
+      ],
+      "teleother_twig": [
+        "twigs",
+        5
+      ]
+    },
+    "2": {
+      "healing_mud": [
+        "healing",
+        50
+      ],
+      "confusing_twig": [
+        "twigs",
+        5
+      ],
+      "lightning_twig": [
+        "twigs",
+        5
+      ],
+      "teleother_twig": [
+        "twigs",
+        5
+      ],
+      "longsword": [
+        "weapons",
+        10
+      ]
+    },
+    "3": {
+      "healing_mud": [
+        "healing",
+        50
+      ],
+      "confusing_twig": [
+        "twigs",
+        5
+      ],
+      "lightning_twig": [
+        "twigs",
+        10
+      ],
+      "teleother_twig": [
+        "twigs",
+        5
+      ],
+      "fireball_twig": [
+        "twigs",
+        5
+      ],
+      "longsword": [
+        "weapons",
+        10
+      ]
+    },
+    "4": {
+      "healing_mud": [
+        "healing",
+        25
+      ],
+      "confusing_twig": [
+        "twigs",
+        5
+      ],
+      "lightning_twig": [
+        "twigs",
+        10
+      ],
+      "teleother_twig": [
+        "twigs",
+        5
+      ],
+      "fireball_twig": [
+        "twigs",
+        5
+      ],
+      "longsword": [
+        "weapons",
+        5
+      ],
+      "cuirass": [
+        "armour",
+        5
+      ]
+    },
+    "5": {
+      "healing_mud": [
+        "healing",
+        25
+      ],
+      "confusing_twig": [
+        "twigs",
+        10
+      ],
+      "lightning_twig": [
+        "twigs",
+        10
+      ],
+      "teleother_twig": [
+        "twigs",
+        10
+      ],
+      "fireball_twig": [
+        "twigs",
+        5
+      ],
+      "cuirass": [
+        "armour",
+        5
+      ]
+    },
+    "6": {
+      "healing_mud": [
+        "healing",
+        25
+      ],
+      "confusing_twig": [
+        "twigs",
+        10
+      ],
+      "lightning_twig": [
+        "twigs",
+        10
+      ],
+      "teleother_twig": [
+        "twigs",
+        10
+      ],
+      "fireball_twig": [
+        "twigs",
+        5
+      ],
+      "cuirass": [
+        "armour",
+        10
+      ]
+    },
+    "7": {
+      "healing_mud": [
+        "healing",
+        25
+      ],
+      "confusing_twig": [
+        "twigs",
+        10
+      ],
+      "lightning_twig": [
+        "twigs",
+        15
+      ],
+      "teleother_twig": [
+        "twigs",
+        10
+      ],
+      "fireball_twig": [
+        "twigs",
+        10
+      ],
+      "cuirass": [
+        "armour",
+        10
+      ]
+    },
+    "8": {
+      "healing_mud": [
+        "healing",
+        25
+      ],
+      "confusing_twig": [
+        "twigs",
+        5
+      ],
+      "lightning_twig": [
+        "twigs",
+        15
+      ],
+      "teleother_twig": [
+        "twigs",
+        15
+      ],
+      "fireball_twig": [
+        "twigs",
+        15
+      ]
+    }
+  }
+]

@@ -155,7 +155,7 @@ class GameWorld:
             cave_smoothing: int = 1,
             cave_p: int = 60,
             floors: Dict[str, SimpleGameMap] = None,
-            current_floor: int = 0
+            current_floor: int = 1
     ):
         if floors is None:
             floors = {}
@@ -177,7 +177,7 @@ class GameWorld:
         from maps.procgen import generate_dungeon
 
         # Logic for floor generation
-        if self.current_floor == 0:
+        if self.current_floor == 1:
             # First floor, unique scenario
             new_floor = generate_dungeon(
                 max_rooms=self.max_rooms,
@@ -187,7 +187,7 @@ class GameWorld:
                 map_height=self.map_height,
                 engine=self.engine,
             )
-        elif 1 <= self.current_floor <= 3:
+        elif 2 <= self.current_floor <= 4:
             # 3 floors of surface caves. Caves get broader as you descend
             self.max_rooms += random.randint(1, 2)
             self.room_min_size += random.randint(1, 2)
@@ -202,7 +202,7 @@ class GameWorld:
                 map_height=self.map_height,
                 engine=self.engine,
             )
-        elif self.current_floor == 4:
+        elif self.current_floor == 5:
             # 4th floor suddenly breaks into tunnels
             self.max_rooms = 15
             self.room_min_size = 4
@@ -217,7 +217,7 @@ class GameWorld:
                 map_height=self.map_height,
                 engine=self.engine,
             )
-        elif 4 <= self.current_floor <= 6:
+        elif 6 <= self.current_floor <= 7:
             # 5th and 6th floors are progressively narrowing tunnels
             self.max_rooms += 5
             self.room_min_size -= 1

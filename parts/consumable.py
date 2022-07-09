@@ -136,9 +136,14 @@ class FireballDamageConsumable(Consumable):
 
 
 class LightningDamageConsumable(Consumable):
-    def __init__(self, damage: int, maximum_range: int):
-        self.damage = damage
+    def __init__(self, upper_bound: int, lower_bound: int, maximum_range: int):
+        self.upper_bound = upper_bound
+        self.lower_bound = lower_bound
         self.maximum_range = maximum_range
+
+    @property
+    def damage(self):
+        return random.randint(self.lower_bound, self.upper_bound)
 
     def activate(self, action: ItemAction) -> None:
         consumer = action.entity

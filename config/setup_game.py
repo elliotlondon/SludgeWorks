@@ -13,9 +13,9 @@ import tcod
 import config.colour
 import core.g
 import core.input_handlers
-from data.item_factory import create_item_from_json
-import data.monster_factory
 from core.engine import Engine
+from data.item_factory import create_item_from_json
+from data.monster_factory import create_monster_from_json
 from maps.game_map import GameWorld
 
 # Load the background image and remove the alpha channel.
@@ -24,7 +24,7 @@ background_image = tcod.image.load("assets/sludge_background.png")[:, :, :3]
 
 def new_game() -> Engine:
     """Return a brand new game session as an Engine instance."""
-    player = copy.deepcopy(data.monster_factory.player)
+    player = copy.deepcopy(create_monster_from_json('data/monsters/player.json', 'player'))
     engine = Engine(player=player)
 
     # Settings for the first floor go here

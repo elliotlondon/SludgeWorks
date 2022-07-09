@@ -1,0 +1,32 @@
+[
+  {
+    "player": {
+      "char": "@",
+      "colour": [255, 255, 255],
+      "name": "Player",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 30,
+        "max_hp": 30,
+        "damage_dice": 1,
+        "damage_sides": 2,
+        "strength": 12,
+        "dexterity": 12,
+        "vitality": 12,
+        "intellect": 12,
+        "perception": 12,
+        "armour": 0,
+        "xp": 0,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 26
+      },
+      "level": {
+        "level_up_base": 100,
+        "xp_given": 0
+      }
+    }
+  }
+]

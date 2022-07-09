@@ -10,11 +10,11 @@ from parts.equippable import Equippable
 
 def create_item_from_json(path: str, request: str) -> Item:
     f = open(path)
-    consumables_dict = json.load(f)
+    item_dict = json.load(f)
 
-    for i in range(len(consumables_dict)):
-        if request in consumables_dict[i]:
-            data = consumables_dict[i][request]
+    for i in range(len(item_dict)):
+        if request in item_dict[i]:
+            data = item_dict[i][request]
 
             # Determine item type
             if 'equipment_type' in data:
@@ -86,6 +86,8 @@ def create_consumable(data: dict) -> Item:
                                                                data['consumable']['radius'])
     elif "Teleother" in data['consumable']['type']:
         consumable = parts.consumable.TeleportOtherConsumable()
+    else:
+        NotImplementedError()
 
     item = Item(
         char=data['char'],

@@ -1,0 +1,62 @@
+[
+  {
+    "whip_vine": {
+      "char": "V",
+      "colour": [150, 50, 100],
+      "name": "Whip Vine",
+      "ai_cls": "HostileStationary",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 4,
+        "max_hp": 4,
+        "damage_dice": 1,
+        "damage_sides": 2,
+        "strength": 14,
+        "dexterity": 6,
+        "vitality": 10,
+        "intellect": 0,
+        "perception": 0,
+        "armour": 1,
+        "xp": 25,
+        "dodges": false
+      },
+      "inventory": {
+        "capacity": 0
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 25
+      }
+    }
+  },
+  {
+    "bluebell": {
+      "char": "b",
+      "colour": [63, 159, 255],
+      "name": "Glowing Bluebells",
+      "ai_cls": "PassiveStationary",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 1,
+        "max_hp": 1,
+        "damage_dice": 0,
+        "damage_sides": 0,
+        "strength": 0,
+        "dexterity": 0,
+        "vitality": 0,
+        "intellect": 0,
+        "perception": 16,
+        "armour": 0,
+        "xp": 0,
+        "dodges": false
+      },
+      "inventory": {
+        "capacity": 0
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 0
+      }
+    }
+  }
+]

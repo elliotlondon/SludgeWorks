@@ -1,0 +1,92 @@
+[
+  {
+    "risen_sacrifice": {
+      "char": "r",
+      "colour": [255, 191, 255],
+      "name": "Risen Sacrifice",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": null,
+        "max_hp": 20,
+        "damage_dice": 1,
+        "damage_sides": 4,
+        "strength": 12,
+        "dexterity": 12,
+        "vitality": 10,
+        "intellect": 10,
+        "perception": 10,
+        "armour": 0,
+        "xp": 45,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 8
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 45
+      }
+    }
+  },
+  {
+    "celebrant": {
+      "char": "c",
+      "colour": [239, 191, 255],
+      "name": "Eternal Cult Celebrant",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 8,
+        "max_hp": 8,
+        "damage_dice": 2,
+        "damage_sides": 2,
+        "strength": 10,
+        "dexterity": 12,
+        "vitality": 18,
+        "intellect": 16,
+        "perception": 10,
+        "armour": 0,
+        "xp": 160,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 8
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 160
+      }
+    }
+  },
+  {
+    "kidnapper": {
+      "char": "K",
+      "colour": [255, 63, 255],
+      "name": "Eternal Cult Kidnapper",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 10,
+        "max_hp": 10,
+        "damage_dice": 2,
+        "damage_sides": 4,
+        "strength": 16,
+        "dexterity": 10,
+        "vitality": 16,
+        "intellect": 10,
+        "perception": 16,
+        "armour": 0,
+        "xp": 275,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 8
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 275
+      }
+    }
+  }
+]

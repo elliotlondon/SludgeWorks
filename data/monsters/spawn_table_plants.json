@@ -1,0 +1,76 @@
+[
+  {
+    "1": {
+      "bluebell": [
+        "plants",
+        75
+      ],
+      "whip_vine": [
+        "plants",
+        25
+      ]
+    },
+    "2": {
+      "bluebell": [
+        "plants",
+        75
+      ],
+      "whip_vine": [
+        "plants",
+        25
+      ]
+    },
+    "3": {
+      "bluebell": [
+        "plants",
+        75
+      ],
+      "whip_vine": [
+        "plants",
+        25
+      ]
+    },
+    "4": {
+      "bluebell": [
+        "plants",
+        33
+      ],
+      "whip_vine": [
+        "plants",
+        67
+      ]
+    },
+    "5": {
+      "bluebell": [
+        "plants",
+        33
+      ],
+      "whip_vine": [
+        "plants",
+        67
+      ]
+    },
+    "6": {
+      "bluebell": [
+        "plants",
+        33
+      ],
+      "whip_vine": [
+        "plants",
+        67
+      ]
+    },
+    "7": {
+      "whip_vine": [
+        "plants",
+        100
+      ]
+    },
+    "8": {
+      "whip_vine": [
+        "plants",
+        100
+      ]
+    }
+  }
+]

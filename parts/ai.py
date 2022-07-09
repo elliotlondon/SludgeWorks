@@ -8,14 +8,14 @@ from typing import Optional, List, Tuple, TYPE_CHECKING
 import numpy as np  # type: ignore
 import tcod
 
+import core.actions
 import core.g
-from core.actions import Action, BumpAction, MeleeAction, MovementAction, WaitAction
 
 if TYPE_CHECKING:
     from parts.entity import Actor
 
 
-class BaseAI(Action):
+class BaseAI(core.actions.Action):
     def perform(self) -> None:
         raise NotImplementedError()
 
@@ -74,7 +74,7 @@ class HostileEnemy(BaseAI):
 
         if core.g.engine.game_map.visible[self.entity.x, self.entity.y]:
             if distance <= 1:
-                return MeleeAction(self.entity, dx, dy).perform()
+                return core.actions.MeleeAction(self.entity, dx, dy).perform()
 
             self.path = self.get_path_to(target.x, target.y)
 
@@ -83,20 +83,21 @@ class HostileEnemy(BaseAI):
                 self.path = None
             else:
                 dest_x, dest_y = self.path.pop(0)
-                return MovementAction(
+                return core.actions.MovementAction(
                     self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
                 ).perform()
 
         # Wander: either wait or move randomly
         if randint(0, 100) <= 50:
-            return WaitAction(self.entity).perform()
+            return core.actions.WaitAction(self.entity).perform()
         else:
             dest_x = self.entity.x + randint(-1, 1)
             dest_y = self.entity.y + randint(-1, 1)
             if (dest_x < core.g.engine.game_map.width) and (dest_y < core.g.engine.game_map.height):
-                return MovementAction(self.entity, dest_x - self.entity.x, dest_y - self.entity.y).perform()
+                return core.actions.MovementAction(self.entity, dest_x - self.entity.x,
+                                                   dest_y - self.entity.y).perform()
             else:
-                return WaitAction(self.entity).perform()
+                return core.actions.WaitAction(self.entity).perform()
 
 
 class HostileStationary(BaseAI):
@@ -112,10 +113,10 @@ class HostileStationary(BaseAI):
 
         if core.g.engine.game_map.visible[self.entity.x, self.entity.y]:
             if distance <= 1:
-                return MeleeAction(self.entity, dx, dy).perform()
+                return core.actions.MeleeAction(self.entity, dx, dy).perform()
 
         else:
-            return WaitAction(self.entity).perform()
+            return core.actions.WaitAction(self.entity).perform()
 
 
 class PassiveStationary(BaseAI):
@@ -124,7 +125,7 @@ class PassiveStationary(BaseAI):
         self.path: List[Tuple[int, int]] = []
 
     def perform(self) -> None:
-        return WaitAction(self.entity).perform()
+        return core.actions.WaitAction(self.entity).perform()
 
 
 class NPC(BaseAI):
@@ -134,7 +135,32 @@ class NPC(BaseAI):
 
     def perform(self) -> None:
         # NPCs currently do nothing
-        return WaitAction(self.entity).perform()
+        return core.actions.WaitAction(self.entity).perform()
+
+
+class BrainRaker(HostileEnemy):
+    """Enemy variation where on every hit a random variation of explored, non-FOV tiles are purged from memory."""
+
+    def perform(self) -> None:
+        target = core.g.engine.player
+        dx = target.x - self.entity.x
+        dy = target.y - self.entity.y
+        distance = max(abs(dx), abs(dy))  # Chebyshev distance.
+
+        if core.g.engine.game_map.visible[self.entity.x, self.entity.y]:
+            if distance <= 1:
+                return core.actions.BrainRakerAction(self.entity, dx, dy).perform()
+
+            self.path = self.get_path_to(target.x, target.y)
+
+        if self.path:
+            if not self.path_isvalid(self.path):
+                self.path = None
+            else:
+                dest_x, dest_y = self.path.pop(0)
+                return core.actions.MovementAction(
+                    self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+                ).perform()
 
 
 class ConfusedEnemy(BaseAI):
@@ -176,4 +202,4 @@ class ConfusedEnemy(BaseAI):
 
             # The actor will either try to move or attack in the chosen random direction.
             # Its possible the actor will just bump into the wall, wasting a turn.
-            return BumpAction(self.entity, direction_x, direction_y, ).perform()
+            return core.actions.BumpAction(self.entity, direction_x, direction_y, ).perform()

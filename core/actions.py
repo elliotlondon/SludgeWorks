@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import random
 from typing import Optional, Tuple, TYPE_CHECKING
 
 import numpy as np
@@ -131,11 +132,9 @@ class MeleeAction(ActionWithDirection):
         max_crit_chance = 0.33  # Define max chance to stop overflows!
 
         # Roll to see if hit
-        # attack_roll = roll_dice(1, 20) + attacker.fighter.dexterity_modifier
-        attack_roll = roll_dice(1, 20)
+        attack_roll = roll_dice(1, 20) + attacker.fighter.dexterity_modifier
         if defender.fighter.dodges:
-            # dodge_roll = roll_dice(1, 20) + defender.fighter.dexterity_modifier
-            dodge_roll = roll_dice(1, 20)
+            dodge_roll = roll_dice(1, 20) + defender.fighter.dexterity_modifier
         else:
             dodge_roll = 0
 
@@ -143,8 +142,7 @@ class MeleeAction(ActionWithDirection):
         crit = False
         if attack_roll > dodge_roll:  # Attack hits
             # Calculate strength-weighted damage roll
-            # damage_roll = attacker.fighter.damage + attacker.fighter.strength_modifier
-            damage_roll = attacker.fighter.damage
+            damage_roll = attacker.fighter.damage + attacker.fighter.strength_modifier
             if defender.fighter.armour_total > 0:
                 defence_roll = roll_dice(1, defender.fighter.armour_total)
             else:
@@ -221,6 +219,122 @@ class MeleeAction(ActionWithDirection):
                 core.g.engine.message_log.add_message(f'You attack the {defender.name.capitalize()} '
                                                       f'but the attack is evaded.', config.colour.enemy_evade)
             elif defender.name.capitalize() == 'Player':
+                core.g.engine.message_log.add_message(f'You evade the {attacker.name.capitalize()}\'s attack.',
+                                                      config.colour.player_evade)
+            else:
+                core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                                                      f'but the attack is evaded.', config.colour.enemy_evade)
+            if logging.DEBUG >= logging.root.level:
+                core.g.engine.message_log.add_message(f"DEBUG: Roll [{attack_roll} vs. {dodge_roll}].",
+                                                      config.colour.debug)
+
+
+class BrainRakerAction(ActionWithDirection):
+    """Attack logic for the brainraker enemy type."""
+
+    def perform(self) -> None:
+        attacker = self.entity
+        defender = self.target_actor
+        if not defender:
+            raise Impossible("Nothing to attack.")
+
+        crit_chance = 0.10  # Critical hit chance in %
+        max_crit_chance = 0.33  # Define max chance to stop overflows!
+
+        # Roll to see if hit
+        attack_roll = roll_dice(1, 20) + attacker.fighter.dexterity_modifier
+        if defender.fighter.dodges:
+            dodge_roll = roll_dice(1, 20) + defender.fighter.dexterity_modifier
+        else:
+            dodge_roll = 0
+
+        # Debug for testing attack
+        dodge_roll = 0
+
+        damage = None
+        crit = False
+        if attack_roll > dodge_roll:  # Attack hits
+            # Calculate strength-weighted damage roll
+            damage_roll = attacker.fighter.damage + attacker.fighter.strength_modifier
+            if defender.fighter.armour_total > 0:
+                defence_roll = roll_dice(1, defender.fighter.armour_total)
+            else:
+                defence_roll = 0
+
+            # Check if entity penetrates target's armour
+            penetration_int = abs(damage_roll - defence_roll)
+            if (damage_roll - defence_roll) > 0:
+                # Calculate modified (positive) crit chance
+                while penetration_int > 0 and crit_chance <= max_crit_chance:
+                    crit_chance += 0.01
+                    penetration_int -= 1
+                # Check if crit
+                if roll_dice(1, np.floor(1 / crit_chance)) == np.floor(1 / crit_chance):
+                    crit = True
+                    # For mindrakers crits do not do double damage, they do small extra damage and an effect
+                    damage = attacker.fighter.damage + 2 - defence_roll
+                else:
+                    damage = attacker.fighter.damage - defence_roll
+
+            # Crits can penetrate otherwise impervious armour!
+            elif (damage_roll - defence_roll) <= 0:
+                # Calculate modified (negative) crit chance
+                while penetration_int > 0 and crit_chance > 0:
+                    crit_chance -= 0.01
+                    penetration_int -= 1
+                # Check if crit
+                if crit_chance <= 0:
+                    damage = 0
+                else:
+                    if roll_dice(1, np.floor(1 / crit_chance)) == np.floor(1 / crit_chance):
+                        crit = True
+                        damage = attacker.fighter.crit_damage - defence_roll
+                    else:
+                        damage = 0
+
+            # Check for damage and display chat messages
+            if damage > 0:
+                if crit:
+                    if defender.name.capitalize() == 'Player':
+                        # If crit remove random tiles from explored tiles!
+                        explored_nonfov = np.logical_xor(self.entity.gamemap.explored, self.entity.gamemap.visible)
+                        num_explored = np.count_nonzero(explored_nonfov)
+
+                        if not num_explored <= len(self.entity.gamemap.visible):
+                            to_remove = round(num_explored / 4)
+                            while to_remove > 0:
+                                x = random.choice(np.where(explored_nonfov == True)[0])
+                                y = random.choice(np.where(explored_nonfov == True)[1])
+                                self.entity.gamemap.explored[x, y] = False
+                                to_remove -= 1
+
+                        core.g.engine.message_log.add_message(f'The {attacker.name} crits you for '
+                                                              f'{str(damage)} damage!', config.colour.enemy_crit)
+                        core.g.engine.message_log.add_message(f'* Your brain hurts and you feel nauseous! Augh! *',
+                                                              config.colour.red)
+                    else:
+                        core.g.engine.message_log.add_message(f'The {attacker.name} crits the {defender.name}'
+                                                              f'{str(damage)} damage!', config.colour.enemy_crit)
+                else:
+                    if defender.name.capitalize() == 'Player':
+                        core.g.engine.message_log.add_message(f'The {attacker.name} attacks you for '
+                                                              f'{str(damage)} damage.', config.colour.enemy_atk)
+                    else:
+                        core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                                                              f'{str(damage)} damage.', config.colour.enemy_atk)
+                defender.fighter.hp -= damage
+            else:
+                if defender.name.capitalize() == 'Player':
+                    core.g.engine.message_log.add_message(f'The {attacker.name} attacks you '
+                                                          f'but does no damage!', config.colour.player_evade)
+                else:
+                    core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                                                          f'but does no damage.', config.colour.enemy_evade)
+                if logging.DEBUG >= logging.root.level:
+                    core.g.engine.message_log.add_message(f"DEBUG: Roll [{attack_roll} vs. {defence_roll}].",
+                                                          config.colour.debug)
+        else:
+            if defender.name.capitalize() == 'Player':
                 core.g.engine.message_log.add_message(f'You evade the {attacker.name.capitalize()}\'s attack.',
                                                       config.colour.player_evade)
             else:

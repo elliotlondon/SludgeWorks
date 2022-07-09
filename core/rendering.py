@@ -45,7 +45,7 @@ def render_map(console: tcod.Console, gamemap: maps.game_map.SimpleGameMap) -> N
 
 
 def render_ui(console: tcod.Console, engine: core.engine.Engine) -> None:
-    engine.message_log.render(console=console, x=21, y=45, width=40, height=5)
+    engine.message_log.render(console=console, x=21, y=45, width=55, height=5)
 
     # Render hp bar
     core.render_functions.render_bar(

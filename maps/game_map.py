@@ -153,9 +153,12 @@ class GameWorld:
             map_width: int,
             map_height: int,
             cave_smoothing: int = 1,
-            cave_p: int = 60,
+            cave_p: int = 50,
+            caves: bool = True,
+            rooms: bool = True,
+            erode: bool = False,
             floors: Dict[str, SimpleGameMap] = None,
-            current_floor: int = 1
+            current_floor: int = 0
     ):
         if floors is None:
             floors = {}
@@ -168,6 +171,9 @@ class GameWorld:
         # Biome params
         self.cave_smoothing = cave_smoothing
         self.cave_p = cave_p
+        self.caves = caves
+        self.rooms = rooms
+        self.erode = erode
 
         self.engine = engine
         self.floors = floors
@@ -177,6 +183,7 @@ class GameWorld:
         from maps.procgen import generate_dungeon
 
         # Logic for floor generation
+        self.current_floor += 1
         if self.current_floor == 1:
             # First floor, unique scenario
             new_floor = generate_dungeon(
@@ -189,11 +196,12 @@ class GameWorld:
             )
         elif 2 <= self.current_floor <= 4:
             # 3 floors of surface caves. Caves get broader as you descend
-            self.max_rooms += random.randint(1, 2)
-            self.room_min_size += random.randint(1, 2)
-            self.room_max_size += random.randint(1, 3)
+            self.room_max_size = 4
+            self.room_min_size = 1
             self.cave_smoothing += 1
-            self.cave_p = random.randint(45, 70)
+            self.cave_p -= 5
+            self.rooms = True
+            self.erode = True
             new_floor = generate_dungeon(
                 max_rooms=self.max_rooms,
                 room_min_size=self.room_min_size,
@@ -204,11 +212,13 @@ class GameWorld:
             )
         elif self.current_floor == 5:
             # 4th floor suddenly breaks into tunnels
-            self.max_rooms = 15
-            self.room_min_size = 4
-            self.room_max_size = 8
+            self.max_rooms = 25
+            self.room_max_size = 4
+            self.room_min_size = 1
             self.cave_smoothing = 1
-            self.cave_p = random.randint(40, 55)
+            self.cave_p += 10
+            self.rooms = True
+            self.erode = False
             new_floor = generate_dungeon(
                 max_rooms=self.max_rooms,
                 room_min_size=self.room_min_size,
@@ -240,9 +250,6 @@ class GameWorld:
                 map_height=self.map_height,
                 engine=self.engine,
             )
-
-
-        self.current_floor += 1
 
         self.engine.game_map = new_floor
         self.floors[f'level_{self.current_floor}'] = new_floor

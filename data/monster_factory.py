@@ -1,7 +1,7 @@
 import json
 
+import parts.ai
 from config.exceptions import DataLoadError
-from parts.ai import HostileEnemy, NPC, HostileStationary, PassiveStationary
 from parts.entity import Actor
 from parts.equipment import Equipment
 from parts.fighter import Fighter
@@ -27,13 +27,15 @@ def create_monster_from_json(path: str, request: str) -> Actor:
 def create_monster(data: dict) -> Actor:
     # Unpack non-json values
     if data['ai_cls'] == "HostileEnemy":
-        ai_cls = HostileEnemy
+        ai_cls = parts.ai.HostileEnemy
     elif data['ai_cls'] == "NPC":
-        ai_cls = NPC
+        ai_cls = parts.ai.NPC
     elif data['ai_cls'] == "HostileStationary":
-        ai_cls = HostileStationary
+        ai_cls = parts.ai.HostileStationary
     elif data['ai_cls'] == "PassiveStationary":
-        ai_cls = PassiveStationary
+        ai_cls = parts.ai.PassiveStationary
+    elif data['ai_cls'] == "BrainRaker":
+        ai_cls = parts.ai.BrainRaker
     else:
         raise NotImplementedError()
 

@@ -198,11 +198,12 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
     while tries <= 10:
         # Initialize map
         dungeon = SimpleGameMap(engine, map_width, map_height, entities=[player])
-        dungeon = add_caves(dungeon, smoothing=cave_smoothing, p=cave_p)
-        dungeon = add_rooms(dungeon, max_rooms, room_min_size, room_max_size)
-
-        # Smooth edges
-        # dungeon = erode(dungeon, 1)
+        if engine.game_world.caves:
+            dungeon = add_caves(dungeon, smoothing=cave_smoothing, p=cave_p)
+        if engine.game_world.rooms:
+            dungeon = add_rooms(dungeon, max_rooms, room_min_size, room_max_size)
+        if engine.game_world.erode:
+            dungeon = erode(dungeon, 1)
 
         # Add rocks/water
         dungeon = add_rubble(dungeon, events=7)

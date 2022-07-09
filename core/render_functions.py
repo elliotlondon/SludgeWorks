@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 from enum import Enum, auto
 from random import Random
 
-from core.game_states import GameStates
 from gui.menus import *
 
 
@@ -168,27 +167,6 @@ def render_all(con, panel, player, entities, game_map, message_log, hp_bar, xp_b
         y += 1
 
     tcod.console_blit(panel, 0, 0, panel_width, panel_height, con, 0, root_height - panel_height)
-
-    if GameStates.current_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):
-        if GameStates.current_state == GameStates.SHOW_INVENTORY:
-            inventory_title = 'Press the key next to an item to use it, or Esc to cancel.\n'
-        else:
-            inventory_title = 'Press the key next to an item to drop it, or Esc to cancel.\n'
-        inventory_menu(con, inventory_title, player, 50, game_window_width, game_window_height)
-
-    if GameStates.current_state == GameStates.SHOW_LOADOUT:
-        loadout_title = 'EQUIPMENT. Press the key next to an item to use it, or Esc to cancel.\n'
-        loadout_menu(con, loadout_title, player, 50, game_window_width, game_window_height)
-    elif GameStates.current_state == GameStates.LEVEL_UP:
-        level_up_menu(con, 'Choose a stat to increase:', player, 50, game_window_width, game_window_height)
-    elif GameStates.current_state == GameStates.CHARACTER_SCREEN:
-        character_screen(con, player, 30, 15, game_window_width, game_window_height)
-    elif GameStates.current_state == GameStates.ABILITY_SCREEN:
-        ability_screen(con, player, 30, 10, game_window_width, game_window_height)
-    elif GameStates.current_state == GameStates.ESC_MENU:
-        esc_menu(con, 40, 10, root_width, root_height, player.turn_number)
-    elif GameStates.current_state == GameStates.HELP_MENU:
-        help_menu(con, root_width, root_height, root_width, root_height)
 
 
 # TODO: Implement movable screen depending upon map size

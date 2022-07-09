@@ -42,11 +42,11 @@
         10
       ],
       "moire_beast": [
-        "scavengerss",
+        "scavengers",
         3
       ],
       "lupine_terror": [
-        "scavengerss",
+        "scavengers",
         1
       ],
       "hunchback": [
@@ -76,16 +76,20 @@
         10
       ],
       "moire_beast": [
-        "scavengerss",
+        "scavengers",
         5
       ],
       "lupine_terror": [
-        "scavengerss",
+        "scavengers",
         5
       ],
       "hunchback": [
         "horrors",
         10
+      ],
+      "brainraker": [
+        "horrors",
+        5
       ],
       "celebrant": [
         "cultists",
@@ -110,19 +114,19 @@
         10
       ],
       "thresher": [
-        "scavengerss",
+        "scavengers",
         5
       ],
       "moire_beast": [
-        "scavengerss",
+        "scavengers",
         5
       ],
       "lupine_terror": [
-        "scavengerss",
+        "scavengers",
         10
       ],
       "bloodseeker": [
-        "scavengerss",
+        "scavengers",
         1
       ],
       "hunchback": [
@@ -152,19 +156,23 @@
         10
       ],
       "thresher": [
-        "scavengerss",
+        "scavengers",
         5
       ],
+      "brainraker": [
+        "horrors",
+        10
+      ],
       "moire_beast": [
-        "scavengerss",
+        "scavengers",
         5
       ],
       "lupine_terror": [
-        "scavengerss",
+        "scavengers",
         10
       ],
       "bloodseeker": [
-        "scavengerss",
+        "scavengers",
         1
       ],
       "hunchback": [
@@ -202,24 +210,28 @@
         30
       ],
       "thresher": [
-        "scavengerss",
+        "scavengers",
         15
       ],
       "moire_beast": [
-        "scavengerss",
+        "scavengers",
         20
       ],
       "lupine_terror": [
-        "scavengerss",
+        "scavengers",
         25
       ],
       "bloodseeker": [
-        "scavengerss",
+        "scavengers",
         1
       ],
       "hunchback": [
         "horrors",
         50
+      ],
+      "brainraker": [
+        "horrors",
+        15
       ],
       "kidnapper": [
         "cultists",
@@ -252,24 +264,28 @@
         30
       ],
       "thresher": [
-        "scavengerss",
+        "scavengers",
         35
       ],
       "moire_beast": [
-        "scavengerss",
+        "scavengers",
         25
       ],
       "lupine_terror": [
-        "scavengerss",
+        "scavengers",
         30
       ],
       "bloodseeker": [
-        "scavengerss",
+        "scavengers",
         1
       ],
       "hunchback": [
         "horrors",
         40
+      ],
+      "brainraker": [
+        "horrors",
+        15
       ],
       "kidnapper": [
         "cultists",

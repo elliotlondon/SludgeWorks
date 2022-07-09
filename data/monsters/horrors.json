@@ -34,7 +34,7 @@
       "char": "ß",
       "colour": [0, 95, 151],
       "name": "Brainraker",
-      "ai_cls": "HostileEnemy",
+      "ai_cls": "BrainRaker",
       "equipment": "equipment",
       "fighter": {
         "hp": 28,

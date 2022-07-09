@@ -19,7 +19,7 @@
     }
 },
 {
-    "steel_cuirass": {
+    "cuirass": {
         "char": "]",
         "colour": [203, 203, 203],
         "name": "Steel Cuirass",

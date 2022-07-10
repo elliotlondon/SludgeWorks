@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import Iterable, Iterator, Optional, TYPE_CHECKING, Tuple, Dict
+from typing import Iterable, Iterator, Optional, TYPE_CHECKING, Tuple, Dict, List
 
 import numpy as np
 
@@ -58,6 +58,24 @@ class SimpleGameMap:
     @property
     def items(self) -> Iterator[Item]:
         yield from (entity for entity in self.entities if isinstance(entity, parts.entity.Item))
+
+    def get_tile_at_explored_location(self, location_x: int, location_y: int) -> Optional[maps.tiles.tile_dt]:
+        if self.explored[location_x, location_y]:
+            return self.tiles[location_x, location_y]
+
+    def get_all_entities_at_location(self, location_x: int, location_y: int) -> Optional[List[Entity]]:
+        entities = []
+        for entity in self.entities:
+            if entity.x == location_x and entity.y == location_y:
+                entities.append(entity)
+        return entities
+
+    def get_all_visible_entities(self, location_x: int, location_y: int) -> Optional[List[Entity]]:
+        entities = []
+        for entity in self.entities:
+            if entity.x == location_x and entity.y == location_y and self.visible[location_x, location_y]:
+                entities.append(entity)
+        return entities
 
     def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
         for entity in self.entities:

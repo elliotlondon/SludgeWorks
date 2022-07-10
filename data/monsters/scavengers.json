@@ -26,7 +26,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 30
-      }
+      },
+      "description": "A stunted and misshapen humanoid form covered in filthy rags that has long since been driven feral by the SludgeWorks."
     }
   },
   {
@@ -56,7 +57,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 50
-      }
+      },
+      "description": "A ravenous humanoid creature with a maw of sharp yellowed teeth. The remains of clothing cover its torso, and discoloured spikes erupt in clusters from its emaciated body."
     }
   },
   {
@@ -86,7 +88,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 275
-      }
+      },
+      "description": "A colossal ogre-like hominid covered in patches of matted hair and littered with scars. It smashes everything it can find with childlike glee."
     }
   },
   {
@@ -116,7 +119,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 20
-      }
+      },
+      "description": "A short four-legged beast with an intricate and migraine-inducing greyscale pattern printed over its body. Its yellow catlike eyes peer out from its dazzling form."
     }
   },
   {
@@ -146,7 +150,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 200
-      }
+      },
+      "description": "This upright beast is nothing but fangs and matted, grey fur. It twiches constantly, shying from the light as frothy saliva drips from its mouth."
     }
   },
   {
@@ -176,7 +181,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 1500
-      }
+      },
+      "description": "An asymmetric monstrosity the size of a bear, rippling with muscle. Rusted weaponry is embedded within its body, sticking out in many directions, with pale and twisted flesh creeping up the hilts. It regularly cries out in agony."
     }
   }
 ]

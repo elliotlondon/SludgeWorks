@@ -26,7 +26,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 45
-      }
+      },
+      "description": "The gaunt form of a human used in ritual sacrifice that has refused to stay dead. It smiles as it wanders sleepily through the caverns."
     }
   },
   {
@@ -56,7 +57,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 160
-      }
+      },
+      "description": "A horrifically scarred human who clutches a dagger as it wanders through the scratch-marked tunnels. The cult demands more sacrifices."
     }
   },
   {
@@ -86,7 +88,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 275
-      }
+      },
+      "description": "The flow of new flesh into the Palace of Hedonism must be constant. This cloaked figure ensures that this commandment is upheld."
     }
   }
 ]

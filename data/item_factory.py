@@ -62,7 +62,8 @@ def create_equipment(data) -> Item:
             intellect_bonus=data['equipment']['intellect_bonus']
         ),
         depth=data['depth'],
-        rarity=data['rarity']
+        rarity=data['rarity'],
+        description=data['description']
     )
     return item
 
@@ -96,7 +97,8 @@ def create_consumable(data: dict) -> Item:
         consumable=consumable,
         depth=data['depth'],
         rarity=data['rarity'],
-        usetext=data['usetext']
+        usetext=data['usetext'],
+        description=data['description']
     )
     return item
 

@@ -14,7 +14,8 @@
       },
       "depth": 0,
       "rarity": 1,
-      "usetext": "You use the medkit to heal yourself."
+      "usetext": "You use the medkit to heal yourself.",
+      "description": "An assortment of medical tools from the surface, used to heal minor injuries."
     }
   },
   {
@@ -33,7 +34,8 @@
       },
       "depth": 1,
       "rarity": 1,
-      "usetext": "You slather yourself in the healing mud..."
+      "usetext": "You slather yourself in the healing mud...",
+      "description": "This clay-like mud glistened with streaks of inseparable gold powder. Even when holding it you feel more healthy."
     }
   }
 ]

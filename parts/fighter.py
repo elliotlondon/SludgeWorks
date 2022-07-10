@@ -139,11 +139,12 @@ class Fighter(BaseComponent):
             self.parent.ai = None
             self.parent.render_order = RenderOrder.CORPSE
             if self.parent.name == 'Player':
-                self.parent.name = 'your lifeless body'
+                self.parent.name = 'Your lifeless body'
             elif self.parent.name[0].lower() in 'aeiou':
                 self.parent.name = 'An ' + self.parent.name + ' corpse'
             else:
                 self.parent.name = 'A ' + self.parent.name + ' corpse'
+            self.parent.description = f"The SludgeWorks claims another life."
 
         core.g.engine.message_log.add_message(death_message, death_message_color)
 

@@ -15,7 +15,8 @@
             "armour_bonus": 1
         },
         "depth": 1,
-        "rarity": 1
+        "rarity": 1,
+        "description": "A durable pocketed leather jacket from the surface."
     }
 },
 {
@@ -34,7 +35,8 @@
             "armour_bonus": 3
         },
         "depth": 3,
-        "rarity": 3
+        "rarity": 3,
+        "description": "A thick steel platebody emblazoned with silver filigree. It feels unnaturally light."
     }
 }
 ]

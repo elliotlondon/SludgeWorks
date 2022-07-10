@@ -19,7 +19,8 @@
         "armour_bonus": 0
       },
       "depth": 1,
-      "rarity": 1
+      "rarity": 1,
+      "description": "A short and versatile blade from the surface."
     }
   },
   {
@@ -42,7 +43,8 @@
         "armour_bonus": 0
       },
       "depth": 1,
-      "rarity": 2
+      "rarity": 2,
+      "description": "A longsword made of iron, with a t-shaped hilt. It retains its edge well."
     }
   }
 ]

@@ -26,7 +26,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 350
-      }
+      },
+      "description": "A rank and file soldier of the Cleansing Hand. His armour is a mixture of leather padding and ring mail and he stance is confident."
     }
   },
   {
@@ -56,7 +57,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 425
-      }
+      },
+      "description": "A cruel morningstar is held by this veteran crusader. Never again will the last bastion of purity be defiled by entropy."
     }
   },
   {
@@ -86,7 +88,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 600
-      }
+      },
+      "description": "A duelist of the Ascetic Church sect of the Cleansing Hand. He stands statue-like, goading attacks with his alber stance."
     }
   }
 ]

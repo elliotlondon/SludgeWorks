@@ -3,7 +3,8 @@ from __future__ import annotations
 import logging
 import math
 import os
-from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union, List
+import textwrap
+from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union, List, Iterable
 
 import numpy as np
 import tcod
@@ -16,6 +17,10 @@ import parts.inventory
 from config.exceptions import Impossible
 from core.actions import Action
 from core.rendering import render_map, render_ui
+from maps.tiles import get_clean_name
+from parts.ai import NPC
+from parts.entity import Actor
+from core.render_functions import RenderOrder
 
 if TYPE_CHECKING:
     from parts.entity import Item
@@ -664,7 +669,131 @@ class SelectIndexHandler(AskUserEventHandler):
 
 
 class LookHandler(SelectIndexHandler):
-    """Lets the player look around using the keyboard."""
+    """Lets the player look around using the keyboard. Draws a box with details about the selected tile, and
+    its occupants."""
+
+    def __init__(self):
+        """Additionally keep track of items to render in tile stack."""
+        super().__init__()
+        self.stack: List = []
+
+    @staticmethod
+    def wrap(string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():
+            yield from textwrap.wrap(line, width, expand_tabs=True)
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Highlight the tile under the cursor."""
+        super().on_render(console)
+        x, y = core.g.engine.mouse_location
+        console.tiles_rgb["bg"][x, y] = config.colour.white
+        console.tiles_rgb["fg"][x, y] = config.colour.black
+
+        self.create_look_box(x, y, console)
+
+    def create_look_box(self, x_pos: int, y_pos: int, console: tcod.Console) -> None:
+        """Render the parent and dim the result, then print the message on top.
+        x_pos: x index of selected tile
+        y_pos: y index of selected tile
+        """
+        self.stack = []
+
+        # Get necessary info at the specified tile
+        tile = core.g.engine.game_map.get_tile_at_explored_location(x_pos, y_pos)
+        visible = core.g.engine.game_map.visible[x_pos, y_pos]
+        if tile:
+            # Make a dictionary containing all necessary content
+            tile_content = {}
+            tile_content['name'] = get_clean_name(tile)
+            tile_content['description'] = ''.join(tile[5])
+            tile_content['footer'] = 'FLOOR TILE'
+            tile_content['footer_colour'] = tcod.grey
+            if visible:
+                tile_content['colour'] = list(tile[4][1])
+            else:
+                tile_content['colour'] = list(tile[4][1])
+
+            # Look box size
+            width = console.width // 4 + 2
+            height = len(tile_content['description']) // (console.width // 4) + 8
+
+            # Calculate whether the box should be rendered above or below the selected tile
+            if x_pos >= console.width // 2:
+                box_x = x_pos - width - 2
+            else:
+                box_x = x_pos + 2
+            if y_pos >= console.height // 2:
+                box_y = y_pos - height - 2
+            else:
+                box_y = y_pos + 2
+
+            # First draw a box for the tile
+            self.stack.append(self.draw_look_box(tile_content, box_x, box_y, width, height, console))
+
+            # Now make a box for each entity at the location. Only consider visible entities
+            entities = core.g.engine.game_map.get_all_visible_entities(x_pos, y_pos)
+            if entities:
+                entity_content = {}
+                i = 1
+                for entity in sorted(entities, key=lambda x: x.render_order.value):
+                    # Get entity info
+                    entity_content['name'] = entity.name.capitalize()
+                    entity_content['colour'] = entity.colour
+                    entity_content['description'] = entity.description
+                    if entity.name == "Player":
+                        entity_content['footer'] = ''
+                        entity_content['footer_colour'] = tcod.white
+                    elif isinstance(entity, parts.entity.Item):
+                        entity_content['footer'] = "ITEM"
+                        entity_content['footer_colour'] = tcod.yellow
+                    elif isinstance(entity.ai, parts.ai.NPC):
+                        entity_content['footer'] = "NPC"
+                        entity_content['footer_colour'] = tcod.blue
+                    elif isinstance(entity.ai, parts.ai.HostileStationary) or \
+                            isinstance(entity.ai, parts.ai.PassiveStationary):
+                        entity_content["footer"] = "PLANT"
+                        entity_content['footer_colour'] = tcod.green
+                    elif entity.render_order == RenderOrder.CORPSE:
+                        entity_content["footer"] = "CORPSE"
+                        entity_content['footer_colour'] = tcod.grey
+                    else:
+                        entity_content["footer"] = "ENEMY"
+                        entity_content['footer_colour'] = tcod.red
+                    # Scale width in case of long item names
+                    if len(entity_content['name']) > width:
+                        width = len(entity_content['name']) + 4
+                    self.stack.append(self.draw_look_box(entity_content, box_x + i, box_y + i, width, height, console))
+                    i += 1
+
+    def draw_look_box(self, content_dict: dict, x: int, y: int, width: int, height: int, console: tcod.Console) -> None:
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=(255, 255, 255),
+            bg=(0, 0, 0)
+        )
+        # Add white bg to title if item colour is too dark
+        if sum(content_dict['colour']) < 121:
+            bg = (255, 255, 255)
+        else:
+            bg = (0, 0, 0)
+        console.print(x=x + 1, y=y, string=f"{content_dict['name']}", fg=content_dict['colour'], bg=bg,
+                      alignment=tcod.constants.LEFT)
+
+        # Break up description string into sub-strings if it is longer than the box width.
+        y_offset = 2
+        content_dict['description'] = content_dict['description'].replace(".", ".\n")
+        for line in list(self.wrap(content_dict['description'], width - 2)):
+            console.print(x=x + 1, y=y + y_offset, string=line, fg=tcod.white)
+            y_offset += 1
+
+        console.print(x=x + 1, y=y + height - 1, string=content_dict['footer'], fg=content_dict['footer_colour'],
+                      alignment=tcod.constants.LEFT)
 
     def on_index_selected(self, x: int, y: int) -> MainGameEventHandler:
         """Return to main handler."""

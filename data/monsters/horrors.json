@@ -26,7 +26,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 150
-      }
+      },
+      "description": "What you can only assume is a hunched humanoid draped in tattered linens. Its face is completely concealed by a tapered hood. It chants in a gutteral language as it paces slowly."
     }
   },
   {
@@ -56,7 +57,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 400
-      }
+      },
+      "description": "A terrifying bipedal creature with a blue scaled hide and webbed hands. With every breath it exhales a shining mist of particles, covering its glyphed robe with miniscule crystals."
     }
   }
 ]

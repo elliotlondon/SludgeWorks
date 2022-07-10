@@ -26,7 +26,8 @@
       "level": {
         "level_up_base": 0,
         "xp_given": 100
-      }
+      },
+      "description": "<Blank>"
     }
   }
 ]

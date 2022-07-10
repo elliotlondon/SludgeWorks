@@ -189,6 +189,7 @@ class Actor(Entity):
             fighter: Fighter,
             inventory: Inventory,
             level: Level,
+            description: str
     ):
         super().__init__(
             x=x,
@@ -196,6 +197,7 @@ class Actor(Entity):
             char=char,
             colour=colour,
             name=name,
+            description=description,
             blocks_movement=True,
             render_order=RenderOrder.ACTOR,
         )
@@ -209,6 +211,7 @@ class Actor(Entity):
         self.inventory.parent = self
         self.level = level
         self.level.parent = self
+        self.description = description
 
     @property
     def is_alive(self) -> bool:
@@ -230,6 +233,7 @@ class Item(Entity):
             depth=0,
             rarity=None,
             usetext: str = "<Undefined>",
+            description: str
     ):
         super().__init__(
             x=x,
@@ -239,6 +243,7 @@ class Item(Entity):
             name=name,
             blocks_movement=False,
             render_order=RenderOrder.ITEM,
+            description=description
         )
 
         self.consumable = consumable
@@ -257,6 +262,7 @@ class Item(Entity):
         self.rarity = rarity
 
         self.usetext = usetext
+        self.description = description
 
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):

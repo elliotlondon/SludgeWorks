@@ -16,11 +16,7 @@ def create_monster_from_json(path: str, request: str) -> Actor:
     for i in range(len(monster_dict)):
         if request in monster_dict[i]:
             data = monster_dict[i][request]
-
-            try:
-                monster = create_monster(data)
-            except:
-                raise DataLoadError
+            monster = create_monster(data)
             return monster
 
 
@@ -69,6 +65,7 @@ def create_monster(data: dict) -> Actor:
         level=Level(
             level_up_base=data['level']['level_up_base'],
             xp_given=data['level']['xp_given']
-        )
+        ),
+        description=data['description']
     )
     return monster

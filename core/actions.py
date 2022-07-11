@@ -125,6 +125,7 @@ class MeleeAction(ActionWithDirection):
     def perform(self) -> None:
         attacker = self.entity
         defender = self.target_actor
+        core.g.engine.last_actor = self.entity
         if not defender:
             raise Impossible("Nothing to attack.")
 

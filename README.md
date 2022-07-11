@@ -25,7 +25,7 @@ Arrow keys / numpad keys / yuihjkbnm: Move around diagonally.
 Bump into enemies to attack them. Full stop (.) to wait a turn
 
 ; (Semicolon): Look around
-/ (Forward slash): 
+/ (Forward slash): Explore your surroundings
 
 i: Inventory
 Select items in your inventory with the corresponding alphabetical keys.
@@ -37,4 +37,9 @@ c: Character sheet
 m: Message log
 
 ESC: Save & Quit
+
+# Tips
+Long-dead plants in the upper caves leave behind plenty of strange artefacts. They could be useful in combat...
+If you are desperate, you can jump down holes in the ground to progress to the next floor.
+Some enemies have very nasty attacks at close range. Keep your distance!
 

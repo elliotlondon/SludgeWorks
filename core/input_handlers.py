@@ -871,14 +871,15 @@ class HoleJumpEventHandler(AskUserEventHandler):
         # y = round(self.engine.game_map.height)
 
         width = len(self.TITLE) + 34
+        height = 6
         x = console.width // 2 - int(width / 2)
-        y = console.height // 2
+        y = console.height // 2 - height
 
         console.draw_frame(
             x=x,
             y=y,
             width=width,
-            height=6,
+            height=height,
             title='',
             clear=True,
             fg=tcod.gray,
@@ -895,21 +896,6 @@ class HoleJumpEventHandler(AskUserEventHandler):
                       alignment=tcod.constants.CENTER, fg=tcod.white)
         console.print(x=console.width // 2 + 6, y=y + 5, string=f"[N]: No",
                       alignment=tcod.constants.CENTER, fg=tcod.white)
-
-
-class GameOverEventHandler(EventHandler):
-    def on_quit(self) -> None:
-        """Handle exiting out of a finished game."""
-        if os.path.exists("savegames/savegame.sav"):
-            os.remove("savegames/savegame.sav")  # Deletes the active save file.
-        raise config.exceptions.QuitWithoutSaving()  # Avoid saving a finished game.
-
-    def ev_quit(self, event: tcod.event.Quit) -> None:
-        self.on_quit()
-
-    def ev_keydown(self, event: tcod.event.KeyDown) -> None:
-        if event.sym == tcod.event.K_ESCAPE:
-            self.on_quit()
 
 
 class HistoryViewer(EventHandler):
@@ -960,6 +946,60 @@ class HistoryViewer(EventHandler):
         else:  # Any other key moves back to the main game state.
             return MainGameEventHandler()
         return None
+
+
+class GameOverEventHandler(EventHandler):
+    # Savegame moved immediately at the time of death.
+    if os.path.exists("savegames/savegame.sav"):
+        os.remove("savegames/savegame.sav")  # Deletes the active save file.
+
+    def on_quit(self) -> None:
+        """Handle exiting out of a finished game."""
+        raise config.exceptions.QuitWithoutSaving()  # Avoid saving a finished game.
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Create a popup window informing the player of their death."""
+        super().on_render(console)
+
+        death_message = "Killed by a "
+        killer = core.g.engine.last_actor.name
+
+        width = len(death_message + killer) + 6
+        height = 8
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - height
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=tcod.dark_red,
+            bg=(0, 0, 0),
+        )
+        console.print(x + int(width / 2), y, f"┤YOU DIED├",
+                      alignment=tcod.constants.CENTER, fg=tcod.dark_red)
+
+        console.print(x=x + 1, y=y + 2, string=death_message,
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 13, y=y + 2, string=killer,
+                      alignment=tcod.constants.LEFT, fg=core.g.engine.last_actor.colour)
+        console.print(x=x + 1, y=y + 5, string=f"[M]: View message log",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + 6, string=f"[ESC]: Quit",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+
+    def ev_quit(self, event: tcod.event.Quit) -> None:
+        self.on_quit()
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> BaseEventHandler:
+        if event.sym == tcod.event.K_ESCAPE:
+            self.on_quit()
+        elif event.sym == tcod.event.K_m:
+            return HistoryViewer()
+
 
 # TODO: Restore autoexplore
 # TODO: Restore autostairs

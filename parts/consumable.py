@@ -1,17 +1,18 @@
 from __future__ import annotations
 
+import copy
 import random
 from typing import Optional, TYPE_CHECKING
 
-from utils.random_utils import dnd_bonus_calc
 import config.colour
+import core.g
 import parts.ai
 import parts.inventory
 from config.exceptions import Impossible
 from core.actions import ItemAction
-from core.input_handlers import ActionOrHandler, AreaRangedAttackHandler, SingleRangedAttackHandler
+import core.input_handlers
 from parts.base_component import BaseComponent
-import core.g
+from utils.random_utils import dnd_bonus_calc
 
 if TYPE_CHECKING:
     from entity import Actor, Item
@@ -24,7 +25,7 @@ class Consumable(BaseComponent):
         assert isinstance(self.parent, parts.entity.Item)
         return self.parent
 
-    def get_action(self, consumer: Actor) -> Optional[ActionOrHandler]:
+    def get_action(self, consumer: Actor) -> Optional[core.input_handlers.ActionOrHandler]:
         """Try to return the action for this item."""
         return ItemAction(consumer, self.parent)
 
@@ -93,11 +94,11 @@ class FireballDamageConsumable(Consumable):
     def damage(self):
         return random.randint(self.lower_bound, self.upper_bound)
 
-    def get_action(self, consumer: Actor) -> AreaRangedAttackHandler:
+    def get_action(self, consumer: Actor) -> core.input_handlers.AreaRangedAttackHandler:
         core.g.engine.message_log.add_message(
             "Select a target location.", config.colour.needs_target
         )
-        return AreaRangedAttackHandler(
+        return core.input_handlers.AreaRangedAttackHandler(
             radius=self.radius,
             callback=lambda xy: ItemAction(consumer, self.parent, xy),
         )
@@ -135,9 +136,14 @@ class FireballDamageConsumable(Consumable):
 
 
 class LightningDamageConsumable(Consumable):
-    def __init__(self, damage: int, maximum_range: int):
-        self.damage = damage
+    def __init__(self, upper_bound: int, lower_bound: int, maximum_range: int):
+        self.upper_bound = upper_bound
+        self.lower_bound = lower_bound
         self.maximum_range = maximum_range
+
+    @property
+    def damage(self):
+        return random.randint(self.lower_bound, self.upper_bound)
 
     def activate(self, action: ItemAction) -> None:
         consumer = action.entity
@@ -175,9 +181,9 @@ class ConfusionConsumable(Consumable):
             self.save_bonus = 0
         return self.base_turns - self.save_bonus
 
-    def get_action(self, consumer: Actor) -> SingleRangedAttackHandler:
+    def get_action(self, consumer: Actor) -> core.input_handlers.SingleRangedAttackHandler:
         core.g.engine.message_log.add_message("Select a target location.", config.colour.needs_target)
-        return SingleRangedAttackHandler(callback=lambda xy: ItemAction(consumer, self.parent, xy))
+        return core.input_handlers.SingleRangedAttackHandler(callback=lambda xy: ItemAction(consumer, self.parent, xy))
 
     def activate(self, action: ItemAction) -> None:
         consumer = action.entity
@@ -209,4 +215,40 @@ class ConfusionConsumable(Consumable):
             target.ai = parts.ai.ConfusedEnemy(
                 entity=target, previous_ai=target.ai, turns_remaining=self.calc_turns,
             )
+        self.consume()
+
+
+class TeleportOtherConsumable(Consumable):
+    def get_action(self, consumer: Actor) -> core.input_handlers.TeleotherEventHandler:
+        core.g.engine.message_log.add_message("Select a target location.", config.colour.needs_target)
+        return core.input_handlers.TeleotherEventHandler(callback=lambda xy: ItemAction(consumer, self.parent, xy))
+
+    def activate(self, action: ItemAction) -> None:
+        consumer = action.entity
+        target = action.target_actor
+
+        if not core.g.engine.game_map.visible[action.target_xy]:
+            raise Impossible("You cannot target an area that you cannot see.")
+        if not target:
+            raise Impossible("No enemy at location (You must select an enemy to target).")
+        if target is consumer:
+            raise Impossible("You can't bring yourself to target yourself.")
+
+        # Display message for use whenever Item is consumed
+        core.g.engine.message_log.add_message(self.parent.usetext, config.colour.use)
+
+        # Logic for whether enemy can be teleported
+        if isinstance(target.ai, parts.ai.PassiveStationary) or isinstance(target.ai, parts.ai.HostileStationary):
+            core.g.engine.message_log.add_message(
+                f"The {self.parent.name} has no effect...",
+                config.colour.enemy_evade,
+            )
+        else:
+            core.g.engine.message_log.add_message(f"The space around {target.name} warps and it disappears from view!",
+                                                  config.colour.status_effect_applied,
+                                                  )
+
+            # Get a random walkable tile that is not in the player's FOV
+            random_x, random_y = core.g.engine.game_map.get_random_unoccupied_nonfov_tile()
+            target.teleport(random_x, random_y)
         self.consume()

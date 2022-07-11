@@ -1,0 +1,64 @@
+[
+  {
+    "hunchback": {
+      "char": "H",
+      "colour": [191, 151, 96],
+      "name": "Hunchback",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 12,
+        "max_hp": 12,
+        "damage_dice": 1,
+        "damage_sides": 8,
+        "strength": 18,
+        "dexterity": 8,
+        "vitality": 8,
+        "intellect": 18,
+        "perception": 8,
+        "armour": 0,
+        "xp": 350,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 8
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 150
+      },
+      "description": "What you can only assume is a hunched humanoid draped in tattered linens. Its face is completely concealed by a tapered hood. It chants in a gutteral language as it paces slowly."
+    }
+  },
+  {
+    "brainraker": {
+      "char": "ß",
+      "colour": [0, 95, 151],
+      "name": "Brainraker",
+      "ai_cls": "BrainRaker",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 28,
+        "max_hp": 28,
+        "damage_dice": 2,
+        "damage_sides": 6,
+        "strength": 8,
+        "dexterity": 8,
+        "vitality": 8,
+        "intellect": 26,
+        "perception": 14,
+        "armour": 1,
+        "xp": 400,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 8
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 400
+      },
+      "description": "A terrifying bipedal creature with a blue scaled hide and webbed hands. With every breath it exhales a shining mist of particles, covering its glyphed robe with miniscule crystals."
+    }
+  }
+]

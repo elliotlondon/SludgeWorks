@@ -1,0 +1,188 @@
+[
+  {
+    "wretch": {
+      "char": "w",
+      "colour": [127, 0, 0],
+      "name": "Wretch",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 4,
+        "max_hp": 4,
+        "damage_dice": 1,
+        "damage_sides": 3,
+        "strength": 14,
+        "dexterity": 10,
+        "vitality": 12,
+        "intellect": 8,
+        "perception": 10,
+        "armour": 0,
+        "xp": 30,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 8
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 30
+      },
+      "description": "A stunted and misshapen humanoid form covered in filthy rags that has long since been driven feral by the SludgeWorks."
+    }
+  },
+  {
+    "sludge_fiend": {
+      "char": "f",
+      "colour": [255, 0, 0],
+      "name": "Sludge Fiend",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 6,
+        "max_hp": 6,
+        "damage_dice": 1,
+        "damage_sides": 5,
+        "strength": 16,
+        "dexterity": 8,
+        "vitality": 10,
+        "intellect": 6,
+        "perception": 8,
+        "armour": 0,
+        "xp": 50,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 8
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 50
+      },
+      "description": "A ravenous humanoid creature with a maw of sharp yellowed teeth. The remains of clothing cover its torso, and discoloured spikes erupt in clusters from its emaciated body."
+    }
+  },
+  {
+    "thresher": {
+      "char": "T",
+      "colour": [0, 95, 191],
+      "name": "Thresher",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 26,
+        "max_hp": 26,
+        "damage_dice": 2,
+        "damage_sides": 4,
+        "strength": 20,
+        "dexterity": 12,
+        "vitality": 12,
+        "intellect": 4,
+        "perception": 8,
+        "armour": 1,
+        "xp": 275,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 8
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 275
+      },
+      "description": "A colossal ogre-like hominid covered in patches of matted hair and littered with scars. It smashes everything it can find with childlike glee."
+    }
+  },
+  {
+    "moire_beast": {
+      "char": "M",
+      "colour": [159, 159, 159],
+      "name": "Moire Beast",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 14,
+        "max_hp": 14,
+        "damage_dice": 3,
+        "damage_sides": 2,
+        "strength": 10,
+        "dexterity": 16,
+        "vitality": 12,
+        "intellect": 10,
+        "perception": 10,
+        "armour": 1,
+        "xp": 200,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 0
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 20
+      },
+      "description": "A short four-legged beast with an intricate and migraine-inducing greyscale pattern printed over its body. Its yellow catlike eyes peer out from its dazzling form."
+    }
+  },
+  {
+    "lupine_terror": {
+      "char": "L",
+      "colour": [95, 95, 95],
+      "name": "Lupine Terror",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 16,
+        "max_hp": 16,
+        "damage_dice": 4,
+        "damage_sides": 2,
+        "strength": 8,
+        "dexterity": 12,
+        "vitality": 10,
+        "intellect": 8,
+        "perception": 14,
+        "armour": 1,
+        "xp": 200,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 0
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 200
+      },
+      "description": "This upright beast is nothing but fangs and matted, grey fur. It twiches constantly, shying from the light as frothy saliva drips from its mouth."
+    }
+  },
+  {
+    "bloodseeker": {
+      "char": "B",
+      "colour": [255, 63, 111],
+      "name": "Bloodseeker",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 82,
+        "max_hp": 82,
+        "damage_dice": 6,
+        "damage_sides": 8,
+        "strength": 30,
+        "dexterity": 16,
+        "vitality": 18,
+        "intellect": 12,
+        "perception": 14,
+        "armour": 0,
+        "xp": 1500,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 0
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 1500
+      },
+      "description": "An asymmetric monstrosity the size of a bear, rippling with muscle. Rusted weaponry is embedded within its body, sticking out in many directions, with pale and twisted flesh creeping up the hilts. It regularly cries out in agony."
+    }
+  }
+]

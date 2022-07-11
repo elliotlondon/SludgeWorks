@@ -11,5 +11,5 @@ class EquipmentType(Enum):
     Hands = auto()
     Legs = auto()
     Feet = auto()
-    Left_Hand = auto()
-    Right_Hand = auto()
+    Left_Ring = auto()
+    Right_Ring = auto()

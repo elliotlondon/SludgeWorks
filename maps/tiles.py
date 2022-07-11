@@ -1,3 +1,4 @@
+from string import digits
 from typing import Tuple
 
 import numpy as np
@@ -19,64 +20,125 @@ tile_dt = np.dtype(
         ("transparent", np.bool),  # True if this tile doesn"t block FOV.
         ("dark", graphic_dt),  # Graphics for when this tile is not in FOV.
         ("light", graphic_dt),  # Graphics for when the tile is in FOV.
+        ("description", list)  # Description of the tile for the look menu
     ]
 )
 
 
-def new_tile(*, name: str, walkable: bool, transparent: bool,
+def new_tile(*, name: str,
+             walkable: bool, transparent: bool,
              dark: Tuple[int, Tuple[int, int, int], Tuple[int, int, int]],
-             light: Tuple[int, Tuple[int, int, int], Tuple[int, int, int]]) -> np.ndarray:
+             light: Tuple[int, Tuple[int, int, int], Tuple[int, int, int]],
+             description: list) -> np.ndarray:
     """
     Helper function for defining individual tile types
     """
-    return np.array((name, walkable, transparent, dark, light), dtype=tile_dt)
+    return np.array((name, walkable, transparent, dark, light, description), dtype=tile_dt)
+
+
+def get_clean_name(tile: tile_dt) -> str:
+    """Return the information of a selected tile without decoration, for use in look menu."""
+    name = tile[0]
+    name = name.replace('_', '').capitalize()
+    name = name.translate({ord(k): None for k in digits})
+
+    if name == "Dirt":
+        name = "Cave Floor"
+    elif name == "Verdant":
+        name = "Verdant Cave Floor"
+    elif name == "Down_stairs":
+        name = "Next Floor (press '<')"
+    elif name == "Hole":
+        name = "Chasm"
+
+    return name
 
 
 # SHROUD represents unexplored, unseen tiles
 SHROUD = np.array((ord(" "), (255, 255, 255), (0, 0, 0)), dtype=graphic_dt)
 
 # Floors
-dirt_1 = new_tile(name="dirt_1", walkable=True, transparent=True,
+dirt_1 = new_tile(name="dirt_1",
+                  walkable=True, transparent=True,
                   dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
-                  light=(ord("∙"), tcod.grey, (0, 0, 0)))
-dirt_2 = new_tile(name="dirt_2", walkable=True, transparent=True,
+                  light=(ord("∙"), tcod.grey, (0, 0, 0)),
+                  description=list("The dirt beneath your feet is soft and dampened by the humidity of the cave. "
+                                   "Decomposing plant matter is mixed into the soil."))
+dirt_2 = new_tile(name="dirt_2",
+                  walkable=True, transparent=True,
                   dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
-                  light=(ord("'"), tcod.grey, (0, 0, 0)))
-dirt_3 = new_tile(name="dirt_3", walkable=True, transparent=True,
+                  light=(ord("'"), tcod.grey, (0, 0, 0)),
+                  description=list("The dirt beneath your feet is soft and dampened by the humidity of the cave. "
+                                   "Decomposing plant matter is mixed into the soil."))
+dirt_3 = new_tile(name="dirt_3",
+                  walkable=True, transparent=True,
                   dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
-                  light=(ord(","), tcod.grey, (0, 0, 0)))
-dirt_4 = new_tile(name="dirt_4", walkable=True, transparent=True,
+                  light=(ord(","), tcod.grey, (0, 0, 0)),
+                  description=list("The dirt beneath your feet is soft and dampened by the humidity of the cave. "
+                                   "Decomposing plant matter is mixed into the soil."))
+dirt_4 = new_tile(name="dirt_4",
+                  walkable=True, transparent=True,
                   dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
-                  light=(ord("`"), tcod.grey, (0, 0, 0)))
+                  light=(ord("`"), tcod.grey, (0, 0, 0)),
+                  description=list("The dirt beneath your feet is soft and dampened by the humidity of the cave. "
+                                   "Decomposing plant matter is mixed into the soil."))
 floor_tiles_1 = [dirt_1, dirt_2, dirt_3, dirt_4]
 
-verdant_1 = new_tile(name="verdant_1", walkable=True, transparent=True,
+verdant_1 = new_tile(name="verdant_1",
+                     walkable=True, transparent=True,
                      dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
-                     light=(ord(","), tcod.green, (0, 0, 0)))
-verdant_2 = new_tile(name="verdant_2", walkable=True, transparent=True,
+                     light=(ord(","), tcod.green, (0, 0, 0)),
+                     description=list("Unusual tufted grass, fractal succulents and dainty flowers have sprouted here, "
+                                      "abandoning photosynthesis in lieu of the sustaining properties of "
+                                      "the mud they spring from."))
+verdant_2 = new_tile(name="verdant_2",
+                     walkable=True, transparent=True,
                      dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
-                     light=(ord("∙"), tcod.light_green, (0, 0, 0)))
-verdant_3 = new_tile(name="verdant_3", walkable=True, transparent=True,
+                     light=(ord("∙"), tcod.light_green, (0, 0, 0)),
+                     description=list("Unusual tufted grass, fractal succulents and dainty flowers have sprouted here, "
+                                      "abandoning photosynthesis in lieu of the sustaining properties of "
+                                      "the mud they spring from."))
+verdant_3 = new_tile(name="verdant_3",
+                     walkable=True, transparent=True,
                      dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
-                     light=(ord("'"), tcod.dark_green, (0, 0, 0)))
-verdant_4 = new_tile(name="verdant_4", walkable=True, transparent=True,
+                     light=(ord("'"), tcod.dark_green, (0, 0, 0)),
+                     description=list("Unusual tufted grass, fractal succulents and dainty flowers have sprouted here, "
+                                      "abandoning photosynthesis in lieu of the sustaining properties of "
+                                      "the mud they spring from."))
+verdant_4 = new_tile(name="verdant_4",
+                     walkable=True, transparent=True,
                      dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
-                     light=(ord("∙"), tcod.dark_green, (0, 0, 0)))
+                     light=(ord("∙"), tcod.dark_green, (0, 0, 0)),
+                     description=list("Unusual tufted grass, fractal succulents and dainty flowers have sprouted here, "
+                                      "abandoning photosynthesis in lieu of the sustaining properties of "
+                                      "the mud they spring from."))
 verdant_chars = [",", ".", "'", "∙"]
 verdant_tiles_1 = [verdant_1, verdant_2, verdant_3, verdant_4]
 
 # Walls
-wall = new_tile(name="wall", walkable=False, transparent=False,
+wall = new_tile(name="wall",
+                walkable=False, transparent=False,
                 dark=(ord("▓"), tcod.grey, (0, 0, 0)),
-                light=(ord("▓"), (150, 100, 50), (0, 0, 0)))
-rubble = new_tile(name="rubble", walkable=False, transparent=True,
+                light=(ord("▓"), (150, 100, 50), (0, 0, 0)),
+                description=list("The cave walls are made of rugged brown rock, and slick with condensation. "
+                                 "Marks like writing appear in clusters, "
+                                 "partially obscured by fluorescent moss."))
+rubble = new_tile(name="rubble",
+                  walkable=False, transparent=True,
                   dark=(ord("▲"), tcod.grey, (0, 0, 0)),
-                  light=(ord("▲"), (150, 100, 50), (0, 0, 0)))
+                  light=(ord("▲"), (150, 100, 50), (0, 0, 0)),
+                  description=list("The instability of the SludgeWorks is obvious by the sheer quantity of "
+                                   "rubble found even within the upper caves. "
+                                   "Gigantic boulders embedded with unknown fossils block your path. "))
 
 # Liquids
-water = new_tile(name="water", walkable=False, transparent=True,
+water = new_tile(name="water",
+                 walkable=False, transparent=True,
                  dark=(ord("≈"), tcod.grey, (0, 0, 0)),
-                 light=(ord("≈"), tcod.light_blue, (0, 0, 0)))
+                 light=(ord("≈"), tcod.light_blue, (0, 0, 0)),
+                 description=list("Deep, murky water covered with glowing green algae forms pools that twist and "
+                                  "flow, pulled lower into the caves by tiny, hidden whirlpools. Fresh water "
+                                  "trickles from cracks in the ceiling, balancing the equilibrium."))
 
 # Stairs
 down_stairs = new_tile(
@@ -85,6 +147,9 @@ down_stairs = new_tile(
     transparent=True,
     dark=(ord(">"), (255, 255, 255), (0, 0, 0)),
     light=(ord(">"), (255, 255, 255), (0, 0, 0)),
+    description=list("A huge, roughly circular hole in the ground stands here, well-lit by luminous greenery. "
+                     "Air from the surface rushes towards the rift, carried to another unknown cavern. "
+                     "You feel an impulse to continue down this route. ")
 )
 hole = new_tile(
     name="hole",
@@ -92,6 +157,9 @@ hole = new_tile(
     transparent=True,
     dark=(ord("░"), (0, 0, 0), (36, 36, 36)),
     light=(ord("░"), (0, 0, 0), (36, 36, 36)),
+    description=list("This area of the cave has recently collapsed, leaving a gigantic void, with the cave floor "
+                     "serving as a cliff edge. You could jump down here, but you're certain that you would hurt "
+                     "yourself on jagged cliff edge as you descend.")
 )
 waterfall = new_tile(
     name="waterfall",
@@ -99,4 +167,6 @@ waterfall = new_tile(
     transparent=True,
     dark=(ord("░"), (0, 0, 0), (36, 36, 36)),
     light=(ord("↓"), tcod.light_blue, (0, 0, 0)),
+    description=list("A rushing waterfall is created from a deep chasm in the ground meeting a nearby body of water, "
+                     "falling into the dark depths beneath.")
 )

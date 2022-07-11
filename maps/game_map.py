@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import Iterable, Iterator, Optional, TYPE_CHECKING, Tuple
+from typing import Iterable, Iterator, Optional, TYPE_CHECKING, Tuple, Dict, List
 
 import numpy as np
 
@@ -51,12 +51,31 @@ class SimpleGameMap:
         yield from (
             entity
             for entity in self.entities
-            if isinstance(entity, parts.entity.Actor) and entity.is_alive and not isinstance(entity.ai, PassiveStationary)
+            if
+            isinstance(entity, parts.entity.Actor) and entity.is_alive and not isinstance(entity.ai, PassiveStationary)
         )
 
     @property
     def items(self) -> Iterator[Item]:
         yield from (entity for entity in self.entities if isinstance(entity, parts.entity.Item))
+
+    def get_tile_at_explored_location(self, location_x: int, location_y: int) -> Optional[maps.tiles.tile_dt]:
+        if self.explored[location_x, location_y]:
+            return self.tiles[location_x, location_y]
+
+    def get_all_entities_at_location(self, location_x: int, location_y: int) -> Optional[List[Entity]]:
+        entities = []
+        for entity in self.entities:
+            if entity.x == location_x and entity.y == location_y:
+                entities.append(entity)
+        return entities
+
+    def get_all_visible_entities(self, location_x: int, location_y: int) -> Optional[List[Entity]]:
+        entities = []
+        for entity in self.entities:
+            if entity.x == location_x and entity.y == location_y and self.visible[location_x, location_y]:
+                entities.append(entity)
+        return entities
 
     def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
         for entity in self.entities:
@@ -71,6 +90,13 @@ class SimpleGameMap:
                 return actor
 
         return None
+
+    def get_occupied(self):
+        """Return all tiles which have an entity at their coordinates."""
+        tiles = np.full((self.width, self.height), fill_value=False, order="F")
+        for actor in self.actors:
+            tiles[actor.x, actor.y] = True
+        return tiles
 
     def in_bounds(self, x: int, y: int) -> bool:
         """Return True if x and y are within map bounds."""
@@ -96,6 +122,16 @@ class SimpleGameMap:
 
         return (x, y)
 
+    def get_random_unoccupied_nonfov_tile(self) -> Tuple[int, int]:
+        """Return the coordinates of a random walkable tile within the current floor."""
+        walkable = np.logical_and(self.tiles['walkable'], self.tiles['name'] != 'hole')
+        unoccupied = np.nonzero(np.logical_xor(walkable, self.get_occupied()))
+        index = random.randint(0, len(unoccupied[0]) - 1)
+        x = unoccupied[0][index]
+        y = unoccupied[1][index]
+
+        return (x, y)
+
     def get_random_walkable_nontunnel_tile(self) -> Tuple[int, int]:
         """Return the coordinates of a random walkable tile that is not a tunnel within the current floor."""
         walkable = np.nonzero(
@@ -118,30 +154,6 @@ class SimpleGameMap:
 
         return accessible
 
-    # def render(self, console: tcod.Console) -> None:
-    #     console.tiles_rgb[0:self.width, 0:self.height] = self.tiles["dark"]
-    #     """
-    #     Renders the map.
-    #
-    #     If a tile is in the "visible" array, then draw it with the "light" colors.
-    #     If it isn't, but it's in the "explored" array, then draw it with the "dark" colors.
-    #     Otherwise, the default is "SHROUD".
-    #     """
-    #     console.tiles_rgb[0:self.width, 0:self.height] = np.select(
-    #         condlist=[self.visible, self.explored],
-    #         choicelist=[self.tiles["light"], self.tiles["dark"]],
-    #         default=maps.tiles.SHROUD
-    #     )
-    #
-    #     entities_sorted_for_rendering = sorted(self.entities, key=lambda x: x.render_order.value)
-    #
-    #     for entity in entities_sorted_for_rendering:
-    #         if self.visible[entity.x, entity.y]:
-    #             console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
-    #             console.print(
-    #                 x=entity.x, y=entity.y, string=entity.char, fg=entity.colour
-    #             )
-
 
 # TODO: Add saved gamemaps to gameworld
 class GameWorld:
@@ -153,38 +165,112 @@ class GameWorld:
             self,
             *,
             engine: Engine,
+            max_rooms: int,
+            room_max_size: int,
+            room_min_size: int,
             map_width: int,
             map_height: int,
-            max_rooms: int,
-            room_min_size: int,
-            room_max_size: int,
+            cave_smoothing: int = 1,
+            cave_p: int = 50,
+            caves: bool = True,
+            rooms: bool = True,
+            erode: bool = False,
+            floors: Dict[str, SimpleGameMap] = None,
             current_floor: int = 0
     ):
-        self.engine = engine
-
+        if floors is None:
+            floors = {}
+        # Floor params
+        self.max_rooms = max_rooms
+        self.room_max_size = room_max_size
+        self.room_min_size = room_min_size
         self.map_width = map_width
         self.map_height = map_height
+        # Biome params
+        self.cave_smoothing = cave_smoothing
+        self.cave_p = cave_p
+        self.caves = caves
+        self.rooms = rooms
+        self.erode = erode
 
-        self.max_rooms = max_rooms
-
-        self.room_min_size = room_min_size
-        self.room_max_size = room_max_size
-
+        self.engine = engine
+        self.floors = floors
         self.current_floor = current_floor
 
     def generate_floor(self) -> None:
         from maps.procgen import generate_dungeon
 
+        # Logic for floor generation
         self.current_floor += 1
+        if self.current_floor == 1:
+            # First floor, unique scenario
+            new_floor = generate_dungeon(
+                max_rooms=self.max_rooms,
+                room_min_size=self.room_min_size,
+                room_max_size=self.room_max_size,
+                map_width=self.map_width,
+                map_height=self.map_height,
+                engine=self.engine,
+            )
+        elif 2 <= self.current_floor <= 4:
+            # 3 floors of surface caves. Caves get broader as you descend
+            self.room_max_size = 4
+            self.room_min_size = 1
+            self.cave_smoothing += 1
+            self.cave_p -= 5
+            self.rooms = True
+            self.erode = True
+            new_floor = generate_dungeon(
+                max_rooms=self.max_rooms,
+                room_min_size=self.room_min_size,
+                room_max_size=self.room_max_size,
+                map_width=self.map_width,
+                map_height=self.map_height,
+                engine=self.engine,
+            )
+        elif self.current_floor == 5:
+            # 4th floor suddenly breaks into tunnels
+            self.max_rooms = 25
+            self.room_max_size = 4
+            self.room_min_size = 1
+            self.cave_smoothing = 1
+            self.cave_p += 10
+            self.rooms = True
+            self.erode = False
+            new_floor = generate_dungeon(
+                max_rooms=self.max_rooms,
+                room_min_size=self.room_min_size,
+                room_max_size=self.room_max_size,
+                map_width=self.map_width,
+                map_height=self.map_height,
+                engine=self.engine,
+            )
+        elif 6 <= self.current_floor <= 7:
+            # 5th and 6th floors are progressively narrowing tunnels
+            self.max_rooms += 5
+            self.room_min_size -= 1
+            self.room_max_size -= 1
+            new_floor = generate_dungeon(
+                max_rooms=self.max_rooms,
+                room_min_size=self.room_min_size,
+                room_max_size=self.room_max_size,
+                map_width=self.map_width,
+                map_height=self.map_height,
+                engine=self.engine,
+            )
+        else:
+            # Not yet implemented
+            new_floor = generate_dungeon(
+                max_rooms=self.max_rooms,
+                room_min_size=self.room_min_size,
+                room_max_size=self.room_max_size,
+                map_width=self.map_width,
+                map_height=self.map_height,
+                engine=self.engine,
+            )
 
-        self.engine.game_map = generate_dungeon(
-            max_rooms=self.max_rooms,
-            room_min_size=self.room_min_size,
-            room_max_size=self.room_max_size,
-            map_width=self.map_width,
-            map_height=self.map_height,
-            engine=self.engine,
-        )
+        self.engine.game_map = new_floor
+        self.floors[f'level_{self.current_floor}'] = new_floor
 
 
 # class GameMap:

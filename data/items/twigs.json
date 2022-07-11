@@ -1,0 +1,81 @@
+[
+  {
+    "lightning_twig": {
+      "char": "√",
+      "colour": [
+        191,
+        191,
+        0
+      ],
+      "name": "Crackling Imbued Twig",
+      "consumable": {
+        "type": "Lightning",
+        "upper_bound": 20,
+        "lower_bound": 16,
+        "range": 8
+      },
+      "depth": 1,
+      "rarity": 2,
+      "usetext": "You snap the twig...",
+      "description": "An odd Y-shaped twig of unknown hardwood. Holding it makes your hair stand on end."
+    }
+  },
+  {
+    "confusing_twig": {
+      "char": "√",
+      "colour": [
+        191,
+        0,
+        191
+      ],
+      "name": "Warping Imbued Twig",
+      "consumable": {
+        "type": "Confusion",
+        "number_of_turns": 8
+      },
+      "depth": 1,
+      "rarity": 2,
+      "usetext": "You snap the twig...",
+      "description": "An odd Y-shaped twig of unknown hardwood. Holding it makes you feel unable to concentrate."
+    }
+  },
+  {
+    "fireball_twig": {
+      "char": "√",
+      "colour": [
+        191,
+        0,
+        0
+      ],
+      "name": "Burnt Imbued Twig",
+      "consumable": {
+        "type": "Fireball",
+        "upper_bound": 10,
+        "lower_bound": 16,
+        "radius": 3
+      },
+      "depth": 2,
+      "rarity": 3,
+      "usetext": "You snap the twig...",
+      "description": "An odd Y-shaped twig of unknown hardwood. A powerful heat emanates from it."
+    }
+  },
+  {
+    "teleother_twig": {
+      "char": "√",
+      "colour": [
+        63,
+        63,
+        191
+      ],
+      "name": "Repelling Imbued Twig",
+      "consumable": {
+        "type": "Teleother"
+      },
+      "depth": 2,
+      "rarity": 3,
+      "usetext": "You snap the twig...",
+      "description": "An odd Y-shaped twig of unknown hardwood. You often drop the twig out of unnatural clumsiness."
+    }
+  }
+]

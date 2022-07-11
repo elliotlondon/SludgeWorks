@@ -1,0 +1,95 @@
+[
+  {
+    "alanwric": {
+      "char": "Å",
+      "colour": [255, 255, 63],
+      "name": "Alanwric the Spinning Blade",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 42,
+        "max_hp": 42,
+        "damage_dice": 8,
+        "damage_sides": 4,
+        "strength": 28,
+        "dexterity": 28,
+        "vitality": 18,
+        "intellect": 16,
+        "perception": 18,
+        "armour": 6,
+        "xp": 2500,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 8
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 2500
+      },
+      "description": "<Blank>"
+    }
+  },
+  {
+    "teague": {
+      "char": "τ",
+      "colour": [63, 63, 0],
+      "name": "Teague the Martyr",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 64,
+        "max_hp": 64,
+        "damage_dice": 4,
+        "damage_sides": 4,
+        "strength": 20,
+        "dexterity": 20,
+        "vitality": 20,
+        "intellect": 20,
+        "perception": 20,
+        "armour": 0,
+        "xp": 2500,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 8
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 2500
+      },
+      "description": "<Blank>"
+    }
+  },
+  {
+    "dymacia": {
+      "char": "δ",
+      "colour": [63, 0, 63],
+      "name": "Cultist Queen Dymacia",
+      "ai_cls": "HostileEnemy",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 48,
+        "max_hp": 48,
+        "damage_dice": 1,
+        "damage_sides": 6,
+        "strength": 20,
+        "dexterity": 20,
+        "vitality": 24,
+        "intellect": 30,
+        "perception": 26,
+        "armour": 2,
+        "xp": 2500,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 8
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 2500
+      },
+      "description": "<Blank>"
+    }
+  }
+]

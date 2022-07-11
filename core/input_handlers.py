@@ -3,7 +3,8 @@ from __future__ import annotations
 import logging
 import math
 import os
-from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union, List
+import textwrap
+from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union, List, Iterable
 
 import numpy as np
 import tcod
@@ -12,9 +13,14 @@ import config.colour
 import config.inputs
 import core.actions
 import core.g
-from core.rendering import render_map, render_ui
+import parts.inventory
 from config.exceptions import Impossible
 from core.actions import Action
+from core.rendering import render_map, render_ui
+from maps.tiles import get_clean_name
+from parts.ai import NPC
+from parts.entity import Actor
+from core.render_functions import RenderOrder
 
 if TYPE_CHECKING:
     from parts.entity import Item
@@ -92,20 +98,6 @@ class EventHandler(BaseEventHandler):
             elif core.g.engine.player.level.requires_level_up:
                 return LevelUpEventHandler()
             return MainGameEventHandler()  # Return to the main handler.
-
-        # Failsafe for recursion
-        if not core.g.engine.player.is_alive:
-            return GameOverEventHandler()
-        elif core.g.engine.player.level.requires_level_up:
-            return LevelUpEventHandler()
-
-        # Garbage collection for exiled entities
-        exiles = []
-        for entity in core.g.engine.game_map.entities:
-            if entity.name == ' ':
-                exiles.append(entity)
-        core.g.engine.game_map.entities = set([x for x in core.g.engine.game_map.entities
-                                               if x not in exiles])
 
         return self
 
@@ -273,6 +265,34 @@ class ExploreEventHandler(EventHandler):
 
 
 class MainGameEventHandler(EventHandler):
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        # Failsafe for recursion
+        if not core.g.engine.player.is_alive:
+            return GameOverEventHandler()
+        elif core.g.engine.player.level.requires_level_up:
+            return LevelUpEventHandler()
+
+        # Garbage collection for exiled entities
+        exiles = []
+        for entity in core.g.engine.game_map.entities:
+            if entity.name == ' ':
+                exiles.append(entity)
+        core.g.engine.game_map.entities = set([x for x in core.g.engine.game_map.entities
+                                               if x not in exiles])
+
+        return self
+
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         action: Optional[Action] = None
 
@@ -397,14 +417,14 @@ class CharacterScreenEventHandler(AskUserEventHandler):
 
 
 class LevelUpEventHandler(AskUserEventHandler):
-    TITLE = "Level Up"
+    TITLE = "<Untitled>"
 
     def on_render(self, console: tcod.Console) -> None:
         super().on_render(console)
 
-        attr_str = "You have gained a level! Select an attribute to increase."
+        attr_str = "Select an attribute to increase."
 
-        width = len(attr_str) + 4
+        width = len(attr_str) + 15
         x = console.width // 2 - int(width / 2)
         y = console.height // 2 - 4
 
@@ -412,30 +432,37 @@ class LevelUpEventHandler(AskUserEventHandler):
             x=x,
             y=y,
             width=width,
-            height=8,
-            title=self.TITLE,
+            height=9,
+            title='',
             clear=True,
-            fg=(255, 255, 255),
+            fg=tcod.yellow,
             bg=(0, 0, 0),
         )
+        console.print(x=console.width // 2, y=y, string="┤Level Up!├", alignment=tcod.constants.CENTER)
 
-        console.print(x=x + 1, y=y + 1, string="You channel the power of your slain foes...")
-        console.print(x=x + 1, y=y + 2, string=attr_str)
+        console.print(x=console.width // 2, y=y + 2, string="You channel the power of your slain foes...",
+                      fg=tcod.white, alignment=tcod.constants.CENTER)
+        console.print(x=console.width // 2, y=y + 3, string=attr_str,
+                      fg=tcod.white, alignment=tcod.constants.CENTER)
 
-        console.print(
-            x=x + 1,
-            y=y + 4,
-            string=f"a) Vitality (+20 HP, from {core.g.engine.player.fighter.max_hp})",
-        )
         console.print(
             x=x + 1,
             y=y + 5,
-            string=f"b) Strength (+1 attack, from {core.g.engine.player.fighter.base_strength})",
+            string=f"a) Vitality (+{core.g.engine.player.fighter.base_vitality}, "
+                   f"from {core.g.engine.player.fighter.max_hp})",
+            fg=tcod.light_pink,
         )
         console.print(
             x=x + 1,
             y=y + 6,
+            string=f"b) Strength (+1 attack, from {core.g.engine.player.fighter.base_strength})",
+            fg=tcod.light_red,
+        )
+        console.print(
+            x=x + 1,
+            y=y + 7,
             string=f"c) Dexterity (+1 defense, from {core.g.engine.player.fighter.base_dexterity})",
+            fg=tcod.light_green,
         )
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
@@ -469,7 +496,6 @@ class InventoryEventHandler(AskUserEventHandler):
     This handler lets the user select an item.
     What happens then depends on the subclass.
     """
-
     TITLE = "<missing title>"
 
     def on_render(self, console: tcod.Console) -> None:
@@ -486,7 +512,7 @@ class InventoryEventHandler(AskUserEventHandler):
         if height <= 3:
             height = 3
 
-        width = len(self.TITLE) + 16
+        width = len(self.TITLE) + 20
         x = console.width // 2 - int(width / 2)
         y = console.height // 2
 
@@ -495,12 +521,12 @@ class InventoryEventHandler(AskUserEventHandler):
             y=y,
             width=width,
             height=height,
-            title=self.TITLE,
+            title='',
             clear=True,
             fg=(255, 255, 255),
             bg=(0, 0, 0),
         )
-        console.print(x + 1, y, f" {self.TITLE} ", fg=(0, 0, 0), bg=(255, 255, 255))
+        console.print(x + 1, y, f"┤{self.TITLE}. TAB to sort├")
 
         if number_of_items_in_inventory > 0:
             for i, item in enumerate(core.g.engine.player.inventory.items):
@@ -511,7 +537,7 @@ class InventoryEventHandler(AskUserEventHandler):
                 if is_equipped:
                     item_string = f"{item_string} (E)"
 
-                console.print(x + 1, y + i + 1, item_string)
+                console.print(x + 1, y + i + 1, item_string, fg=item.str_colour)
         else:
             console.print(x + 1, y + 1, "(Empty)")
 
@@ -527,6 +553,11 @@ class InventoryEventHandler(AskUserEventHandler):
                 core.g.engine.message_log.add_message("Invalid entry.", config.colour.invalid)
                 return None
             return self.on_item_selected(selected_item)
+        elif key == tcod.event.KeySym.TAB:
+            player.inventory.items = parts.inventory.autosort(player.inventory.items)
+            core.g.engine.message_log.add_message("You reorganize your inventory.",
+                                                  config.colour.use)
+            return None
         return super().ev_keydown(event)
 
     def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
@@ -536,7 +567,6 @@ class InventoryEventHandler(AskUserEventHandler):
 
 class InventoryActivateHandler(InventoryEventHandler):
     """Handle using an inventory item."""
-
     TITLE = "Select an item to use:"
 
     def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
@@ -551,7 +581,6 @@ class InventoryActivateHandler(InventoryEventHandler):
 
 class InventoryDropHandler(InventoryEventHandler):
     """Handle dropping an inventory item."""
-
     TITLE = "Select an item to drop"
 
     def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
@@ -567,6 +596,33 @@ class SelectIndexHandler(AskUserEventHandler):
         super().__init__()
         player = core.g.engine.player
         core.g.engine.mouse_location = player.x, player.y
+
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        """Handle an event, perform any actions, then return the next active event handler."""
+        action_or_state = self.dispatch(event)
+        if isinstance(action_or_state, EventHandler):
+            return action_or_state
+        if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
+            if not core.g.engine.player.is_alive:
+                return GameOverEventHandler()
+            elif core.g.engine.player.level.requires_level_up:
+                return LevelUpEventHandler()
+            return MainGameEventHandler()  # Return to the main handler.
+
+        return self
+
+    def handle_action(self, action: Action) -> EventHandler:
+        """Handle actions returned from event methods."""
+        try:
+            action.perform()
+        except Impossible as exc:
+            core.g.engine.message_log.add_message(exc.args[0], config.colour.impossible)
+            return self  # Skip enemy turn on exceptions.
+
+        # Action was successfully performed and a turn was advanced
+        core.g.engine.handle_enemy_turns()
+        core.g.engine.update_fov()
+        return self
 
     def on_render(self, console: tcod.Console) -> None:
         """Highlight the tile under the cursor."""
@@ -613,9 +669,131 @@ class SelectIndexHandler(AskUserEventHandler):
 
 
 class LookHandler(SelectIndexHandler):
-    """
-    Lets the player look around using the keyboard.
-    """
+    """Lets the player look around using the keyboard. Draws a box with details about the selected tile, and
+    its occupants."""
+
+    def __init__(self):
+        """Additionally keep track of items to render in tile stack."""
+        super().__init__()
+        self.stack: List = []
+
+    @staticmethod
+    def wrap(string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():
+            yield from textwrap.wrap(line, width, expand_tabs=True)
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Highlight the tile under the cursor."""
+        super().on_render(console)
+        x, y = core.g.engine.mouse_location
+        console.tiles_rgb["bg"][x, y] = config.colour.white
+        console.tiles_rgb["fg"][x, y] = config.colour.black
+
+        self.create_look_box(x, y, console)
+
+    def create_look_box(self, x_pos: int, y_pos: int, console: tcod.Console) -> None:
+        """Render the parent and dim the result, then print the message on top.
+        x_pos: x index of selected tile
+        y_pos: y index of selected tile
+        """
+        self.stack = []
+
+        # Get necessary info at the specified tile
+        tile = core.g.engine.game_map.get_tile_at_explored_location(x_pos, y_pos)
+        visible = core.g.engine.game_map.visible[x_pos, y_pos]
+        if tile:
+            # Make a dictionary containing all necessary content
+            tile_content = {}
+            tile_content['name'] = get_clean_name(tile)
+            tile_content['description'] = ''.join(tile[5])
+            tile_content['footer'] = 'FLOOR TILE'
+            tile_content['footer_colour'] = tcod.grey
+            if visible:
+                tile_content['colour'] = list(tile[4][1])
+            else:
+                tile_content['colour'] = list(tile[4][1])
+
+            # Look box size
+            width = console.width // 4 + 2
+            height = len(tile_content['description']) // (console.width // 4) + 8
+
+            # Calculate whether the box should be rendered above or below the selected tile
+            if x_pos >= console.width // 2:
+                box_x = x_pos - width - 2
+            else:
+                box_x = x_pos + 2
+            if y_pos >= console.height // 2:
+                box_y = y_pos - height - 2
+            else:
+                box_y = y_pos + 2
+
+            # First draw a box for the tile
+            self.stack.append(self.draw_look_box(tile_content, box_x, box_y, width, height, console))
+
+            # Now make a box for each entity at the location. Only consider visible entities
+            entities = core.g.engine.game_map.get_all_visible_entities(x_pos, y_pos)
+            if entities:
+                entity_content = {}
+                i = 1
+                for entity in sorted(entities, key=lambda x: x.render_order.value):
+                    # Get entity info
+                    entity_content['name'] = entity.name.capitalize()
+                    entity_content['colour'] = entity.colour
+                    entity_content['description'] = entity.description
+                    if entity.name == "Player":
+                        entity_content['footer'] = ''
+                        entity_content['footer_colour'] = tcod.white
+                    elif isinstance(entity, parts.entity.Item):
+                        entity_content['footer'] = "ITEM"
+                        entity_content['footer_colour'] = tcod.yellow
+                    elif isinstance(entity.ai, parts.ai.NPC):
+                        entity_content['footer'] = "NPC"
+                        entity_content['footer_colour'] = tcod.blue
+                    elif isinstance(entity.ai, parts.ai.HostileStationary) or \
+                            isinstance(entity.ai, parts.ai.PassiveStationary):
+                        entity_content["footer"] = "PLANT"
+                        entity_content['footer_colour'] = tcod.green
+                    elif entity.render_order == RenderOrder.CORPSE:
+                        entity_content["footer"] = "CORPSE"
+                        entity_content['footer_colour'] = tcod.grey
+                    else:
+                        entity_content["footer"] = "ENEMY"
+                        entity_content['footer_colour'] = tcod.red
+                    # Scale width in case of long item names
+                    if len(entity_content['name']) > width:
+                        width = len(entity_content['name']) + 4
+                    self.stack.append(self.draw_look_box(entity_content, box_x + i, box_y + i, width, height, console))
+                    i += 1
+
+    def draw_look_box(self, content_dict: dict, x: int, y: int, width: int, height: int, console: tcod.Console) -> None:
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=(255, 255, 255),
+            bg=(0, 0, 0)
+        )
+        # Add white bg to title if item colour is too dark
+        if sum(content_dict['colour']) < 121:
+            bg = (255, 255, 255)
+        else:
+            bg = (0, 0, 0)
+        console.print(x=x + 1, y=y, string=f"{content_dict['name']}", fg=content_dict['colour'], bg=bg,
+                      alignment=tcod.constants.LEFT)
+
+        # Break up description string into sub-strings if it is longer than the box width.
+        y_offset = 2
+        content_dict['description'] = content_dict['description'].replace(".", ".\n")
+        for line in list(self.wrap(content_dict['description'], width - 2)):
+            console.print(x=x + 1, y=y + y_offset, string=line, fg=tcod.white)
+            y_offset += 1
+
+        console.print(x=x + 1, y=y + height - 1, string=content_dict['footer'], fg=content_dict['footer_colour'],
+                      alignment=tcod.constants.LEFT)
 
     def on_index_selected(self, x: int, y: int) -> MainGameEventHandler:
         """Return to main handler."""
@@ -627,7 +805,6 @@ class SingleRangedAttackHandler(SelectIndexHandler):
 
     def __init__(self, callback: Callable[[Tuple[int, int]], Optional[Action]]):
         super().__init__()
-
         self.callback = callback
 
     def on_index_selected(self, x: int, y: int) -> Optional[Action]:
@@ -664,8 +841,19 @@ class AreaRangedAttackHandler(SelectIndexHandler):
         return self.callback((x, y))
 
 
+class TeleotherEventHandler(SelectIndexHandler):
+    """Handles targeting a single enemy. Only the enemy selected will be affected."""
+
+    def __init__(self, callback: Callable[[Tuple[int, int]], Optional[Action]]):
+        super().__init__()
+        self.callback = callback
+
+    def on_index_selected(self, x: int, y: int) -> Optional[Action]:
+        return self.callback((x, y))
+
+
 class HoleJumpEventHandler(AskUserEventHandler):
-    TITLE = "You stand on the edge of a deep chasm."
+    TITLE = "<Untitled>"
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
         if event.sym in config.inputs.YESNO_KEYS:
@@ -682,7 +870,7 @@ class HoleJumpEventHandler(AskUserEventHandler):
         # x = round(self.engine.game_map.width / 2)
         # y = round(self.engine.game_map.height)
 
-        width = len(self.TITLE) + 6
+        width = len(self.TITLE) + 34
         x = console.width // 2 - int(width / 2)
         y = console.height // 2
 
@@ -690,16 +878,23 @@ class HoleJumpEventHandler(AskUserEventHandler):
             x=x,
             y=y,
             width=width,
-            height=4,
-            title=self.TITLE,
+            height=6,
+            title='',
             clear=True,
-            fg=(255, 255, 255),
+            fg=tcod.gray,
             bg=(0, 0, 0),
         )
+        console.print(console.width // 2, y, f"┤You stand on the edge of a deep chasm.├",
+                      alignment=tcod.constants.CENTER, fg=tcod.gray)
 
-        console.print(x=x + 1, y=y + 1, string=f"Are you sure you want to jump down the hole?")
-        console.print(x=x + int(width / 4), y=y + 3, string=f"[Y]: Yes")
-        console.print(x=x + int(width / 2), y=y + 3, string=f"[N]: No")
+        console.print(x=console.width // 2, y=y + 2, string=f"Are you sure you want to",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2, y=y + 3, string=f"jump down the hole?",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 - 6, y=y + 5, string=f"[Y]: Yes",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 + 6, y=y + 5, string=f"[N]: No",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
 
 
 class GameOverEventHandler(EventHandler):
@@ -766,16 +961,8 @@ class HistoryViewer(EventHandler):
             return MainGameEventHandler()
         return None
 
-
 # TODO: Restore autoexplore
 # TODO: Restore autostairs
-def handle_event():
-    """
-    For every player event, first determine the game state in order to provide the context for the actions, and then
-    act accordingly.
-    """
-    pass
-
 # TODO: Show inventory and message log on player death
 # TODO: Show library of highscores for single player
 # def handle_player_dead_events(event):
@@ -784,39 +971,6 @@ def handle_event():
 #             return {'show_inventory': True}
 #         case tcod.event.K_ESCAPE:
 #             return {'quit': True}
-#         case tcod.event.K_F11:
-#             return {'fullscreen': True}
-#     return {}
-
-# TODO: Main menu
-# def handle_main_menu(event):
-#     match event:
-#         case tcod.event.K_a:
-#             return {'new_game': True}
-#         case tcod.event.K_b:
-#             return {'load_game': True}
-#         case (tcod.event.K_c, tcod.event.K_q, tcod.event.K_ESCAPE):
-#             return {'exit': True}
-#         case tcod.event.K_F11:
-#             return {'fullscreen': True}
-#     return {}
-
-# TODO: Level-up menu
-# def handle_level_up_menu(event):
-#     match event:
-#         case tcod.event.K_a:
-#             return {'level_up': 'str'}
-#         case tcod.event.K_b:
-#             return {'level_up': 'agi'}
-#         case tcod.event.K_F11:
-#             return {'fullscreen': True}
-#     return {}
-
-# TODO: Display character sheet
-# def handle_character_screen(event):
-#     match event:
-#         case tcod.event.K_ESCAPE:
-#             return {'exit': True}
 #         case tcod.event.K_F11:
 #             return {'fullscreen': True}
 #     return {}

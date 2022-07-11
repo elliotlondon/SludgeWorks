@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
 
+import core.g
 from parts.base_component import BaseComponent
 from parts.equipment_types import EquipmentType
-import core.g
 
 if TYPE_CHECKING:
     from entity import Actor, Item
@@ -21,8 +21,8 @@ class Equipment(BaseComponent):
                  hands: Optional[Item] = None,
                  legs: Optional[Item] = None,
                  feet: Optional[Item] = None,
-                 left_hand: Optional[Item] = None,
-                 right_hand: Optional[Item] = None):
+                 left_ring: Optional[Item] = None,
+                 right_ring: Optional[Item] = None):
         self.main_hand = main_hand
         self.off_hand = off_hand
         self.head = head
@@ -30,8 +30,8 @@ class Equipment(BaseComponent):
         self.hands = hands
         self.legs = legs
         self.feet = feet
-        self.left_hand = left_hand
-        self.right_hand = right_hand
+        self.left_ring = left_ring
+        self.right_ring = right_ring
 
     def __iter__(self):
         for attr in self.__dict__.items():
@@ -101,7 +101,7 @@ class Equipment(BaseComponent):
     def item_is_equipped(self, item: Item) -> bool:
         return self.main_hand == item or self.off_hand == item or \
                self.head == item or self.torso == item or self.legs == item or self.feet == item or \
-               self.left_hand == item or self.right_hand == item
+               self.left_ring == item or self.right_ring == item
 
     def unequip_message(self, item_name: str) -> None:
         core.g.engine.message_log.add_message(f"You remove the {item_name}.")
@@ -146,9 +146,9 @@ class Equipment(BaseComponent):
                 slot = "hands"
             elif type == EquipmentType.Feet:
                 slot = "feet"
-            elif type == EquipmentType.Left_Hand:
+            elif type == EquipmentType.Left_Ring:
                 slot = "left_hand"
-            elif type == EquipmentType.Right_Hand:
+            elif type == EquipmentType.Right_Ring:
                 slot = "right_hand"
 
         if getattr(self, slot) == equippable_item:
@@ -177,4 +177,3 @@ class Equipment(BaseComponent):
     #                 setattr(entity.equipment, x.lower(), None)
     #             else:
     #                 setattr(entity.equipment, x.lower(), equippable_entity)
-

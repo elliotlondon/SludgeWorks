@@ -3,8 +3,8 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING
 
-from parts.base_component import BaseComponent
 import core.g
+from parts.base_component import BaseComponent
 
 if TYPE_CHECKING:
     from entity import Actor

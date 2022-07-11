@@ -1,21 +1,22 @@
 from __future__ import annotations
 
+import copy
+import json
 import logging
 import random
-from typing import Dict, Tuple, Iterator, List, TYPE_CHECKING
+from typing import Tuple, Iterator, List, TYPE_CHECKING
 
 import numpy as np
 
 import config.colour
-import maps.item_factory
-import maps.monster_factory
 import maps.tiles
 from config.exceptions import MapGenError, FatalMapGenError
+from data.item_factory import create_item_from_json
+from data.monster_factory import create_monster_from_json
 from maps.game_map import SimpleGameMap
 
 if TYPE_CHECKING:
     from core.engine import Engine
-    from parts.entity import Entity
 
 import tcod
 
@@ -39,24 +40,6 @@ max_monsters_by_floor = [
     (4, 50),
 ]
 
-item_chances: Dict[int, List[Tuple[Entity, int]]] = {
-    0: [(maps.item_factory.healing_mud, 50),
-        (maps.item_factory.confusing_twig, 5),
-        (maps.item_factory.lightning_twig, 5)],
-    1: [(maps.item_factory.longsword, 10)],
-    2: [(maps.item_factory.fireball_twig, 5)],
-    3: [(maps.item_factory.longsword, 5),
-        (maps.item_factory.cuirass, 5)],
-    4: [(maps.item_factory.longsword, 0),
-        (maps.item_factory.confusing_twig, 10),
-        (maps.item_factory.lightning_twig, 10),
-        (maps.item_factory.fireball_twig, 5)],
-    5: [(maps.item_factory.cuirass, 10)],
-    6: [(maps.item_factory.lightning_twig, 15),
-        (maps.item_factory.fireball_twig, 10)],
-    7: [(maps.item_factory.cuirass, 5)],
-    8: [(maps.item_factory.cuirass, 0)]
-}
 
 # item_chances = {
 #     'steel_longsword': from_dungeon_level([[5, 2], [10, 3], [15, 4], [10, 5], [5, 6], [0, 7]],
@@ -78,76 +61,6 @@ item_chances: Dict[int, List[Tuple[Entity, int]]] = {
 #     'confusion_scroll': from_dungeon_level([[5, 0], [10, 4]], self.dungeon_level)
 # }
 
-monster_chances: Dict[int, List[Tuple[Entity, int]]] = {
-    0: [(maps.monster_factory.wretch, 80),
-        (maps.monster_factory.sludge_fiend, 35),
-        (maps.monster_factory.risen_sacrifice, 10)],
-    2: [(maps.monster_factory.moire_beast, 3),
-        (maps.monster_factory.lupine_terror, 1),
-        (maps.monster_factory.risen_sacrifice, 10),
-        (maps.monster_factory.hunchback, 10),
-        (maps.monster_factory.celebrant, 10),
-        (maps.monster_factory.kidnapper, 10)],
-    3: [(maps.monster_factory.moire_beast, 5),
-        (maps.monster_factory.lupine_terror, 5),
-        (maps.monster_factory.hunchback, 10),
-        (maps.monster_factory.celebrant, 25),
-        (maps.monster_factory.kidnapper, 10)],
-    4: [(maps.monster_factory.wretch, 35),
-        (maps.monster_factory.sludge_fiend, 50),
-        (maps.monster_factory.thresher, 5),
-        (maps.monster_factory.moire_beast, 10),
-        (maps.monster_factory.lupine_terror, 10),
-        (maps.monster_factory.bloodseeker, 1),
-        (maps.monster_factory.hunchback, 30),
-        (maps.monster_factory.kidnapper, 20),
-        (maps.monster_factory.crusader, 5)],
-    5: [(maps.monster_factory.wretch, 35),
-        (maps.monster_factory.purifier, 5),
-        (maps.monster_factory.duelist, 5)],
-    6: [(maps.monster_factory.wretch, 20),
-        (maps.monster_factory.sludge_fiend, 35),
-        (maps.monster_factory.thresher, 15),
-        (maps.monster_factory.moire_beast, 20),
-        (maps.monster_factory.lupine_terror, 25),
-        (maps.monster_factory.bloodseeker, 3),
-        (maps.monster_factory.hunchback, 50),
-        (maps.monster_factory.risen_sacrifice, 30),
-        (maps.monster_factory.celebrant, 30),
-        (maps.monster_factory.kidnapper, 40),
-        (maps.monster_factory.crusader, 15),
-        (maps.monster_factory.purifier, 10)],
-    7: [(maps.monster_factory.risen_sacrifice, 15),
-        (maps.monster_factory.celebrant, 15),
-        (maps.monster_factory.duelist, 10)],
-    8: [(maps.monster_factory.wretch, 10),
-        (maps.monster_factory.sludge_fiend, 10),
-        (maps.monster_factory.thresher, 30),
-        (maps.monster_factory.moire_beast, 25),
-        (maps.monster_factory.lupine_terror, 30),
-        (maps.monster_factory.bloodseeker, 5),
-        (maps.monster_factory.hunchback, 40),
-        (maps.monster_factory.kidnapper, 20),
-        (maps.monster_factory.crusader, 30),
-        (maps.monster_factory.purifier, 20),
-        (maps.monster_factory.duelist, 25),
-        (maps.monster_factory.alanwric, 5),
-        (maps.monster_factory.teague, 5),
-        (maps.monster_factory.dymacia, 5)],
-    10: [(maps.monster_factory.wretch, 0),
-         (maps.monster_factory.sludge_fiend, 0),
-         (maps.monster_factory.thresher, 50),
-         (maps.monster_factory.crusader, 50),
-         (maps.monster_factory.purifier, 50),
-         (maps.monster_factory.duelist, 50)]
-}
-
-plant_chances: Dict[int, List[Tuple[Entity, int]]] = {
-    0: [(maps.monster_factory.bluebell, 50), (maps.monster_factory.bluebell, 50)],
-    4: [(maps.monster_factory.bluebell, 35), (maps.monster_factory.bluebell, 35)],
-    6: [(maps.monster_factory.bluebell, 20), (maps.monster_factory.bluebell, 20)]
-}
-
 
 def get_max_value_for_floor(max_value_by_floor: List[Tuple[int, int]], floor: int) -> int:
     current_value = 0
@@ -161,29 +74,72 @@ def get_max_value_for_floor(max_value_by_floor: List[Tuple[int, int]], floor: in
     return current_value
 
 
-def get_entities_at_random(
-        weighted_chances_by_floor: Dict[int, List[Tuple[Entity, int]]],
-        number_of_entities: int,
-        floor: int,
-) -> List[Entity]:
+def get_monsters_at_random(engine: Engine, path: str, number_of_entities: int) -> [List[str], List[str]]:
+    # Load drop table for current floor
+    f = open(path)
+    spawn_table = json.load(f)[0]
+
+    # Current final floor is FLOOR 8. Keep spawning unchanged for floors beyond this.
+    if engine.game_world.current_floor > 8:
+        floor_value = 8
+    else:
+        floor_value = engine.game_world.current_floor
+    spawn_table = spawn_table[f"{floor_value}"]
+
+    entity_types = []
     entity_weighted_chances = {}
-
-    for key, values in weighted_chances_by_floor.items():
-        if key > floor:
-            break
-        else:
-            for value in values:
-                entity = value[0]
-                weighted_chance = value[1]
-
-                entity_weighted_chances[entity] = weighted_chance
+    for key, value in spawn_table.items():
+        entity_types.append(value[0])
+        entity_weighted_chances[key] = value[1]
 
     entities = list(entity_weighted_chances.keys())
     entity_weighted_chance_values = list(entity_weighted_chances.values())
 
-    chosen_entities = random.choices(entities, weights=entity_weighted_chance_values, k=number_of_entities)
+    # Generate a random selection across the item and item type arrays simultaneously
+    idx = random.choices(np.arange(len(entities)),
+                         weights=entity_weighted_chance_values, k=number_of_entities)
+    # Now construct the lists of item and type
+    chosen_monsters = []
+    chosen_types = []
+    for i in idx:
+        chosen_monsters.append(entities[i])
+        chosen_types.append(entity_types[i])
 
-    return chosen_entities
+    return chosen_monsters, chosen_types
+
+
+def get_items_at_random(engine: Engine, path: str, number_of_entities: int) -> [List[str], List[str]]:
+    # Load drop table for current floor
+    f = open(path)
+    spawn_table = json.load(f)[0]
+
+    # Current final floor is FLOOR 8. Keep spawning unchanged for floors beyond this.
+    if engine.game_world.current_floor > 8:
+        floor_value = 8
+    else:
+        floor_value = engine.game_world.current_floor
+    spawn_table = spawn_table[f"{floor_value}"]
+
+    entity_types = []
+    entity_weighted_chances = {}
+    for key, value in spawn_table.items():
+        entity_types.append(value[0])
+        entity_weighted_chances[key] = value[1]
+
+    entities = list(entity_weighted_chances.keys())
+    entity_weighted_chance_values = list(entity_weighted_chances.values())
+
+    # Generate a random selection across the item and item type arrays simultaneously
+    idx = random.choices(np.arange(len(entities)),
+                         weights=entity_weighted_chance_values, k=number_of_entities)
+    # Now construct the lists of item and type
+    chosen_items = []
+    chosen_types = []
+    for i in idx:
+        chosen_items.append(entities[i])
+        chosen_types.append(entity_types[i])
+
+    return chosen_items, chosen_types
 
 
 class RectangularRoom:
@@ -229,15 +185,70 @@ class RectangularRoom:
         )
 
 
-def place_flora(dungeon: SimpleGameMap, floor_number: int, areas: int) -> None:
+def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map_width: int, map_height: int,
+                     engine: Engine) -> SimpleGameMap:
+    """
+    Generate a new dungeon map.
+    """
+    player = engine.player
+    cave_smoothing = engine.game_world.cave_smoothing
+    cave_p = engine.game_world.cave_p
+
+    tries = 1
+    while tries <= 10:
+        # Initialize map
+        dungeon = SimpleGameMap(engine, map_width, map_height, entities=[player])
+        if engine.game_world.caves:
+            dungeon = add_caves(dungeon, smoothing=cave_smoothing, p=cave_p)
+        if engine.game_world.rooms:
+            dungeon = add_rooms(dungeon, max_rooms, room_min_size, room_max_size)
+        if engine.game_world.erode:
+            dungeon = erode(dungeon, 1)
+
+        # Add rocks/water
+        dungeon = add_rubble(dungeon, events=7)
+        dungeon = add_hazards(dungeon, floods=5, holes=3)
+        dungeon = add_features(dungeon)
+
+        # Place player
+        engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
+
+        # Populate dungeon
+        place_flora(dungeon, engine, areas=3)
+        place_fauna(dungeon, engine)
+        place_items(dungeon, engine)
+
+        # Finally, add stairs
+        dungeon = add_stairs(dungeon)
+        if isinstance(dungeon, SimpleGameMap):
+            # Mapgen successful, use this floor
+
+            # Calculate accessible area for future use
+            dungeon.accessible = dungeon.calc_accessible()
+
+            return dungeon
+        elif isinstance(dungeon, MapGenError):
+            # Mapgen unsuccessful, try again until max tries are reached
+            if logging.DEBUG >= logging.root.level:
+                print(f"DEBUG: Floor generation failed. Attempt: {tries}.", config.colour.debug)
+            tries += 1
+            continue
+
+    # Something went wrong with mapgen, sysexit
+    raise FatalMapGenError(f"Dungeon generation failed! Reason: floor attempts exceeded.")
+
+
+def place_flora(dungeon: SimpleGameMap, engine: Engine, areas: int) -> None:
     """
     Fill the current floor with plants, both hostile and decorative.
     A cellular automata method is used to generate an area that plants may spawn in, which is then placed onto the
     floor and populated.
     """
-    max_plants = get_max_value_for_floor(max_plants_by_floor, floor_number)
+    current_floor = engine.game_world.current_floor
+    max_plants = get_max_value_for_floor(max_plants_by_floor, current_floor)
     number_of_plants = random.randint(int(max_plants / 2), max_plants)
-    plants: List[Entity] = get_entities_at_random(plant_chances, number_of_plants, floor_number)
+
+    plants, plant_types = get_monsters_at_random(engine, 'data/monsters/spawn_table_plants.json', number_of_plants)
 
     # Generate cellular automata areas
     area_size = random.randint(5, 10)
@@ -274,7 +285,7 @@ def place_flora(dungeon: SimpleGameMap, floor_number: int, areas: int) -> None:
                 if verdant >= 5:
                     dungeon.tiles[x, y] = random.choice(maps.tiles.verdant_tiles_1)
 
-    for entity in plants:
+    for i in range(len(plants)):
         # Random verdant tile
         x, y = random.choice(verdant_array)
 
@@ -289,42 +300,20 @@ def place_flora(dungeon: SimpleGameMap, floor_number: int, areas: int) -> None:
 
         # Spawn in free, non-blocked location
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities) and dungeon.tiles[x, y]['walkable']:
-            entity.spawn(dungeon, x, y)
+            plant = copy.deepcopy(create_monster_from_json(f"data/monsters/{plant_types[i]}.json", plants[i]))
+            plant.spawn(dungeon, x, y)
 
 
-def place_fauna(dungeon: SimpleGameMap, floor_number: int) -> None:
-    max_monsters = get_max_value_for_floor(max_monsters_by_floor, floor_number)
+def place_fauna(dungeon: SimpleGameMap, engine: Engine) -> None:
+    current_floor = engine.game_world.current_floor
+    max_monsters = get_max_value_for_floor(max_monsters_by_floor, current_floor)
     number_of_monsters = random.randint(int(max_monsters / 2), max_monsters)
-    monsters: List[Entity] = get_entities_at_random(monster_chances, number_of_monsters, floor_number)
 
-    for entity in monsters:
+    monsters, monster_types = get_monsters_at_random(engine, 'data/monsters/spawn_table_monsters.json',
+                                                     number_of_monsters)
+
+    for i in range(len(monsters)):
         # Get the indices of tiles which are walkable
-        walkable = np.nonzero(dungeon.tiles['walkable'])
-        index = random.randint(0, len(walkable[0]) - 1)
-        x = walkable[0][index]
-        y = walkable[1][index]
-
-        # Find Euclidean distance between monster spawn and player
-        player_x = int(dungeon.engine.player.x)
-        player_y = int(dungeon.engine.player.y)
-        spawn_dist = np.sqrt((x - player_x) ** 2 + (y - player_y) ** 2)
-
-        # Enemies should not spawn in player pov!
-        if spawn_dist <= 10:
-            continue
-
-        # Spawn in free, non-blocked location
-        if not any(entity.x == x and entity.y == y for entity in dungeon.entities) and dungeon.tiles[x, y]['walkable']:
-            entity.spawn(dungeon, x, y)
-
-
-def place_items(dungeon: SimpleGameMap, floor_number: int) -> None:
-    max_items = get_max_value_for_floor(max_items_by_floor, floor_number)
-    number_of_items = random.randint(int(max_items / 2), max_items)
-    items: List[Entity] = get_entities_at_random(item_chances, number_of_items, floor_number)
-
-    for entity in items:
-        # Get random walkable tile
         x, y = dungeon.get_random_walkable_tile()
 
         # Find Euclidean distance between monster spawn and player
@@ -338,7 +327,27 @@ def place_items(dungeon: SimpleGameMap, floor_number: int) -> None:
 
         # Spawn in free, non-blocked location
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities) and dungeon.tiles[x, y]['walkable']:
-            entity.spawn(dungeon, x, y)
+            monster = copy.deepcopy(create_monster_from_json(f"data/monsters/{monster_types[i]}.json", monsters[i]))
+            if monster.name == "Risen Sacrifice":
+                monster.fighter.hp = random.randint(4, 8)
+            monster.spawn(dungeon, x, y)
+
+
+def place_items(dungeon: SimpleGameMap, engine: Engine) -> None:
+    current_floor = engine.game_world.current_floor
+    max_items = get_max_value_for_floor(max_items_by_floor, current_floor)
+    number_of_items = random.randint(int(max_items / 2), max_items)
+
+    items, item_types = get_items_at_random(engine, 'data/items/spawn_table_items.json', number_of_items)
+
+    for i in range(len(items)):
+        # Get random walkable tile
+        x, y = dungeon.get_random_walkable_tile()
+
+        # Spawn in free, non-blocked location
+        if not any(entity.x == x and entity.y == y for entity in dungeon.entities) and dungeon.tiles[x, y]['walkable']:
+            item = copy.deepcopy(create_item_from_json(f"data/items/{item_types[i]}.json", items[i]))
+            item.spawn(dungeon, x, y)
 
 
 def tunnel_between(start: Tuple[int, int], end: Tuple[int, int]) -> Iterator[Tuple[int, int]]:
@@ -359,56 +368,6 @@ def tunnel_between(start: Tuple[int, int], end: Tuple[int, int]) -> Iterator[Tup
         yield x, y
     for x, y in tcod.los.bresenham((corner_x, corner_y), (x2, y2)).tolist():
         yield x, y
-
-
-def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map_width: int, map_height: int,
-                     engine: Engine) -> SimpleGameMap:
-    """
-    Generate a new dungeon map.
-    """
-    player = engine.player
-
-    tries = 1
-    while tries <= 10:
-        # Initialize map
-        dungeon = SimpleGameMap(engine, map_width, map_height, entities=[player])
-        dungeon = add_caves(dungeon, smoothing=1, p=60)
-        dungeon = add_rooms(dungeon, max_rooms, room_min_size, room_max_size)
-
-        # Smooth edges
-        # dungeon = erode(dungeon, 1)
-
-        # Add rocks/water
-        dungeon = add_rubble(dungeon, events=7)
-        dungeon = add_hazards(dungeon, floods=5, holes=3)
-        dungeon = add_features(dungeon)
-
-        # Place player
-        engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
-
-        # Populate dungeon
-        place_flora(dungeon, engine.game_world.current_floor, areas=3)
-        place_fauna(dungeon, engine.game_world.current_floor)
-        place_items(dungeon, engine.game_world.current_floor)
-
-        # Finally, add stairs
-        dungeon = add_stairs(dungeon)
-        if isinstance(dungeon, SimpleGameMap):
-            # Mapgen successful, use this floor
-
-            # Calculate accessible area for future use
-            dungeon.accessible = dungeon.calc_accessible()
-
-            return dungeon
-        elif isinstance(dungeon, MapGenError):
-            # Mapgen unsuccessful, try again until max tries are reached
-            if logging.DEBUG >= logging.root.level:
-                print(f"DEBUG: Floor generation failed. Attempt: {tries}.", config.colour.debug)
-            tries += 1
-            continue
-
-    # Something went wrong with mapgen, sysexit
-    raise FatalMapGenError(f"Dungeon generation failed! Reason: floor attempts exceeded.")
 
 
 def add_rooms(dungeon: SimpleGameMap, max_rooms: int,

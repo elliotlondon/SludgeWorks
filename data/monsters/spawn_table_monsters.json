@@ -1,0 +1,308 @@
+[
+  {
+    "1": {
+      "wretch": [
+        "scavengers",
+        80
+      ],
+      "sludge_fiend": [
+        "scavengers",
+        35
+      ],
+      "risen_sacrifice": [
+        "cultists",
+        10
+      ]
+    },
+    "2": {
+      "wretch": [
+        "scavengers",
+        80
+      ],
+      "sludge_fiend": [
+        "scavengers",
+        35
+      ],
+      "risen_sacrifice": [
+        "cultists",
+        10
+      ]
+    },
+    "3": {
+      "wretch": [
+        "scavengers",
+        80
+      ],
+      "sludge_fiend": [
+        "scavengers",
+        35
+      ],
+      "risen_sacrifice": [
+        "cultists",
+        10
+      ],
+      "moire_beast": [
+        "scavengers",
+        3
+      ],
+      "lupine_terror": [
+        "scavengers",
+        1
+      ],
+      "hunchback": [
+        "horrors",
+        10
+      ],
+      "celebrant": [
+        "cultists",
+        10
+      ],
+      "kidnapper": [
+        "cultists",
+        10
+      ]
+    },
+    "4": {
+      "wretch": [
+        "scavengers",
+        80
+      ],
+      "sludge_fiend": [
+        "scavengers",
+        35
+      ],
+      "risen_sacrifice": [
+        "cultists",
+        10
+      ],
+      "moire_beast": [
+        "scavengers",
+        5
+      ],
+      "lupine_terror": [
+        "scavengers",
+        5
+      ],
+      "hunchback": [
+        "horrors",
+        10
+      ],
+      "brainraker": [
+        "horrors",
+        5
+      ],
+      "celebrant": [
+        "cultists",
+        25
+      ],
+      "kidnapper": [
+        "cultists",
+        10
+      ]
+    },
+    "5": {
+      "wretch": [
+        "scavengers",
+        35
+      ],
+      "sludge_fiend": [
+        "scavengers",
+        50
+      ],
+      "risen_sacrifice": [
+        "cultists",
+        10
+      ],
+      "thresher": [
+        "scavengers",
+        5
+      ],
+      "moire_beast": [
+        "scavengers",
+        5
+      ],
+      "lupine_terror": [
+        "scavengers",
+        10
+      ],
+      "bloodseeker": [
+        "scavengers",
+        1
+      ],
+      "hunchback": [
+        "horrors",
+        30
+      ],
+      "kidnapper": [
+        "cultists",
+        20
+      ],
+      "crusader": [
+        "crusaders",
+        5
+      ]
+    },
+    "6": {
+      "wretch": [
+        "scavengers",
+        35
+      ],
+      "sludge_fiend": [
+        "scavengers",
+        50
+      ],
+      "risen_sacrifice": [
+        "cultists",
+        10
+      ],
+      "thresher": [
+        "scavengers",
+        5
+      ],
+      "brainraker": [
+        "horrors",
+        10
+      ],
+      "moire_beast": [
+        "scavengers",
+        5
+      ],
+      "lupine_terror": [
+        "scavengers",
+        10
+      ],
+      "bloodseeker": [
+        "scavengers",
+        1
+      ],
+      "hunchback": [
+        "horrors",
+        30
+      ],
+      "kidnapper": [
+        "cultists",
+        20
+      ],
+      "purifier": [
+        "crusaders",
+        5
+      ],
+      "duelist": [
+        "crusaders",
+        5
+      ],
+      "crusader": [
+        "crusaders",
+        5
+      ]
+    },
+    "7": {
+      "wretch": [
+        "scavengers",
+        20
+      ],
+      "sludge_fiend": [
+        "scavengers",
+        35
+      ],
+      "risen_sacrifice": [
+        "cultists",
+        30
+      ],
+      "thresher": [
+        "scavengers",
+        15
+      ],
+      "moire_beast": [
+        "scavengers",
+        20
+      ],
+      "lupine_terror": [
+        "scavengers",
+        25
+      ],
+      "bloodseeker": [
+        "scavengers",
+        1
+      ],
+      "hunchback": [
+        "horrors",
+        50
+      ],
+      "brainraker": [
+        "horrors",
+        15
+      ],
+      "kidnapper": [
+        "cultists",
+        40
+      ],
+      "purifier": [
+        "crusaders",
+        10
+      ],
+      "duelist": [
+        "crusaders",
+        10
+      ],
+      "crusader": [
+        "crusaders",
+        10
+      ]
+    },
+    "8": {
+      "wretch": [
+        "scavengers",
+        10
+      ],
+      "sludge_fiend": [
+        "scavengers",
+        10
+      ],
+      "risen_sacrifice": [
+        "cultists",
+        30
+      ],
+      "thresher": [
+        "scavengers",
+        35
+      ],
+      "moire_beast": [
+        "scavengers",
+        25
+      ],
+      "lupine_terror": [
+        "scavengers",
+        30
+      ],
+      "bloodseeker": [
+        "scavengers",
+        1
+      ],
+      "hunchback": [
+        "horrors",
+        40
+      ],
+      "brainraker": [
+        "horrors",
+        15
+      ],
+      "kidnapper": [
+        "cultists",
+        20
+      ],
+      "purifier": [
+        "crusaders",
+        20
+      ],
+      "duelist": [
+        "crusaders",
+        20
+      ],
+      "crusader": [
+        "crusaders",
+        20
+      ]
+    }
+  }
+]

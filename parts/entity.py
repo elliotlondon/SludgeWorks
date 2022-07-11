@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import copy
 import math
 from random import randint
 from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union
-from parts.level import Level
 
 import tcod
 
 from core.render_functions import RenderOrder
+from parts.level import Level
 
 if TYPE_CHECKING:
     from parts.ai import BaseAI
@@ -28,18 +29,19 @@ class Entity:
     """
 
     parent: Union[SimpleGameMap, Inventory]
+
     def __init__(self,
-                parent: Optional[SimpleGameMap] = None,
-                x: int = 0,
-                y: int = 0,
-                char: str = "?",
-                colour: Tuple[int, int, int] = (255, 255, 255),
-                name: str = "<Unnamed>",
-                blocks_movement: bool = False,
-                description = "<Blank>",
-                render_order=RenderOrder.CORPSE,
-                fighter=None, ai=None, item=None, inventory=None, loadout=None,
-                equipment=None, equippable=None, regenerates=False, errasticity=None):
+                 parent: Optional[SimpleGameMap] = None,
+                 x: int = 0,
+                 y: int = 0,
+                 char: str = "?",
+                 colour: Tuple[int, int, int] = (255, 255, 255),
+                 name: str = "<Unnamed>",
+                 blocks_movement: bool = False,
+                 description="<Blank>",
+                 render_order=RenderOrder.CORPSE,
+                 fighter=None, ai=None, item=None, inventory=None, loadout=None,
+                 equipment=None, equippable=None):
         self.x = x
         self.y = y
         self.char = char
@@ -59,8 +61,6 @@ class Entity:
         self.loadout = loadout
         self.equipment = equipment
         self.equippable = equippable
-        self.regenerates = regenerates
-        self.errasticity = errasticity
 
         if self.fighter:
             self.fighter.owner = self
@@ -115,14 +115,9 @@ class Entity:
         self.y += dy
         self.x += dx
 
-    def move_random(self, game_map):
-        if randint(0, 100) < self.errasticity:
-            dx = randint(-1, 1)
-            dy = randint(-1, 1)
-            if not game_map.is_blocked(self.x + dx, self.y + dy):
-                self.y += dy
-            if not game_map.is_blocked(self.x + dx, self.y):
-                self.x += dx
+    def teleport(self, x, y) -> None:
+        self.y = y
+        self.x = x
 
     def move_towards(self, target_x, target_y, game_map, entities):
         dx = target_x - self.x
@@ -182,18 +177,19 @@ class Entity:
 
 class Actor(Entity):
     def __init__(
-        self,
-        *,
-        x: int = 0,
-        y: int = 0,
-        char: str = "?",
-        colour: Tuple[int, int, int] = (255, 255, 255),
-        name: str = "<Unnamed>",
-        ai_cls: Type[BaseAI],
-        equipment: Equipment,
-        fighter: Fighter,
-        inventory: Inventory,
-        level: Level,
+            self,
+            *,
+            x: int = 0,
+            y: int = 0,
+            char: str = "?",
+            colour: Tuple[int, int, int] = (255, 255, 255),
+            name: str = "<Unnamed>",
+            ai_cls: Type[BaseAI],
+            equipment: Equipment,
+            fighter: Fighter,
+            inventory: Inventory,
+            level: Level,
+            description: str
     ):
         super().__init__(
             x=x,
@@ -201,6 +197,7 @@ class Actor(Entity):
             char=char,
             colour=colour,
             name=name,
+            description=description,
             blocks_movement=True,
             render_order=RenderOrder.ACTOR,
         )
@@ -214,6 +211,7 @@ class Actor(Entity):
         self.inventory.parent = self
         self.level = level
         self.level.parent = self
+        self.description = description
 
     @property
     def is_alive(self) -> bool:
@@ -223,16 +221,19 @@ class Actor(Entity):
 
 class Item(Entity):
     def __init__(
-        self,
-        *,
-        x: int = 0,
-        y: int = 0,
-        char: str = "?",
-        colour: Tuple[int, int, int] = (255, 255, 255),
-        name: str = "<Unnamed>",
-        consumable: Optional[Consumable] = None,
-        equippable: Optional[Equippable] = None,
-        usetext: str = "<Undefined>",
+            self,
+            *,
+            x: int = 0,
+            y: int = 0,
+            char: str = "?",
+            colour: Tuple[int, int, int] = (255, 255, 255),
+            name: str = "<Unnamed>",
+            consumable: Optional[Consumable] = None,
+            equippable: Optional[Equippable] = None,
+            depth=0,
+            rarity=None,
+            usetext: str = "<Undefined>",
+            description: str
     ):
         super().__init__(
             x=x,
@@ -242,6 +243,7 @@ class Item(Entity):
             name=name,
             blocks_movement=False,
             render_order=RenderOrder.ITEM,
+            description=description
         )
 
         self.consumable = consumable
@@ -252,7 +254,15 @@ class Item(Entity):
         if self.equippable:
             self.equippable.parent = self
 
+        # Item string colour when viewed in a menu. Defaults to object colour
+        self.str_colour = colour
+
+        # Quality
+        self.depth = depth
+        self.rarity = rarity
+
         self.usetext = usetext
+        self.description = description
 
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):

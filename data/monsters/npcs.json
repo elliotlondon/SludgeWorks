@@ -1,0 +1,33 @@
+[
+  {
+    "gilbert": {
+      "char": "@",
+      "colour": [0, 255, 0],
+      "name": "Gilbert",
+      "ai_cls": "NPC",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 10,
+        "max_hp": 10,
+        "damage_dice": 1,
+        "damage_sides": 2,
+        "strength": 10,
+        "dexterity": 10,
+        "vitality": 12,
+        "intellect": 14,
+        "perception": 14,
+        "armour": 1,
+        "xp": 0,
+        "dodges": true
+      },
+      "inventory": {
+        "capacity": 12
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 100
+      },
+      "description": "<Blank>"
+    }
+  }
+]

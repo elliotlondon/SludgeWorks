@@ -9,7 +9,7 @@ from parts.equippable import Equippable
 
 
 def create_item_from_json(path: str, request: str) -> Item:
-    f = open(path)
+    f = open(path, 'r', encoding='utf-8')
     item_dict = json.load(f)
 
     for i in range(len(item_dict)):

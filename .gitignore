@@ -12,6 +12,7 @@ maps/__pycache/
 utils/__pycache/
 
 # venv folders
+venv/
 lib/
 sludgeworks37/
 lib64/

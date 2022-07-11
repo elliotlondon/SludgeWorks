@@ -121,10 +121,10 @@ class MainMenu(core.input_handlers.BaseEventHandler):
                 load_game(Path("savegames/savegame.sav"))
                 return core.input_handlers.MainGameEventHandler()
             except FileNotFoundError:
-                return core.input_handlers.PopupMessage(self, "No saved game to load.")
+                return core.input_handlers.BasePopupMessage(self, "No saved game to load.")
             except Exception as exc:
                 traceback.print_exc()  # Print to stderr.
-                return core.input_handlers.PopupMessage(self, f"Failed to load save:\n{exc}")
+                return core.input_handlers.BasePopupMessage(self, f"Failed to load save:\n{exc}")
         elif event.sym == tcod.event.K_n:
             new_game()
             return core.input_handlers.MainGameEventHandler()

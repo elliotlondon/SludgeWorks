@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 import logging
 import math
 import os
@@ -50,7 +51,7 @@ class BaseEventHandler(tcod.event.EventDispatch[ActionOrHandler]):
         raise SystemExit()
 
 
-class PopupMessage(BaseEventHandler):
+class BasePopupMessage(BaseEventHandler):
     """Display a popup text window."""
 
     def __init__(self, parent_handler: BaseEventHandler, text: str):
@@ -60,26 +61,23 @@ class PopupMessage(BaseEventHandler):
     def on_render(self, console: tcod.Console) -> None:
         """Render the parent and dim the result, then print the message on top."""
         self.parent.on_render(console)
-        console.tiles_rgb["fg"] //= 8
-        console.tiles_rgb["bg"] //= 8
 
         width = len(self.text) + 4
+        height = 6
         x = console.width // 2 - int(width / 2)
-        y = console.height // 2
+        y = console.height // 2 - int(height / 2)
 
         console.draw_frame(
             x=x,
             y=y,
             width=width,
-            height=7,
+            height=height,
             title='',
             clear=True,
             fg=(255, 255, 255),
-            bg=(0, 0, 0),
-            decoration="╔═╗║ ║╚═╝"
+            bg=(0, 0, 0)
         )
-
-        console.print(x=x + 1, y=y + 1, string=self.text)
+        console.print(x=x + int(width / 2), y=y + 2, string=self.text, alignment=tcod.CENTER)
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[BaseEventHandler]:
         """Any key returns to the parent handler."""
@@ -123,6 +121,37 @@ class EventHandler(BaseEventHandler):
     def on_render(self, console: tcod.Console) -> None:
         render_map(console, core.g.engine.game_map)
         render_ui(console, core.g.engine)
+
+
+class GenericPopupMessage(EventHandler):
+    TITLE = "<Untitled>"
+
+    def __init__(self, text: str):
+        self.text = text
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
+        if event.sym == tcod.event.K_ESCAPE:
+            return MainGameEventHandler()
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Create the popup window allowing the user to choose whether to descend"""
+        super().on_render(console)
+        width = len(self.text) + 4
+        height = 6
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - int(height / 2)
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=(255, 255, 255),
+            bg=(0, 0, 0)
+        )
+        console.print(x=x + int(width / 2), y=y + 2, string=self.text, alignment=tcod.CENTER)
 
 
 class ExploreEventHandler(EventHandler):
@@ -866,10 +895,6 @@ class HoleJumpEventHandler(AskUserEventHandler):
     def on_render(self, console: tcod.Console) -> None:
         """Create the popup window allowing the user to choose whether to descend"""
         super().on_render(console)
-
-        # x = round(self.engine.game_map.width / 2)
-        # y = round(self.engine.game_map.height)
-
         width = len(self.TITLE) + 34
         height = 6
         x = console.width // 2 - int(width / 2)
@@ -949,9 +974,10 @@ class HistoryViewer(EventHandler):
 
 
 class GameOverEventHandler(EventHandler):
-    # Savegame moved immediately at the time of death.
-    if os.path.exists("savegames/savegame.sav"):
-        os.remove("savegames/savegame.sav")  # Deletes the active save file.
+    # Savegame removed immediately at the time of death.
+    def __init__(self):
+        if os.path.exists("savegames/savegame.sav"):
+            os.remove("savegames/savegame.sav")  # Deletes the active save file.
 
     def on_quit(self) -> None:
         """Handle exiting out of a finished game."""
@@ -962,10 +988,13 @@ class GameOverEventHandler(EventHandler):
         super().on_render(console)
 
         death_message = "Killed by a "
-        killer = core.g.engine.last_actor.name
+        try:
+            killer = core.g.engine.last_actor.name
+        except:
+            killer = "<Undefined>"
 
         width = len(death_message + killer) + 6
-        height = 8
+        height = 9
         x = console.width // 2 - int(width / 2)
         y = console.height // 2 - height
 
@@ -988,7 +1017,9 @@ class GameOverEventHandler(EventHandler):
                       alignment=tcod.constants.LEFT, fg=core.g.engine.last_actor.colour)
         console.print(x=x + 1, y=y + 5, string=f"[M]: View message log",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + 6, string=f"[ESC]: Quit",
+        console.print(x=x + 1, y=y + 6, string=f"[S]: Save message log",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + 8, string=f"[ESC]: Quit",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
 
     def ev_quit(self, event: tcod.event.Quit) -> None:
@@ -999,6 +1030,13 @@ class GameOverEventHandler(EventHandler):
             self.on_quit()
         elif event.sym == tcod.event.K_m:
             return HistoryViewer()
+        elif event.sym == tcod.event.K_s:
+            with open('savegames/messages.txt', 'w', encoding='utf-8') as f:
+                for i in core.g.engine.message_log.messages:
+                    f.write(i.full_text)
+                    f.write('\n')
+                f.close()
+            return GenericPopupMessage("Messages saved successfully to\n savegames/messages.txt.")
 
 
 # TODO: Restore autoexplore

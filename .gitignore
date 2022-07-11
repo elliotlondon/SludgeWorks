@@ -1,5 +1,6 @@
 # Saved games
 *.sav
+savegames/messages.txt
 
 # Python optimized files
 *.pyo

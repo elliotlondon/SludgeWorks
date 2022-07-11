@@ -18,9 +18,6 @@ from data.item_factory import create_item_from_json
 from data.monster_factory import create_monster_from_json
 from maps.game_map import GameWorld
 
-# Load the background image and remove the alpha channel.
-background_image = tcod.image.load("assets/sludge_background.png")[:, :, :3]
-
 
 def new_game() -> Engine:
     """Return a brand new game session as an Engine instance."""
@@ -91,29 +88,30 @@ class MainMenu(core.input_handlers.BaseEventHandler):
 
     def on_render(self, console: tcod.Console) -> None:
         """Render the main menu on a background image."""
+        background_image = tcod.image.load("assets/menu_image.png")[:, :, :3]
         console.draw_semigraphics(background_image, 0, 0)
 
-        console.print(
-            console.width // 2,
-            console.height // 2 - 4,
-            "SLUDGEWORKS",
-            fg=config.colour.menu_title,
-            alignment=tcod.CENTER,
-        )
-
-        menu_width = 24
+        menu_width = 14
         for i, text in enumerate(
-                ["[N] New game", "[C] Continue", "[Q] Quit"]
+                ["[N] New game", "", "[C] Continue", "", "[Q] Quit"]
         ):
             console.print(
-                console.width // 2,
-                console.height // 2 - 2 + i,
+                18,
+                22 + i,
                 text.ljust(menu_width),
                 fg=config.colour.menu_text,
-                bg=config.colour.black,
-                alignment=tcod.CENTER,
-                bg_blend=tcod.BKGND_ALPHA(64),
+                bg=(0, 0, 0),
+                alignment=tcod.CENTER
             )
+
+        console.print(
+            11,
+            console.height - 2,
+            "https://github.com/elliotlondon/Sludgeworks",
+            fg=config.colour.menu_text,
+            bg=(0, 0, 0),
+            alignment=tcod.LEFT
+        )
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[core.input_handlers.BaseEventHandler]:
         if event.sym in (tcod.event.K_q, tcod.event.K_ESCAPE):

@@ -60,10 +60,12 @@ class SimpleGameMap:
         yield from (entity for entity in self.entities if isinstance(entity, parts.entity.Item))
 
     def get_tile_at_explored_location(self, location_x: int, location_y: int) -> Optional[maps.tiles.tile_dt]:
+        """Returns a tile within the explored array."""
         if self.explored[location_x, location_y]:
             return self.tiles[location_x, location_y]
 
     def get_all_entities_at_location(self, location_x: int, location_y: int) -> Optional[List[Entity]]:
+        """Returns all entities at a given tile location x, y."""
         entities = []
         for entity in self.entities:
             if entity.x == location_x and entity.y == location_y:
@@ -71,6 +73,7 @@ class SimpleGameMap:
         return entities
 
     def get_all_visible_entities(self, location_x: int, location_y: int) -> Optional[List[Entity]]:
+        """Returns all enemies within the FOV."""
         entities = []
         for entity in self.entities:
             if entity.x == location_x and entity.y == location_y and self.visible[location_x, location_y]:
@@ -78,6 +81,7 @@ class SimpleGameMap:
         return entities
 
     def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
+        """Returns the entity if it is at location x, y."""
         for entity in self.entities:
             if entity.blocks_movement and entity.x == location_x and entity.y == location_y:
                 return entity
@@ -85,6 +89,7 @@ class SimpleGameMap:
         return None
 
     def get_actor_at_location(self, x: int, y: int) -> Optional[parts.entity.Actor]:
+        """Returns the Actor at location x, y."""
         for actor in self.actors:
             if actor.x == x and actor.y == y:
                 return actor
@@ -129,6 +134,21 @@ class SimpleGameMap:
         index = random.randint(0, len(unoccupied[0]) - 1)
         x = unoccupied[0][index]
         y = unoccupied[1][index]
+
+        return (x, y)
+
+    def get_random_nearby_tile(self, location_x: int, location_y: int, radius: int) -> Tuple[int, int]:
+        """Return the coordinates of a random tile of radius away from location x, y."""
+        walkable = np.logical_and(self.tiles['walkable'], self.tiles['name'] != 'hole')
+        unoccupied = np.nonzero(np.logical_xor(walkable, self.get_occupied()))
+        x_region = list(np.unique(unoccupied[0])[location_x-radius:location_x+radius])
+        y_region = list(np.unique(unoccupied[1])[location_y-radius:location_y+radius])
+        if x_region == []:
+            x_region = [location_x]
+        if y_region == []:
+            y_region = [location_y]
+        x = random.choice(x_region)
+        y = random.choice(y_region)
 
         return (x, y)
 

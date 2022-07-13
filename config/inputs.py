@@ -56,6 +56,18 @@ YESNO_KEYS = {
     tcod.event.K_ESCAPE
 }
 
+MODIFIER_KEYS: {
+    tcod.event.K_LSHIFT,
+    tcod.event.K_RSHIFT,
+    tcod.event.K_LCTRL,
+    tcod.event.K_RCTRL,
+    tcod.event.K_LALT,
+    tcod.event.K_RALT,
+    tcod.event.K_LGUI,
+    tcod.event.K_RGUI,
+    tcod.event.K_MODE,
+}
+
 USERNAME_KEYS = {
     tcod.event.K_a,
     tcod.event.K_b,

@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import logging
 import math
-import os
 import textwrap
 from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union, List, Iterable
 
@@ -17,11 +15,11 @@ import core.g
 import parts.inventory
 from config.exceptions import Impossible
 from core.actions import Action
+from core.render_functions import RenderOrder
 from core.rendering import render_map, render_ui
 from maps.tiles import get_clean_name
 from parts.ai import NPC
 from parts.entity import Actor
-from core.render_functions import RenderOrder
 
 if TYPE_CHECKING:
     from parts.entity import Item
@@ -51,47 +49,15 @@ class BaseEventHandler(tcod.event.EventDispatch[ActionOrHandler]):
         raise SystemExit()
 
 
-class BasePopupMessage(BaseEventHandler):
-    """Display a popup text window."""
-
-    def __init__(self, parent_handler: BaseEventHandler, text: str):
-        self.parent = parent_handler
-        self.text = text
-
-    def on_render(self, console: tcod.Console) -> None:
-        """Render the parent and dim the result, then print the message on top."""
-        self.parent.on_render(console)
-
-        width = len(self.text) + 4
-        height = 6
-        x = console.width // 2 - int(width / 2)
-        y = console.height // 2 - int(height / 2)
-
-        console.draw_frame(
-            x=x,
-            y=y,
-            width=width,
-            height=height,
-            title='',
-            clear=True,
-            fg=(255, 255, 255),
-            bg=(0, 0, 0)
-        )
-        console.print(x=x + int(width / 2), y=y + 2, string=self.text, alignment=tcod.CENTER)
-
-    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[BaseEventHandler]:
-        """Any key returns to the parent handler."""
-        return self.parent
-
-
 class EventHandler(BaseEventHandler):
     def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
         """Handle an event, perform any actions, then return the next active event handler."""
         action_or_state = self.dispatch(event)
-        if isinstance(action_or_state, EventHandler):
+        if isinstance(action_or_state, EventHandler) or isinstance(action_or_state, BaseEventHandler):
             return action_or_state
         if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
             if not core.g.engine.player.is_alive:
+                from core.events.death import GameOverEventHandler
                 return GameOverEventHandler()
             elif core.g.engine.player.level.requires_level_up:
                 return LevelUpEventHandler()
@@ -123,7 +89,7 @@ class EventHandler(BaseEventHandler):
         render_ui(console, core.g.engine)
 
 
-class GenericPopupMessage(EventHandler):
+class PopupMessage(EventHandler):
     TITLE = "<Untitled>"
 
     def __init__(self, text: str):
@@ -134,7 +100,7 @@ class GenericPopupMessage(EventHandler):
             return MainGameEventHandler()
 
     def on_render(self, console: tcod.Console) -> None:
-        """Create the popup window allowing the user to choose whether to descend"""
+        """Create the popup window with a message within."""
         super().on_render(console)
         width = len(self.text) + 4
         height = 6
@@ -169,7 +135,7 @@ class ExploreEventHandler(EventHandler):
         if self.handle_action(action_or_state):
             # A valid action was performed.
             if not core.g.engine.player.is_alive:
-                # The player was killed sometime during or after the action.
+                from core.events.death import GameOverEventHandler
                 return GameOverEventHandler()
             elif core.g.engine.player.level.requires_level_up:
                 return LevelUpEventHandler()
@@ -177,6 +143,7 @@ class ExploreEventHandler(EventHandler):
 
         # Failsafe for recursion
         if not core.g.engine.player.is_alive:
+            from core.events.death import GameOverEventHandler
             return GameOverEventHandler()
         elif core.g.engine.player.level.requires_level_up:
             return LevelUpEventHandler()
@@ -301,6 +268,7 @@ class MainGameEventHandler(EventHandler):
             return action_or_state
         if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
             if not core.g.engine.player.is_alive:
+                from core.events.death import GameOverEventHandler
                 return GameOverEventHandler()
             elif core.g.engine.player.level.requires_level_up:
                 return LevelUpEventHandler()
@@ -308,6 +276,7 @@ class MainGameEventHandler(EventHandler):
 
         # Failsafe for recursion
         if not core.g.engine.player.is_alive:
+            from core.events.death import GameOverEventHandler
             return GameOverEventHandler()
         elif core.g.engine.player.level.requires_level_up:
             return LevelUpEventHandler()
@@ -329,7 +298,8 @@ class MainGameEventHandler(EventHandler):
         modifier = event.mod
         player = core.g.engine.player
 
-        if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT):
+        if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT)\
+                or key == tcod.event.K_KP_ENTER:
             return core.actions.TakeStairsAction(player)
 
         if key in config.inputs.MOVE_KEYS:
@@ -364,7 +334,7 @@ class MainGameEventHandler(EventHandler):
         elif key == tcod.event.K_d:
             return InventoryDropHandler()
 
-        elif key == tcod.event.K_HASH or key == tcod.event.K_SLASH:
+        elif key == tcod.event.K_HASH or key == tcod.event.K_BACKSLASH:
             return ExploreEventHandler()
 
         return action
@@ -633,7 +603,7 @@ class SelectIndexHandler(AskUserEventHandler):
             return action_or_state
         if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
             if not core.g.engine.player.is_alive:
-                return GameOverEventHandler()
+                return core.events.death.GameOverEventHandler()
             elif core.g.engine.player.level.requires_level_up:
                 return LevelUpEventHandler()
             return MainGameEventHandler()  # Return to the main handler.
@@ -971,73 +941,6 @@ class HistoryViewer(EventHandler):
         else:  # Any other key moves back to the main game state.
             return MainGameEventHandler()
         return None
-
-
-class GameOverEventHandler(EventHandler):
-    # Savegame removed immediately at the time of death.
-    def __init__(self):
-        if os.path.exists("savegames/savegame.sav"):
-            os.remove("savegames/savegame.sav")  # Deletes the active save file.
-
-    def on_quit(self) -> None:
-        """Handle exiting out of a finished game."""
-        raise config.exceptions.QuitWithoutSaving()  # Avoid saving a finished game.
-
-    def on_render(self, console: tcod.Console) -> None:
-        """Create a popup window informing the player of their death."""
-        super().on_render(console)
-
-        death_message = "Killed by a "
-        try:
-            killer = core.g.engine.last_actor.name
-        except:
-            killer = "<Undefined>"
-
-        width = len(death_message + killer) + 6
-        height = 9
-        x = console.width // 2 - int(width / 2)
-        y = console.height // 2 - height
-
-        console.draw_frame(
-            x=x,
-            y=y,
-            width=width,
-            height=height,
-            title='',
-            clear=True,
-            fg=tcod.dark_red,
-            bg=(0, 0, 0),
-        )
-        console.print(x + int(width / 2), y, f"┤YOU DIED├",
-                      alignment=tcod.constants.CENTER, fg=tcod.dark_red)
-
-        console.print(x=x + 1, y=y + 2, string=death_message,
-                      alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 13, y=y + 2, string=killer,
-                      alignment=tcod.constants.LEFT, fg=core.g.engine.last_actor.colour)
-        console.print(x=x + 1, y=y + 5, string=f"[M]: View message log",
-                      alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + 6, string=f"[S]: Save message log",
-                      alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + 8, string=f"[ESC]: Quit",
-                      alignment=tcod.constants.LEFT, fg=tcod.white)
-
-    def ev_quit(self, event: tcod.event.Quit) -> None:
-        self.on_quit()
-
-    def ev_keydown(self, event: tcod.event.KeyDown) -> BaseEventHandler:
-        if event.sym == tcod.event.K_ESCAPE:
-            self.on_quit()
-        elif event.sym == tcod.event.K_m:
-            return HistoryViewer()
-        elif event.sym == tcod.event.K_s:
-            with open('savegames/messages.txt', 'w', encoding='utf-8') as f:
-                for i in core.g.engine.message_log.messages:
-                    f.write(i.full_text)
-                    f.write('\n')
-                f.close()
-            return GenericPopupMessage("Messages saved successfully to\n savegames/messages.txt.")
-
 
 # TODO: Restore autoexplore
 # TODO: Restore autostairs

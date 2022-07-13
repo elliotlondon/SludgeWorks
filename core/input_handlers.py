@@ -118,6 +118,7 @@ class PopupMessage(EventHandler):
             bg=(0, 0, 0)
         )
         console.print(x=x + int(width / 2), y=y + 2, string=self.text, alignment=tcod.CENTER)
+        console.print(x=x + int(width / 2), y=y + height - 1, string="[OK]", alignment=tcod.CENTER)
 
 
 class ExploreEventHandler(EventHandler):
@@ -304,7 +305,6 @@ class MainGameEventHandler(EventHandler):
 
         if key in config.inputs.MOVE_KEYS:
             dx, dy = config.inputs.MOVE_KEYS[key]
-
             # Failsafe OOB check
             if not core.g.engine.game_map.in_bounds(player.x + dx, player.y + dy):
                 core.g.engine.message_log.add_message("That way is blocked.", config.colour.impossible)
@@ -315,15 +315,8 @@ class MainGameEventHandler(EventHandler):
         elif key in config.inputs.WAIT_KEYS:
             action = core.actions.WaitAction(player)
 
-        elif key == tcod.event.K_ESCAPE:
-            raise SystemExit()
-        # elif key == tcod.event.K_F11:
-        #     self.engine.event_handler.toggle_fullscreen()
-
         elif key == tcod.event.K_m:
             return HistoryViewer()
-        elif key == tcod.event.K_SEMICOLON:
-            return LookHandler()
         elif key == tcod.event.K_c:
             return CharacterScreenEventHandler()
 
@@ -334,8 +327,25 @@ class MainGameEventHandler(EventHandler):
         elif key == tcod.event.K_d:
             return InventoryDropHandler()
 
+        elif key == tcod.event.K_SEMICOLON:
+            return LookHandler()
         elif key == tcod.event.K_HASH or key == tcod.event.K_BACKSLASH:
             return ExploreEventHandler()
+
+        # Space-to-interact. If nothing around, create popup. If something, interact. If multiple, prompt user.
+        elif key == tcod.event.K_SPACE or key == tcod.event.K_KP_SPACE:
+            interactables = core.g.engine.game_map.get_surrounding_interactables(player.x, player.y)
+            if len(interactables) == 0:
+                return PopupMessage("There is nothing nearby to interact with.")
+            elif len(interactables) == 1:
+                return InteractEventHandler(interactables[0])
+            else:
+                raise NotImplementedError("Too may objects to interact with surrounding the player.")
+
+        elif key == tcod.event.K_ESCAPE:
+            raise SystemExit()
+        # elif key == tcod.event.K_F11:
+        #     self.engine.event_handler.toggle_fullscreen()
 
         return action
 
@@ -587,6 +597,48 @@ class InventoryDropHandler(InventoryEventHandler):
         return core.actions.DropItem(core.g.engine.player, item)
 
 
+class InteractEventHandler(AskUserEventHandler):
+    """Handle space-to-interact with entities around the character."""
+    def __init__(self, interactee: parts.entity.StaticObject):
+        super().__init__(),
+        self.interactee = interactee
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler, PopupMessage]:
+        if event.sym in config.inputs.YESNO_KEYS:
+            if event.sym not in (tcod.event.K_n, tcod.event.K_ESCAPE):
+                return PopupMessage("You bathe in the sludge...")
+            return MainGameEventHandler()
+        return None
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Create the popup window allowing the user to choose whether to descend"""
+        super().on_render(console)
+        width = len(self.interactee.interact_message) + 4
+        height = 6
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - height
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=self.interactee.colour,
+            bg=(0, 0, 0),
+        )
+        console.print(console.width // 2, y, f"┤{self.interactee.name}├",
+                      alignment=tcod.constants.CENTER, fg=self.interactee.colour)
+        console.print(x=console.width // 2, y=y + 2, string=self.interactee.interact_message,
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 - 6, y=y + 5, string=f"[Y]: Yes",
+                      alignment=tcod.constants.CENTER, fg=self.interactee.colour)
+        console.print(x=console.width // 2 + 6, y=y + 5, string=f"[N]: No",
+                      alignment=tcod.constants.CENTER, fg=self.interactee.colour)
+
+
+
 class SelectIndexHandler(AskUserEventHandler):
     """Handles asking the user for an index on the map."""
 
@@ -746,6 +798,9 @@ class LookHandler(SelectIndexHandler):
                     elif isinstance(entity, parts.entity.Item):
                         entity_content['footer'] = "ITEM"
                         entity_content['footer_colour'] = tcod.yellow
+                    elif isinstance(entity, parts.entity.StaticObject):
+                        entity_content['footer'] = "OBJECT"
+                        entity_content['footer_colour'] = tcod.light_sky
                     elif isinstance(entity.ai, parts.ai.NPC):
                         entity_content['footer'] = "NPC"
                         entity_content['footer_colour'] = tcod.blue
@@ -759,6 +814,10 @@ class LookHandler(SelectIndexHandler):
                     else:
                         entity_content["footer"] = "ENEMY"
                         entity_content['footer_colour'] = tcod.red
+
+                    # Look box size
+                    width = console.width // 4 + 2
+                    height = len(entity_content['description']) // (console.width // 4) + 8
                     # Scale width in case of long item names
                     if len(entity_content['name']) > width:
                         width = len(entity_content['name']) + 4

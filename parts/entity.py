@@ -77,7 +77,9 @@ class Entity:
         if self.equippable:
             self.equippable.owner = self
             if not self.item:
-                item = Item()
+                item = Item(
+                    description="<Undefined>"
+                )
                 self.item = item
                 self.item.owner = self
 
@@ -263,6 +265,37 @@ class Item(Entity):
 
         self.usetext = usetext
         self.description = description
+
+tcod.light_sky
+
+
+class StaticObject(Entity):
+    """An entity which exists in place on the game map and can be interacted with, but blocks movement and cannot
+    be picked up or stored in an inventory like an item."""
+    def __init__(
+            self,
+            *,
+            x: int = 0,
+            y: int = 0,
+            char: str = "?",
+            colour: Tuple[int, int, int] = (255, 255, 255),
+            name: str = "<Unnamed>",
+            interact_message: str = "<Undefined>",
+            description: str
+    ):
+        super().__init__(
+            x=x,
+            y=y,
+            char=char,
+            colour=colour,
+            name=name,
+            blocks_movement=True,
+            render_order=RenderOrder.STATIC_OBJECT,
+            description=description
+        )
+
+        self.interact_message = interact_message
+
 
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):

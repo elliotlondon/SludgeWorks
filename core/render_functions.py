@@ -18,6 +18,7 @@ from gui.menus import *
 class RenderOrder(Enum):
     CORPSE = auto()
     ITEM = auto()
+    STATIC_OBJECT = auto()
     STAIRS = auto()
     PLANT = auto()
     ACTOR = auto()

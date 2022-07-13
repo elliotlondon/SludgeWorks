@@ -88,6 +88,18 @@ class SimpleGameMap:
 
         return None
 
+    def get_surrounding_interactables(self, location_x: int, location_y: int) -> Optional[List[Entity]]:
+        """Get list of all entities that can be interacted with surrounding a selected tile, including diagonals."""
+        x_values = [location_x - 1, location_x, location_x + 1]
+        y_values = [location_y - 1, location_y, location_y + 1]
+        interactables = []
+        for x in x_values:
+            for y in y_values:
+                for entity in self.entities:
+                    if entity.x == x and entity.y == y and isinstance(entity, parts.entity.StaticObject):
+                        interactables.append(entity)
+        return interactables
+
     def get_actor_at_location(self, x: int, y: int) -> Optional[parts.entity.Actor]:
         """Returns the Actor at location x, y."""
         for actor in self.actors:

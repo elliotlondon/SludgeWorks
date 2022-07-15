@@ -8,6 +8,7 @@ import numpy as np
 
 import config.colour
 import core.g
+import parts.effects
 from config.exceptions import Impossible
 from core.action import Action, ItemAction
 from utils.random_utils import roll_dice
@@ -122,6 +123,21 @@ class ActionWithDirection(Action):
 
 
 class MeleeAction(ActionWithDirection):
+    def __init__(self,
+                 entity: Actor,
+                 dx: int,
+                 dy: int,
+                 crit_chance: float = 0.05,
+                 max_crit_chance: float = 0.33
+                 ):
+        super().__init__(
+            entity,
+            dx=dx,
+            dy=dy
+        )
+        self.crit_chance = crit_chance
+        self.max_crit_chance = max_crit_chance
+
     def perform(self) -> None:
         attacker = self.entity
         defender = self.target_actor
@@ -129,8 +145,8 @@ class MeleeAction(ActionWithDirection):
         if not defender:
             raise Impossible("Nothing to attack.")
 
-        crit_chance = 0.05  # Critical hit chance in %
-        max_crit_chance = 0.33  # Define max chance to stop overflows!
+        # Get and apply modifiers for action
+        modifiers = self.entity.equipment.get_active_modifiers()
 
         # Roll to see if hit
         attack_roll = roll_dice(1, 20) + attacker.fighter.dexterity_modifier
@@ -153,11 +169,11 @@ class MeleeAction(ActionWithDirection):
             penetration_int = abs(damage_roll - defence_roll)
             if (damage_roll - defence_roll) > 0:
                 # Calculate modified (positive) crit chance
-                while penetration_int > 0 and crit_chance <= max_crit_chance:
-                    crit_chance += 0.01
+                while penetration_int > 0 and self.crit_chance <= self.max_crit_chance:
+                    self.crit_chance += 0.01
                     penetration_int -= 1
                 # Check if crit
-                if roll_dice(1, np.floor(1 / crit_chance)) == np.floor(1 / crit_chance):
+                if roll_dice(1, np.floor(1 / self.crit_chance)) == np.floor(1 / self.crit_chance):
                     crit = True
                     damage = attacker.fighter.crit_damage - defence_roll
                 else:
@@ -166,14 +182,14 @@ class MeleeAction(ActionWithDirection):
             # Crits can penetrate otherwise impervious armour!
             elif (damage_roll - defence_roll) <= 0:
                 # Calculate modified (negative) crit chance
-                while penetration_int > 0 and crit_chance > 0:
-                    crit_chance -= 0.01
+                while penetration_int > 0 and self.crit_chance > 0:
+                    self.crit_chance -= 0.01
                     penetration_int -= 1
                 # Check if crit
-                if crit_chance <= 0:
+                if self.crit_chance <= 0:
                     damage = 0
                 else:
-                    if roll_dice(1, np.floor(1 / crit_chance)) == np.floor(1 / crit_chance):
+                    if roll_dice(1, np.floor(1 / self.crit_chance)) == np.floor(1 / self.crit_chance):
                         crit = True
                         damage = attacker.fighter.crit_damage - defence_roll
                     else:
@@ -191,6 +207,17 @@ class MeleeAction(ActionWithDirection):
                     else:
                         core.g.engine.message_log.add_message(f'The {attacker.name} crits the {defender.name}'
                                                               f'{str(damage)} damage!', config.colour.enemy_crit)
+                    # Always apply poison on crit
+                    for modifier in modifiers:
+                        if isinstance(modifier, parts.effects.PoisonModifier):
+                            effect = parts.effects.PoisonEffect(damage=modifier.damage, turns=modifier.turns)
+                            effect.parent = defender
+
+                            # Poison message only if not already poisoned
+                            if len(defender.active_effects) == 0:
+                                core.g.engine.message_log.add_message(f"The {defender.name.capitalize()} is poisoned!",
+                                                                      config.colour.poison)
+                            defender.active_effects.append(effect)
                 else:
                     if attacker.name.capitalize() == 'Player':
                         core.g.engine.message_log.add_message(f'You attack the {defender.name.capitalize()} for '
@@ -201,6 +228,18 @@ class MeleeAction(ActionWithDirection):
                     else:
                         core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
                                                               f'{str(damage)} damage.', config.colour.enemy_atk)
+                    # Roll for poison if damage is dealt!
+                    for modifier in modifiers:
+                        if isinstance(modifier, parts.effects.PoisonModifier):
+                            if roll_dice(1, defender.fighter.base_vitality) < modifier.difficulty:
+                                effect = parts.effects.PoisonEffect(damage=modifier.damage, turns=modifier.turns)
+                                effect.parent = defender
+
+                                # Poison message only if not already poisoned
+                                if len(defender.active_effects) == 0:
+                                    core.g.engine.message_log.add_message(
+                                        f"The {defender.name.capitalize()} is poisoned!", config.colour.poison)
+                                defender.active_effects.append(effect)
                 defender.fighter.hp -= damage
             else:
                 if attacker.name.capitalize() == 'Player':
@@ -230,7 +269,7 @@ class MeleeAction(ActionWithDirection):
                                                       config.colour.debug)
 
 
-class BrainRakerAction(ActionWithDirection):
+class BrainRakerAction(MeleeAction):
     """Attack logic for the brainraker enemy type."""
 
     def perform(self) -> None:

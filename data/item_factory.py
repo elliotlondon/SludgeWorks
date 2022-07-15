@@ -1,11 +1,14 @@
 import json
 
+from typing import List
+
 import parts.consumable
 import parts.equippable
 from config.exceptions import DataLoadError
 from parts.entity import Item
 from parts.equipment_types import EquipmentType
 from parts.equippable import Equippable
+import parts.effects
 
 
 def create_item_from_json(path: str, request: str) -> Item:
@@ -48,24 +51,47 @@ def create_equipment(data) -> Item:
     elif "Right_Ring" in equipment_type:
         equipment_type = EquipmentType.Right_Ring
 
+    # Check modifiers if present
+    if 'modifiers' in data['equipment']:
+        modifiers = get_modifiers_from_dict(data['equipment']['modifiers'])
+    else:
+        modifiers = None
+
     item = Item(
         char=data['char'],
         colour=(data['colour'][0], data['colour'][1], data['colour'][2]),
         name=data['name'],
         equippable=Equippable(
             equipment_type=equipment_type,
+            modifiers=modifiers,
             damage_dice=data['equipment']['damage_dice'],
             damage_sides=data['equipment']['damage_sides'],
             strength_bonus=data['equipment']['strength_bonus'],
             dexterity_bonus=data['equipment']['dexterity_bonus'],
             vitality_bonus=data['equipment']['vitality_bonus'],
-            intellect_bonus=data['equipment']['intellect_bonus']
+            intellect_bonus=data['equipment']['intellect_bonus'],
+            armour_bonus=data['equipment']['armour_bonus']
         ),
         depth=data['depth'],
         rarity=data['rarity'],
         description=data['description']
     )
+
     return item
+
+
+def get_modifiers_from_dict(input_dict: dict) -> List[parts.effects.ItemModifier]:
+    """Return a populated list of object modifiers depending upon the ones supplied."""
+    output_list = []
+    if 'poison' in input_dict:
+        effect = parts.effects.PoisonModifier(
+            damage=input_dict['poison']['damage'],
+            turns=input_dict['poison']['turns'],
+            difficulty=input_dict['poison']['difficulty']
+        )
+        output_list.append(effect)
+
+    return output_list
 
 
 def create_consumable(data: dict) -> Item:

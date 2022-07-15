@@ -24,6 +24,37 @@
     }
   },
   {
+    "fungal_dagger": {
+      "char": "-",
+      "colour": [
+        51,
+        121,
+        51
+      ],
+      "name": "Fungal Dagger",
+      "equipment_type": "MainHand",
+      "equipment": {
+        "damage_dice": 1,
+        "damage_sides": 3,
+        "strength_bonus": 0,
+        "dexterity_bonus": 0,
+        "vitality_bonus": 0,
+        "intellect_bonus": 0,
+        "armour_bonus": 0,
+        "modifiers": {
+          "poison":{
+            "damage": 1,
+            "turns": 5,
+            "difficulty": 10
+          }
+        }
+      },
+      "depth": 1,
+      "rarity": 5,
+      "description": "A dagger which has been imbued with caustic cave fungus. The metal of the blade has resettled into strata resembling gills."
+    }
+  },
+  {
     "longsword": {
       "char": "/",
       "colour": [

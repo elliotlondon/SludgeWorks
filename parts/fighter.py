@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING\
+from typing import TYPE_CHECKING
 
 import core.g
 from config.colour import player_die, enemy_die

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, List
 
 import core.g
 from parts.base_component import BaseComponent
@@ -8,12 +8,14 @@ from parts.equipment_types import EquipmentType
 
 if TYPE_CHECKING:
     from entity import Actor, Item
+    from parts.effects import ItemModifier
 
 
 class Equipment(BaseComponent):
     parent: Actor
 
     def __init__(self,
+                 modifiers: Optional[List[ItemModifier]] = None,
                  main_hand: Optional[Item] = None,
                  off_hand: Optional[Item] = None,
                  head: Optional[Item] = None,
@@ -22,7 +24,9 @@ class Equipment(BaseComponent):
                  legs: Optional[Item] = None,
                  feet: Optional[Item] = None,
                  left_ring: Optional[Item] = None,
-                 right_ring: Optional[Item] = None):
+                 right_ring: Optional[Item] = None
+                 ):
+        self.modifiers = modifiers
         self.main_hand = main_hand
         self.off_hand = off_hand
         self.head = head
@@ -97,6 +101,17 @@ class Equipment(BaseComponent):
             if getattr(self, x) and self.__dict__[x].equippable:
                 bonus += self.__dict__[x].equippable.armour_bonus
         return bonus
+
+    def get_active_modifiers(self) -> List[ItemModifier]:
+        """For a given entity with equipment component, find all modifiers of currently active items."""
+        active_modifiers = []
+        for item in self.parent.inventory.items:
+            if item.equippable:
+                if item.equippable.modifiers and self.parent.equipment.item_is_equipped(item):
+                    for modifier in item.equippable.modifiers:
+                        active_modifiers.append(modifier)
+        return active_modifiers
+
 
     def item_is_equipped(self, item: Item) -> bool:
         return self.main_hand == item or self.off_hand == item or \

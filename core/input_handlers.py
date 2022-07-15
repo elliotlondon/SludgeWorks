@@ -507,7 +507,7 @@ class InventoryEventHandler(AskUserEventHandler):
 
         width = len(self.TITLE) + 20
         x = console.width // 2 - int(width / 2)
-        y = console.height // 2
+        y = console.height // 2 - int(height / 2)
 
         console.draw_frame(
             x=x,

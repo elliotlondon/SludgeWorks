@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 import math
-from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union
+from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union, List
 
 import tcod
 
@@ -10,6 +10,7 @@ from core.render_functions import RenderOrder
 from parts.level import Level
 
 if TYPE_CHECKING:
+    import parts.effects
     from parts.ai import BaseAI
     from parts.fighter import Fighter
     from parts.consumable import Consumable
@@ -36,8 +37,17 @@ class Entity:
                  blocks_movement: bool = False,
                  description="<Blank>",
                  render_order=RenderOrder.CORPSE,
-                 fighter=None, ai=None, item=None, inventory=None, loadout=None,
-                 equipment=None, equippable=None):
+                 fighter: Optional[parts.fighter.Fighter] = None,
+                 ai: Optional[parts.ai.BaseAI] = None,
+                 item: Optional[parts.entity.Item] = None,
+                 inventory: Optional[parts.inventory.Inventory] = None,
+                 loadout=None,
+                 equipment: Optional[parts.equipment.Equipment] = None,
+                 equippable: Optional[parts.equippable.Equippable] = None,
+                 active_effects: Optional[List[parts.effects.Effect]] = None
+                 ):
+        if active_effects is None:
+            active_effects = []
         self.x = x
         self.y = y
         self.char = char
@@ -57,6 +67,7 @@ class Entity:
         self.loadout = loadout
         self.equipment = equipment
         self.equippable = equippable
+        self.active_effects = active_effects
 
         if self.fighter:
             self.fighter.owner = self
@@ -78,6 +89,8 @@ class Entity:
                 )
                 self.item = item
                 self.item.owner = self
+        if self.active_effects:
+            self.active_effects.owner = self
 
     @property
     def gamemap(self) -> SimpleGameMap:
@@ -220,6 +233,18 @@ class Actor(Entity):
     def is_alive(self) -> bool:
         """Returns True as long as this actor can perform actions."""
         return bool(self.ai)
+
+    def trigger_active_effects(self):
+        """Function to be performed at the end of a turn. All active effects currently applied to the Actor are
+        cycled through, and their effects are performed."""
+        if self.active_effects:
+            for effect in self.active_effects:
+                if effect.turns > 0:
+                    if self.is_alive:
+                        effect.tick()
+                else:
+                    effect.expiry_message()
+                    self.active_effects.remove(effect)
 
 
 class Item(Entity):

@@ -30,7 +30,7 @@ class GameOverEventHandler(EventHandler):
             killer = "<Undefined>"
 
         max_len = max([len(i) for i in [death_message, turns_survived]])
-        width = max_len + 6
+        width = max_len + 10
         height = 10
         x = console.width // 2 - int(width / 2)
         y = console.height // 2 - height

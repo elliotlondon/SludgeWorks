@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import copy
 import math
-from random import randint
 from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union
 
 import tcod
@@ -24,9 +22,7 @@ T = TypeVar("T", bound="Entity")
 
 
 class Entity:
-    """
-    A generic object to represent players, enemies, items, etc.
-    """
+    """A generic parent object to represent players, enemies, items, etc."""
 
     parent: Union[SimpleGameMap, Inventory]
 
@@ -178,6 +174,8 @@ class Entity:
 
 
 class Actor(Entity):
+    """An entity with an AI which may move and act within the game map."""
+
     def __init__(
             self,
             *,
@@ -189,6 +187,7 @@ class Actor(Entity):
             ai_cls: Type[BaseAI],
             equipment: Equipment,
             fighter: Fighter,
+            corpse: Corpse,
             inventory: Inventory,
             level: Level,
             description: str
@@ -209,6 +208,8 @@ class Actor(Entity):
         self.equipment.parent = self
         self.fighter = fighter
         self.fighter.parent = self
+        self.corpse = corpse
+        self.corpse.parent = self
         self.inventory = inventory
         self.inventory.parent = self
         self.level = level
@@ -222,6 +223,8 @@ class Actor(Entity):
 
 
 class Item(Entity):
+    """Items which may be placed upon the game map, found in inventories, and can be used or equipped."""
+
     def __init__(
             self,
             *,
@@ -266,12 +269,38 @@ class Item(Entity):
         self.usetext = usetext
         self.description = description
 
-tcod.light_sky
+
+class Corpse(Entity):
+    """An entity which is spawned upon the death of its parent."""
+
+    def __init__(
+            self,
+            *,
+            x: int = 0,
+            y: int = 0,
+            char: str = "?",
+            colour: Tuple[int, int, int] = (255, 255, 255),
+            name: str = "<Unnamed>",
+            description: str
+    ):
+        super().__init__(
+            x=x,
+            y=y,
+            char=char,
+            colour=colour,
+            name=name,
+            blocks_movement=False,
+            render_order=RenderOrder.CORPSE,
+            description=description
+        )
+
+        self.description = description
 
 
 class StaticObject(Entity):
     """An entity which exists in place on the game map and can be interacted with, but blocks movement and cannot
     be picked up or stored in an inventory like an item."""
+
     def __init__(
             self,
             *,
@@ -295,7 +324,6 @@ class StaticObject(Entity):
         )
 
         self.interact_message = interact_message
-
 
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):

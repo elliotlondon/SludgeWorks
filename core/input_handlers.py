@@ -149,14 +149,6 @@ class ExploreEventHandler(EventHandler):
         elif core.g.engine.player.level.requires_level_up:
             return LevelUpEventHandler()
 
-        # Garbage collection for exiled entities
-        exiles = []
-        for entity in core.g.engine.game_map.entities:
-            if entity.name == ' ':
-                exiles.append(entity)
-        core.g.engine.game_map.entities = set([x for x in core.g.engine.game_map.entities
-                                               if x not in exiles])
-
         return self
 
     def handle_action(self, action: Optional[Action]):
@@ -281,14 +273,6 @@ class MainGameEventHandler(EventHandler):
             return GameOverEventHandler()
         elif core.g.engine.player.level.requires_level_up:
             return LevelUpEventHandler()
-
-        # Garbage collection for exiled entities
-        exiles = []
-        for entity in core.g.engine.game_map.entities:
-            if entity.name == ' ':
-                exiles.append(entity)
-        core.g.engine.game_map.entities = set([x for x in core.g.engine.game_map.entities
-                                               if x not in exiles])
 
         return self
 

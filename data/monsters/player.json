@@ -20,6 +20,12 @@
         "xp": 0,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [255, 255, 255],
+        "name": "Your lifeless corpse",
+        "description": "Your mind reels at the sight before you. How is this even possible?"
+      },
       "inventory": {
         "capacity": 26
       },

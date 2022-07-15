@@ -23,6 +23,7 @@ class SimpleGameMap:
         self.engine = engine
         self.width, self.height = width, height
         self.entities = set(entities)
+        self.exiles = []
         self.tiles = np.full((width, height), fill_value=maps.tiles.wall, order="F")
         self.rooms = []
         self.tunnel = np.full((width, height), fill_value=False, order="F")  # Tunnel tiles

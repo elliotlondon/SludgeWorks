@@ -20,6 +20,12 @@
         "xp": 350,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [127, 0, 0],
+        "name": "Humanoid corpse",
+        "description": "The body of a creature somewhat resembling a human, but with many subtle and horrific differences."
+      },
       "inventory": {
         "capacity": 8
       },
@@ -50,6 +56,12 @@
         "armour": 1,
         "xp": 400,
         "dodges": true
+      },
+      "corpse": {
+        "char": "%",
+        "colour": [0, 95, 151],
+        "name": "Brainraker corpse",
+        "description": "The rubbery, lifeless form of a scaly humanoid. It seems to be slowly dissolving into the earth."
       },
       "inventory": {
         "capacity": 8

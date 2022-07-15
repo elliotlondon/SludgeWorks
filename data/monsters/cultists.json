@@ -20,6 +20,12 @@
         "xp": 45,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [127, 0, 0],
+        "name": "Mutated corpse",
+        "description": "A mangled mound of mutated flesh. This creature used to be human."
+      },
       "inventory": {
         "capacity": 8
       },
@@ -51,6 +57,12 @@
         "xp": 160,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [127, 0, 0],
+        "name": "Mutated corpse",
+        "description": "A mangled mound of mutated flesh. This creature used to be human."
+      },
       "inventory": {
         "capacity": 8
       },
@@ -81,6 +93,12 @@
         "armour": 0,
         "xp": 275,
         "dodges": true
+      },
+      "corpse": {
+        "char": "%",
+        "colour": [127, 0, 0],
+        "name": "Mutated corpse",
+        "description": "A mangled mound of mutated flesh. This creature used to be human."
       },
       "inventory": {
         "capacity": 8

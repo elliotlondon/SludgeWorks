@@ -20,6 +20,12 @@
         "xp": 25,
         "dodges": false
       },
+      "corpse": {
+        "char": " ",
+        "colour": [255, 255, 255],
+        "name": "<Undefined>",
+        "description": "<Undefined>"
+      },
       "inventory": {
         "capacity": 0
       },
@@ -50,6 +56,12 @@
         "armour": 0,
         "xp": 0,
         "dodges": false
+      },
+      "corpse": {
+        "char": " ",
+        "colour": [255, 255, 255],
+        "name": "<Undefined>",
+        "description": "<Undefined>"
       },
       "inventory": {
         "capacity": 0

@@ -20,6 +20,12 @@
         "xp": 0,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [127, 0, 0],
+        "name": "Human corpse",
+        "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
+      },
       "inventory": {
         "capacity": 12
       },

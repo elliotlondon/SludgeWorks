@@ -322,7 +322,12 @@ class MainGameEventHandler(EventHandler):
             if len(interactables) == 0:
                 return PopupMessage("There is nothing nearby to interact with.")
             elif len(interactables) == 1:
-                return InteractEventHandler(interactables[0])
+                # Decide which interaction to return, depending upon context.
+                if isinstance(interactables[0].ai, parts.ai.NPC):
+                    return ConversationEventHandler(interactables[0])
+                elif isinstance(interactables[0], parts.entity.StaticObject):
+                    if interactables[0].name == "Fountain of Sludge":
+                        return SludgeFountainEventHandler(interactables[0])
             else:
                 raise NotImplementedError("Too may objects to interact with surrounding the player.")
 
@@ -581,21 +586,59 @@ class InventoryDropHandler(InventoryEventHandler):
         return core.actions.DropItem(core.g.engine.player, item)
 
 
-class InteractEventHandler(AskUserEventHandler):
+class ConversationEventHandler(AskUserEventHandler):
+    """Handle space-to-interact with entities around the character."""
+    def __init__(self, interactee: parts.entity.Actor):
+        super().__init__(),
+        self.interactee = interactee
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler, PopupMessage]:
+        return MainGameEventHandler()
+
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)
+        width = console.width // 2 + 10
+        height = 8
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - height
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=tcod.white,
+            bg=(0, 0, 0),
+        )
+        console.print(console.width // 2, y, f"┤{self.interactee.name}├",
+                      alignment=tcod.constants.CENTER, fg=self.interactee.colour)
+
+        console.print(x=x + 1, y=y + 2, string=f"A Descender! Not a common sight these days...",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + 3, string=f"What brings you to the Sludgeworks, friend?",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + 5, string=f"[A]: Option A",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + 6, string=f"[B]: Option B",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+
+
+class SludgeFountainEventHandler(AskUserEventHandler):
     """Handle space-to-interact with entities around the character."""
     def __init__(self, interactee: parts.entity.StaticObject):
         super().__init__(),
         self.interactee = interactee
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler, PopupMessage]:
-        if event.sym in config.inputs.YESNO_KEYS:
-            if event.sym not in (tcod.event.K_n, tcod.event.K_ESCAPE):
+        if event.sym in config.inputs.YESNO_KEYS or event.sym == tcod.event.K_SPACE:
+            if event.sym not in (tcod.event.K_n, tcod.event.K_ESCAPE, tcod.event.K_SPACE):
                 return PopupMessage("You bathe in the sludge...")
             return MainGameEventHandler()
         return None
 
     def on_render(self, console: tcod.Console) -> None:
-        """Create the popup window allowing the user to choose whether to descend"""
         super().on_render(console)
         width = len(self.interactee.interact_message) + 4
         height = 6
@@ -620,7 +663,6 @@ class InteractEventHandler(AskUserEventHandler):
                       alignment=tcod.constants.CENTER, fg=self.interactee.colour)
         console.print(x=console.width // 2 + 6, y=y + 5, string=f"[N]: No",
                       alignment=tcod.constants.CENTER, fg=self.interactee.colour)
-
 
 
 class SelectIndexHandler(AskUserEventHandler):

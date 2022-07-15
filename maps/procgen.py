@@ -274,9 +274,9 @@ def place_fauna(dungeon: SimpleGameMap, engine: Engine) -> None:
     max_monsters = get_max_value_for_floor(max_monsters_by_floor, current_floor)
     number_of_monsters = random.randint(int(max_monsters / 2), max_monsters)
 
+    # Spawn monsters
     monsters, monster_types = get_monsters_at_random(engine, 'data/monsters/spawn_table_monsters.json',
                                                      number_of_monsters)
-
     for i in range(len(monsters)):
         # Get the indices of tiles which are walkable
         x, y = dungeon.get_random_walkable_tile()
@@ -297,6 +297,11 @@ def place_fauna(dungeon: SimpleGameMap, engine: Engine) -> None:
                 monster.fighter.hp = random.randint(4, 8)
             monster.spawn(dungeon, x, y)
 
+    # Spawn NPCs depending upon floor conditions
+    if engine.game_world.current_floor == 1:
+        x, y = dungeon.get_random_walkable_nontunnel_tile()
+        npc = copy.deepcopy(create_monster_from_json(f"data/monsters/npcs.json", "gilbert"))
+        npc.spawn(dungeon, x, y)
 
 def place_items(dungeon: SimpleGameMap, engine: Engine) -> None:
     current_floor = engine.game_world.current_floor

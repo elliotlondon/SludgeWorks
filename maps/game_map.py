@@ -97,7 +97,8 @@ class SimpleGameMap:
         for x in x_values:
             for y in y_values:
                 for entity in self.entities:
-                    if entity.x == x and entity.y == y and isinstance(entity, parts.entity.StaticObject):
+                    if (entity.x == x and entity.y == y) and (isinstance(entity, parts.entity.StaticObject) or \
+                                                              isinstance(entity.ai, parts.ai.NPC)):
                         interactables.append(entity)
         return interactables
 
@@ -358,39 +359,6 @@ class GameWorld:
 #     'fireball_scroll': from_dungeon_level([[5, 4], [10, 6]], self.dungeon_level),
 #     'confusion_scroll': from_dungeon_level([[5, 0], [10, 4]], self.dungeon_level)
 # }
-
-# # Place stationary monsters (plants) independent of monster number
-# for i in range(number_of_plants):
-#     x = randint(room.x1 + 1, room.x2 - 1)
-#     y = randint(room.y1 + 1, room.y2 - 1)
-#     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
-#             and not self.is_blocked(x, y):
-#         plant_choice = random_choice_from_dict(plant_chances)
-#         if plant_choice == 'Whip Vine':
-#             entities.append(whip_vine(x, y))
-#         elif plant_choice == 'Phosphorescent Dahlia':
-#             entities.append(phosphorescent_dahlia(x, y))
-
-# # Place monsters with random spawning chances
-# for i in range(number_of_monsters):
-#     x = randint(room.x1 + 1, room.x2 - 1)
-#     y = randint(room.y1 + 1, room.y2 - 1)
-#     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
-#             and not self.is_blocked(x, y):
-#         monster_choice = random_choice_from_dict(monster_chances)
-#
-# # Place items
-# for i in range(number_of_items):
-#     x = randint(room.x1 + 1, room.x2 - 1)
-#     y = randint(room.y1 + 1, room.y2 - 1)
-#     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
-#             and not self.is_blocked(x, y):
-#         item_choice = random_choice_from_dict(item_chances)
-
-# def is_blocked(self, x, y):
-#     if self.tiles[x][y].blocked:
-#         return True
-#     return False
 #
 # def returncoordinatesinmap(self, coord_x, coord_y):
 #     if coord_x >= 0 and coord_x < self.width:
@@ -507,68 +475,6 @@ class GameWorld:
 #             self.caves_chamber(60, 2)
 #             self.erode(1)
 #
-# def rooms_chamber(self, max_room_size, min_room_size, max_rooms, player, entities):
-#     """A chamber which is filled with rectangular rooms of random sizes, joined with single-jointed corridors."""
-#     rooms = []
-#     num_rooms = 0
-#     map_width = self.width
-#     map_height = self.height
-#     for r in range(max_rooms):
-#         w = random.randint(min_room_size, max_room_size)
-#         h = random.randint(min_room_size, max_room_size)
-#         x = random.randint(0, map_width - w - 1)
-#         y = random.randint(0, map_height - h - 1)
-#
-#         # "Rect" class makes rectangles easier to work with
-#         new_room = Rect(x, y, w, h)
-#
-#         # Run through the other rooms and see if they intersect with this one
-#         for other_room in rooms:
-#             if new_room.intersect(other_room):
-#                 break
-#         else:
-#             self.create_room(new_room)
-#             (new_x, new_y) = new_room.center()
-#             center_of_last_room_x = new_x
-#             center_of_last_room_y = new_y
-#
-#             if num_rooms == 0:
-#                 player.x = new_x
-#                 player.y = new_y
-#             else:
-#                 # center coordinates of previous room
-#                 (prev_x, prev_y) = rooms[num_rooms - 1].center()
-#
-#                 if random.randint(0, 1) == 1:
-#                     # first move horizontally, then vertically
-#                     self.create_h_tunnel(prev_x, new_x, prev_y)
-#                     self.create_v_tunnel(prev_y, new_y, new_x)
-#                 else:
-#                     # first move vertically, then horizontally
-#                     self.create_v_tunnel(prev_y, new_y, prev_x)
-#                     self.create_h_tunnel(prev_x, new_x, new_y)
-#
-#             rooms.append(new_room)
-#             num_rooms += 1
-
-# if num_rooms > 0:
-#     stairs_component = Stairs(self.dungeon_level + 1)
-#     down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', tcod.white, 'Down Stairs',
-#                          'There\'s a dark chasm here which will allow you to take a one-way trip to'
-#                          'the next chamber of the SludgeWorks.', render_order=RenderOrder.STAIRS,
-#                          stairs=stairs_component)
-#     entities.append(down_stairs)
-# else:
-#     print('Map generation failed: No rooms generated.')
-
-# def find_neighbours(self, x, y):
-#     xi = (0, -1, 1) if 0 < x < self.width - 1 else ((0, -1) if x > 0 else (0, 1))
-#     yi = (0, -1, 1) if 0 < y < self.height - 1 else ((0, -1) if y > 0 else (0, 1))
-#     for a in xi:
-#         for b in yi:
-#             if a == b == 0:
-#                 continue
-#             yield (x + a, y + b)
 #
 # def to_down_stairs(self, player, entities, message_log):
 #     """Create a Dijkstra path to the down stairs. Dijkstra was chosen over A* because tcod's built-in dijkstra

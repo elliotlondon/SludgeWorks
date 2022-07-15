@@ -15,6 +15,7 @@ from utils.random_utils import roll_dice
 
 if TYPE_CHECKING:
     from parts.entity import Entity, Actor, Item
+    from parts.ai import NPC
 
 
 class PickupAction(Action):
@@ -385,6 +386,22 @@ class BrainRakerAction(MeleeAction):
                                                       config.colour.debug)
 
 
+class BumpAction(ActionWithDirection):
+    """Bump action to move in a single cardinal direction"""
+
+    def perform(self) -> None:
+        if self.dx > 1 or self.dx < -1 or self.dy > 1 or self.dy < -1:
+            raise Impossible(f"Movement coords for {self.entity.name} are invalid for cardinal movement. "
+                             f"({self.dx, self.dy})", config.colour.debug)
+        if self.target_actor:
+            if isinstance(self.target_actor.ai, parts.ai.NPC):
+                return SwapAction(self.entity, self.target_actor, self.dx, self.dy).perform()
+            else:
+                return MeleeAction(self.entity, self.dx, self.dy).perform()
+        else:
+            return MovementAction(self.entity, self.dx, self.dy).perform()
+
+
 class MovementAction(ActionWithDirection):
     def perform(self) -> None:
         dest_x, dest_y = self.dest_xy
@@ -402,14 +419,25 @@ class MovementAction(ActionWithDirection):
         self.entity.move(self.dx, self.dy)
 
 
-class BumpAction(ActionWithDirection):
-    """Bump action to move in a single cardinal direction"""
+class SwapAction(ActionWithDirection):
+    """Swap the positions of two entities."""
+    def __init__(self, entity: Actor, target: Actor, dx: int, dy: int):
+        super().__init__(entity, dx, dy)
+        self.target = target
 
     def perform(self) -> None:
-        if self.dx > 1 or self.dx < -1 or self.dy > 1 or self.dy < -1:
-            raise Impossible(f"Movement coords for {self.entity.name} are invalid for cardinal movement. "
-                             f"({self.dx, self.dy})", config.colour.debug)
-        if self.target_actor:
-            return MeleeAction(self.entity, self.dx, self.dy).perform()
-        else:
-            return MovementAction(self.entity, self.dx, self.dy).perform()
+        dest_x, dest_y = self.dest_xy
+
+        if not core.g.engine.game_map.in_bounds(dest_x, dest_y):
+            # Destination is out of bounds.
+            raise Impossible("That way is blocked.")
+        if not core.g.engine.game_map.tiles["walkable"][dest_x, dest_y]:
+            # Destination is blocked by a tile.
+            raise Impossible("That way is blocked.")
+
+        x1 = self.entity.x
+        y1 = self.entity.y
+        x2 = self.target_actor.x
+        y2 = self.target_actor.y
+        self.entity.move(x2 - x1, y2 - y1)
+        self.target.move(x1 - x2, y1 - y2)

@@ -40,12 +40,17 @@ def render_bar(console: Console, current_value: int, max_value: int, text: str,
 
 
 def render_dungeon_level(console: Console, dungeon_level: int, location: Tuple[int, int]) -> None:
-    """
-    Render the level the player is currently on, at the given location.
-    """
+    """Render the level the player is currently on, at the given location."""
     x, y = location
 
     console.print(x=x, y=y, string=f"Dungeon level: {dungeon_level}")
+
+
+def render_turn_number(console: Console, turn_number: int, location: Tuple[int, int]) -> None:
+    """Render the level the player is currently on, at the given location."""
+    x, y = location
+
+    console.print(x=x, y=y, string=f"Turn number: {turn_number}")
 
 
 def render_names_at_mouse_location(console: Console, x: int, y: int, engine: Engine) -> None:
@@ -63,43 +68,6 @@ def get_names_at_location(x: int, y: int, game_map: SimpleGameMap) -> str:
     names = ", ".join(entity.name for entity in game_map.entities if entity.x == x and entity.y == y)
 
     return names.capitalize()
-
-
-# def get_names_under_mouse(mouse, entities, fov_map):
-#     (x, y) = (mouse.cx, mouse.cy)
-#
-#     names = [entity.name for entity in entities
-#              if entity.x == x and entity.y == y and tcod.map_is_in_fov(fov_map, entity.x, entity.y)]
-#     names = ', '.join(names)
-#
-#     return names.capitalize()
-#
-#
-# def get_names_under_char(player, entities, fov_map):
-#     (x, y) = (player.x, player.y)
-#
-#     names = [entity.name for entity in entities
-#              if entity.x == x and entity.y == y and tcod.map_is_in_fov(fov_map, entity.x, entity.y)
-#              and entity.name != 'Player']
-#     names = ', '.join(names)
-#
-#     return names.capitalize()
-#
-#
-# def render_bar(panel, x, y, total_width, name, value, maximum, bar_colour, back_colour):
-#     bar_width = int(float(value) / maximum * total_width)
-#
-#     tcod.console_set_default_background(panel, back_colour)
-#     tcod.console_rect(panel, x, y, total_width, 1, False, tcod.BKGND_OVERLAY)
-#
-#     tcod.console_set_default_background(panel, bar_colour)
-#     if bar_width > 0:
-#         tcod.console_rect(panel, x, y, bar_width, 1, False, tcod.BKGND_SCREEN)
-#
-#     tcod.console_set_default_foreground(panel, tcod.white)
-#     tcod.console_print_ex(panel, int(total_width / 2), y, tcod.BKGND_NONE, tcod.CENTER,
-#                              '{0}: {1}/{2}'.format(name, value, maximum))
-
 
 def render_all(con, panel, player, entities, game_map, message_log, hp_bar, xp_bar, fov_map, root_width, root_height,
                game_window_width, game_window_height, panel_width, panel_height, stat_bar_width, stat_bar_height,

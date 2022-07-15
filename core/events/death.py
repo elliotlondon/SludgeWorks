@@ -22,13 +22,15 @@ class GameOverEventHandler(EventHandler):
         """Create a popup window informing the player of their death."""
         super().on_render(console)
 
+        turns_survived = f"You survived for {core.g.engine.turn_number} turns."
         death_message = "Killed by a "
         try:
             killer = core.g.engine.last_actor.name
         except:
             killer = "<Undefined>"
 
-        width = len(death_message + killer) + 6
+        max_len = max([len(i) for i in [death_message, turns_survived]])
+        width = max_len + 6
         height = 10
         x = console.width // 2 - int(width / 2)
         y = console.height // 2 - height
@@ -50,13 +52,16 @@ class GameOverEventHandler(EventHandler):
                       alignment=tcod.constants.LEFT, fg=tcod.white)
         console.print(x=x + 13, y=y + 2, string=killer,
                       alignment=tcod.constants.LEFT, fg=core.g.engine.last_actor.colour)
-        console.print(x=x + 1, y=y + 4, string=f"[I]: View inventory",
+        console.print(x=x + 1, y=y + 3, string=turns_survived,
                       alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + 5, string=f"[M]: View message log",
+
+        console.print(x=x + 1, y=y + 5, string=f"[I]: View inventory",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + 6, string=f"[S]: Save message log",
+        console.print(x=x + 1, y=y + 6, string=f"[M]: View message log",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + 8, string=f"[ESC]: Quit",
+        console.print(x=x + 1, y=y + 7, string=f"[S]: Save message log",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + 9, string=f"[ESC]: Quit",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
 
     def ev_quit(self, event: tcod.event.Quit) -> None:

@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING\
 
 import core.g
 from config.colour import player_die, enemy_die
-from data.item_factory import create_item_from_json
 from maps.tiles import verdant_chars
 from parts.ai import HostileStationary, PassiveStationary
 from parts.base_component import BaseComponent
@@ -141,5 +140,5 @@ class Fighter(BaseComponent):
         # Death message
         core.g.engine.message_log.add_message(death_message, death_message_color)
 
-        # TODO: Award xp to whomever strikes the last blow
-        core.g.engine.player.level.add_xp(xp)
+        # Award xp to whoever performed the last action. Perhaps needs edge case investigation?
+        core.g.engine.last_actor.level.add_xp(xp)

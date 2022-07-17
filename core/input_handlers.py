@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import logging
-import math
 import textwrap
+from json import load
+from math import hypot
+from pathlib import Path
 from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union, List, Iterable
 
 import numpy as np
@@ -208,7 +210,7 @@ class ExploreEventHandler(EventHandler):
         closest_distance = 10000
         closest_coord = None
         for y, x in unexplored_coords:
-            new_distance = math.hypot(x - player.x, y - player.y)
+            new_distance = hypot(x - player.x, y - player.y)
 
             if new_distance < closest_distance:
                 closest_distance = new_distance
@@ -283,7 +285,7 @@ class MainGameEventHandler(EventHandler):
         modifier = event.mod
         player = core.g.engine.player
 
-        if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT)\
+        if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT) \
                 or key == tcod.event.K_KP_ENTER:
             return core.actions.TakeStairsAction(player)
 
@@ -324,7 +326,11 @@ class MainGameEventHandler(EventHandler):
             elif len(interactables) == 1:
                 # Decide which interaction to return, depending upon context.
                 if isinstance(interactables[0].ai, parts.ai.NPC):
-                    return ConversationEventHandler(interactables[0])
+                    # Check if convo has been started before in engine, if not, start a new one
+                    if interactables[0].name in core.g.engine.convos:
+                        return core.g.engine.convos[interactables[0].name]
+                    else:
+                        return ConversationEventHandler(interactables[0])
                 elif isinstance(interactables[0], parts.entity.StaticObject):
                     if interactables[0].name == "Fountain of Sludge":
                         return SludgeFountainEventHandler(interactables[0])
@@ -588,25 +594,91 @@ class InventoryDropHandler(InventoryEventHandler):
 
 class ConversationEventHandler(AskUserEventHandler):
     """Handle space-to-interact with entities around the character."""
+
     def __init__(self, interactee: parts.entity.Actor):
         super().__init__(),
         self.interactee = interactee
+        self.width: int
+        self.height: int
+        self.y_offset: int
+        self.len_replies: int = 0
+        self.current_screen: str = "0"
+        self.new_screen: int
+        self.leave = True
+        self.leave_str = "Goodbye."
+        self.convo_json = self.get_convo_from_json(self.interactee.name.lower())
+        self.speech = []
+        self.replies = []
+
+    @staticmethod
+    def wrap(string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():
+            yield from textwrap.wrap(line, width, expand_tabs=True)
+
+    def get_convo_from_json(self, convo: str) -> dict:
+        """Load a conversation json file for a specified character."""
+        path = Path(f"data/convos/{convo}.json")
+        f = open(path, 'r', encoding='utf-8')
+        return load(f)
+
+    def init_convo(self, index: str):
+        """Logic to set up the conversation with the player on first interaction."""
+        self.speech = self.convo_json[index]["speech"]
+        replies = []
+        for i in self.convo_json[index]:
+            if i != "speech":
+                replies.append(self.convo_json[index][f'{i}'])
+        self.replies = replies
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler, PopupMessage]:
-        return MainGameEventHandler()
+        key = event.sym
+        index = key - tcod.event.K_a
+
+        if 0 <= index < self.len_replies:
+            selected = list(self.convo_json[self.current_screen])[index + 1]
+            self.new_screen = selected
+            # If first interaction, provide init
+            for element in self.convo_json[f"{self.current_screen}"]:
+                if element == "speech":
+                    continue
+                elif element == self.new_screen:
+                    self.current_screen = self.new_screen
+                    self.speech = self.convo_json[f"{self.current_screen}"]['speech']
+                    replies = []
+                    for i in self.convo_json[f"{self.current_screen}"]:
+                        if i != "speech":
+                            replies.append(self.convo_json[f"{self.current_screen}"][f'{i}'])
+                    self.replies = replies
+                    break
+            return self
+        elif key == tcod.event.K_ESCAPE or index == self.len_replies:
+            # Make it so that the next interaction returns the generic interaction
+            self.init_convo("-1")
+
+            # Save to engine on exit
+            core.g.engine.convos[self.interactee.name] = self
+            return MainGameEventHandler()
 
     def on_render(self, console: tcod.Console) -> None:
         super().on_render(console)
-        width = console.width // 2 + 10
-        height = 8
-        x = console.width // 2 - int(width / 2)
-        y = console.height // 2 - height
+        # Populate speech and replies
+        if not self.speech or not self.replies:
+            self.init_convo("0")
+
+        # Init console sizing
+        self.len_replies = len(self.replies)
+        self.width = console.width // 2 + 20
+        self.len_speech = len(list(self.wrap(self.speech, self.width - 2)))
+        self.height = 4 + self.len_speech + self.len_replies
+        x = console.width // 2 - int(self.width / 2)
+        y = console.height // 3  # Clamp height so that extra text moves downwards
 
         console.draw_frame(
             x=x,
             y=y,
-            width=width,
-            height=height,
+            width=self.width,
+            height=self.height,
             title='',
             clear=True,
             fg=tcod.white,
@@ -615,18 +687,38 @@ class ConversationEventHandler(AskUserEventHandler):
         console.print(console.width // 2, y, f"┤{self.interactee.name}├",
                       alignment=tcod.constants.CENTER, fg=self.interactee.colour)
 
-        console.print(x=x + 1, y=y + 2, string=f"A Descender! Not a common sight these days...",
-                      alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + 3, string=f"What brings you to the Sludgeworks, friend?",
-                      alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + 5, string=f"[A]: Option A",
-                      alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + 6, string=f"[B]: Option B",
+        self.draw_speech(console, self.speech, x + 1, y)
+        self.draw_replies(console, self.replies, x + 1, y + self.y_offset + 3)
+
+    def draw_speech(self, console: tcod.console, speech: List[str] | str, x: int, y: int) -> int:
+        """Draws the text spoken by the Actor to the main part of the message menu."""
+        to_draw = ''.join(speech)
+
+        # Loop over all paragraphs
+        self.y_offset = 0
+        for line in list(self.wrap(to_draw, self.width - 2)):
+            console.print(x=x, y=y + 2 + self.y_offset, string=line, alignment=tcod.constants.LEFT, fg=tcod.white)
+            self.y_offset += 1
+
+    def draw_replies(self, console: tcod.console, replies: List[str], x: int, y: int):
+        """Draws the replies that may be chosen by the player for a given speech option."""
+        self.len_replies = len(replies)
+
+        i = 0
+        for i, reply in enumerate(replies):
+            reply_key = chr(ord("a") + i)
+            reply_str = f"[{reply_key}]: {reply}"
+            console.print(x, y + i, reply_str, fg=tcod.white)
+
+        # Goodbye message
+        if self.leave:
+            console.print(x=x, y=y + i + 1, string=f"[{chr(ord('a') + i + 1)}]: {self.leave_str}",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
 
 
 class SludgeFountainEventHandler(AskUserEventHandler):
     """Handle space-to-interact with entities around the character."""
+
     def __init__(self, interactee: parts.entity.StaticObject):
         super().__init__(),
         self.interactee = interactee

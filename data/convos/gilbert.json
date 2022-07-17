@@ -1,43 +1,62 @@
-[
-  {
-    "0": {
-      "header": "A Descender! Not a common sight these days... What brings you to the Sludgeworks, friend?",
-      "1" : "What is this place?",
-      "2" : "Who are you?",
-      "3" : "Where can I get weapons and armour?"
-    },
-    "1": {
-      "header": "What? I really hope you're joking, because only an idiot would enter this place without a goal.",
-      "11" : "Erm..."
-    },
-    "11": {
-      "header": "We are in the upper caves of the Sludgeworks. First things first you'll need a good weapon and armour, and get used to defending yourself every time you turn a corner.//Up here too many fools have gorged themselves on the filth and have been rewarded with deformations and madness. If you have any sense to you you'll be wise to avoid their fate.",
-      "111" : "Where did all these mutants come from?"
-    },
-    "111": {
-      "header": "Practically everything that has come in contact with Sludge have soaked up its putridity. It completely messes up your genetic code, and whats worse is that it's everywhere.//Maybe the fools took a slip near a puddle of the stuff but I'm more supposing that they went for a dip. Too many stupid stories about illuscence flying around."
-    },
-    "3": {
-      "header": "There are enough regular expeditions up here that you might find some leftovers hanging around. Or of course the inhabitants might have some, but they're not for sale.//Plus they're probably sludged to hell and back. Before you ask, I don't have anything to spare...//Well, actually, there is something you can help me with if you fancy a pair of boots.",
-      "31" : "What do you want me to do?"
-    },
-    "31": {
-      "header": "Rarely moirebeasts are seen lurking around these caves. Their hide has unique properties which can be used to create clothing with unique properties.//The only problem is that you'll have a headache for days even if you manage to kill one. Bring me back a decent sized scrap of their hide and I can give you some boots. Real vykan quality.",
-      "311" : "Okay, I'll bring you some moirehide.",
-      "312" : "I'm not risking my life just for a pair of boots!"
-    },
-    "311": {
-      "header": "You're very kind to help me out. Good hunting.//Was there anything else you wanted to know about?"
-    },
-    "312": {
-      "header": "I can't blame you, but at the same time you can't expect anything for free down here.",
-      "31" : "Tell me what you wanted me to do again."
-    },
-    "-1": {
-      "header": "Still alive, I see. Is there anything else I can help you with?",
-      "1" : "What is this place?",
-      "2" : "Who are you?",
-      "3" : "Where can I get weapons and armour?"
-    }
+{
+  "0": {
+    "speech": "A Descender! Not a common sight these days... What brings you to the Sludgeworks, friend?",
+    "1" : "What is this place?",
+    "2" : "Who are you?",
+    "3" : "Where can I get weapons and armour?"
+  },
+  "1": {
+    "speech": "What? I really hope you're joking, because only an idiot would enter this place without a goal.",
+    "11" : "Erm..."
+  },
+  "11": {
+    "speech": "We are in the upper caves of the Sludgeworks. First things first, you'll need a good weapon and armour, and get used to defending yourself every time you turn a corner.\nUp here too many fools have gorged themselves on the filth and have been rewarded with deformations and madness. If you have any sense to you you'll be wise to avoid their fate.",
+    "111" : "Where did all these mutants come from?",
+    "1" : "What is this place?",
+    "2" : "Who are you?",
+    "3" : "Where can I get weapons and armour?"
+  },
+  "111": {
+    "speech": "Practically everything that has come in contact with Sludge have soaked up its putridity. It completely messes up your genetic code, and whats worse is that it's everywhere.\nMaybe the fools took a slip near a puddle of the stuff but I'm more supposing that they went for a dip. Too many stupid stories about illuscence flying around.",
+    "1" : "What is this place?",
+    "2" : "Who are you?",
+    "3" : "Where can I get weapons and armour?"
+  },
+  "2": {
+    "speech": "My name is Gilbert, I'm up here to collect resources for my allies at The Liminus.\nI can't tell you how to get there, but if you manage to, perhaps I can show you around. They're always looking for strong bodies and sane minds up there, and they might be able to protect you.",
+    "1" : "What is this place?",
+    "2" : "Who are you?",
+    "3" : "Where can I get weapons and armour?"
+  },
+  "3": {
+    "speech": "There are enough regular expeditions up here that you might find some leftovers hanging around. Or of course the inhabitants might have some, but they're not for sale.\nPlus they're probably sludged to hell and back. Before you ask, I don't have anything to spare...\nWell, actually, there is something you can help me with if you fancy a pair of boots.",
+    "31" : "What do you want me to do?",
+    "1" : "What is this place?",
+    "2" : "Who are you?",
+    "3" : "Where can I get weapons and armour?"
+  },
+  "31": {
+    "speech": "Rarely, moirebeasts are seen lurking around these caves. Their hide has unique properties which can be used to create clothing.\nThe only problem is that you'll have a headache for days even if you manage to kill one. Bring me back a decent sized scrap of their hide and I can give you some boots. Real vykan quality.",
+    "311" : "Okay, I'll bring you some moirehide.",
+    "312" : "I'm not risking my life just for a pair of boots!"
+  },
+  "311": {
+    "speech": "You're very kind to do this for me! Best of luck, and good hunting.\nWas there anything else you wanted to know about?",
+    "1" : "What is this place?",
+    "2" : "Who are you?",
+    "3" : "Where can I get weapons and armour?"
+  },
+  "312": {
+    "speech": "I can't blame you, but at the same time you can't expect anything for free down here.",
+    "1" : "What is this place?",
+    "2" : "Who are you?",
+    "3" : "Where can I get weapons and armour?",
+    "31" : "Tell me what you wanted me to do again."
+  },
+  "-1": {
+    "speech": "Still alive, I see. Is there anything else I can help you with?",
+    "1" : "What is this place?",
+    "2" : "Who are you?",
+    "3" : "Where can I get weapons and armour?"
   }
-]
+}

@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from tcod import FOV_SYMMETRIC_SHADOWCAST
 from tcod.map import compute_fov
 
-import config.colour
+import core.input_handlers
 from config.exceptions import Impossible
 from gui.message_log import MessageLog
 
@@ -25,6 +24,7 @@ class Engine:
         self.mouse_location = (0, 0)
         self.player = player
         self.last_actor: Actor
+        self.convos: dict[str, core.input_handlers.ConversationEventHandler] = {}
 
     def handle_enemy_turns(self) -> None:
         for entity in set(self.game_map.actors) - {self.player}:

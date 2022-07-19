@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import textwrap
+import itertools
 from json import load
 from math import hypot
 from pathlib import Path
@@ -124,6 +125,8 @@ class PopupMessage(EventHandler):
 
 
 class ExploreEventHandler(EventHandler):
+    """Handler to initiate the explore sequence. Stops if an enemy is in the fov. Continues until interrupted by
+    a keypress, or if there are no more tiles that can be explored."""
     def __init__(self):
         super().__init__()
         # Init message
@@ -135,7 +138,8 @@ class ExploreEventHandler(EventHandler):
         action_or_state = self.dispatch(event)
         if isinstance(action_or_state, BaseEventHandler):
             return action_or_state
-        if self.handle_action(action_or_state):
+
+        if not isinstance(self.handle_action(action_or_state), ExploreEventHandler):
             # A valid action was performed.
             if not core.g.engine.player.is_alive:
                 from core.events.death import GameOverEventHandler
@@ -144,51 +148,31 @@ class ExploreEventHandler(EventHandler):
                 return LevelUpEventHandler()
             return MainGameEventHandler()  # Return to the main handler.
 
-        # Failsafe for recursion
-        if not core.g.engine.player.is_alive:
-            from core.events.death import GameOverEventHandler
-            return GameOverEventHandler()
-        elif core.g.engine.player.level.requires_level_up:
-            return LevelUpEventHandler()
-
         return self
 
     def handle_action(self, action: Optional[Action]):
         """Handle actions returned from event methods. Returns True if the action will advance a turn."""
-        player = core.g.engine.player
-
-        if action is not tcod.event.KeyDown:
-            if self.actor_in_fov():
-                return MainGameEventHandler()
-            try:
-                path = self.explore()
-                if path is not None:
-                    action = core.actions.BumpAction(player, path[0] - player.x, path[1] - player.y)
-                    action.perform()
-                    core.g.engine.handle_enemy_turns()
-                    core.g.engine.update_fov()
-                    # if self.actor_in_fov():
-                    #     return MainGameEventHandler()
-                    return MainGameEventHandler()
-                else:
-                    return MainGameEventHandler()
-            except Impossible as exc:
-                core.g.engine.message_log.add_message(exc.args[0], config.colour.impossible)
-                return True  # Skip enemy turn on exceptions.
-        else:
-            return MainGameEventHandler()
-
-    def actor_in_fov(self) -> bool:
-        """Check if there are any enemies in the FOV."""
+        # First check whether exploring is possible.
         visible_tiles = np.nonzero(core.g.engine.game_map.visible)
         for actor in core.g.engine.game_map.dangerous_actors:
             if actor.x in visible_tiles[0] and actor.y in visible_tiles[1] and actor.name != 'Player':
                 core.g.engine.message_log.add_message(f"You spot a {actor.name} and stop exploring.",
                                                       config.colour.yellow)
-                return True
-        return False
+                return MainGameEventHandler()
+        try:
+            # If path exists, perform next step without halting
+            if self.path:
+                self.explore_move()
+            elif not self.path:
+                self.explore()
+                self.explore_move()
+        except Impossible as exc:
+            core.g.engine.message_log.add_message(exc.args[0], config.colour.impossible)
+            return MainGameEventHandler()
+        self.on_render(core.g.console)
+        return self
 
-    def explore(self) -> Optional[List]:
+    def explore(self) -> Optional[List | None]:
         """Use a dijkstra map to navigate the player towards the nearest unexplored tile."""
         player = core.g.engine.player
 
@@ -218,27 +202,33 @@ class ExploreEventHandler(EventHandler):
 
         # Try simple A*
         if closest_coord:
-            if len(self.path) <= 1:
-                # No path exists, so make one
-                cost = np.array(core.g.engine.game_map.accessible, dtype=np.int8)
+            cost = np.array(core.g.engine.game_map.accessible, dtype=np.int8)
 
-                # Create a graph from the cost array and pass that graph to a new pathfinder.
-                graph = tcod.path.SimpleGraph(cost=cost, cardinal=2, diagonal=3)
-                pathfinder = tcod.path.Pathfinder(graph)
-                pathfinder.add_root((core.g.engine.player.x, core.g.engine.player.y))  # Start position.
+            # Create a graph from the cost array and pass that graph to a new pathfinder.
+            graph = tcod.path.SimpleGraph(cost=cost, cardinal=2, diagonal=3)
+            pathfinder = tcod.path.Pathfinder(graph)
+            pathfinder.add_root((core.g.engine.player.x, core.g.engine.player.y))  # Start position.
 
-                # Compute the path to the destination and remove the starting point.
-                self.path: List[List[int]] = pathfinder.path_to(closest_coord)[1:].tolist()
-                if not self.path:
-                    core.g.engine.message_log.add_message("You cannot explore the remaining tiles.",
-                                                          config.colour.yellow)
-                    return None
-                return self.path[0]
-            else:
-                # Path already exists: use it and prune it
-                self.path.pop(0)
-                new_coords = self.path[0]
-                return new_coords
+            # Compute the path to the destination and remove the starting point.
+            self.path: List[List[int]] = pathfinder.path_to(closest_coord)[1:].tolist()
+            if not self.path:
+                core.g.engine.message_log.add_message("You cannot explore the remaining tiles.",
+                                                      config.colour.yellow)
+                return None
+
+    def explore_move(self):
+        """Perform an action to move the player, update fov and the renderer"""
+        # Move player
+        action = core.actions.BumpAction(core.g.engine.player,
+                                         self.path[0][0] - core.g.engine.player.x,
+                                         self.path[0][1] - core.g.engine.player.y)
+        # Remove the tile moved to from the path
+        action.perform()
+        self.path.pop(0)
+
+        # Handle enemy turns
+        core.g.engine.handle_enemy_turns()
+        core.g.engine.update_fov()
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         """By default any key exits this input handler."""
@@ -340,7 +330,7 @@ class MainGameEventHandler(EventHandler):
         elif key == tcod.event.K_ESCAPE:
             raise SystemExit()
         # elif key == tcod.event.K_F11:
-        #     self.engine.event_handler.toggle_fullscreen()
+        #     self.toggle_fullscreen()
 
         return action
 

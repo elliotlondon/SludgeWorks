@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List
 
-from tcod import FOV_SYMMETRIC_SHADOWCAST
+import tcod
 from tcod.map import compute_fov
 
 import core.input_handlers
@@ -41,7 +41,7 @@ class Engine:
         self.game_map.visible[:] = compute_fov(
             self.game_map.tiles["transparent"],
             (self.player.x, self.player.y),
-            radius=6, algorithm=FOV_SYMMETRIC_SHADOWCAST
+            radius=6, algorithm=tcod.FOV_SYMMETRIC_SHADOWCAST
         )
         # If a tile is "visible" it should be added to "explored".
         self.game_map.explored |= self.game_map.visible

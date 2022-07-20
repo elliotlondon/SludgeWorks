@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from math import hypot
 import logging
 import random
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import Optional, Tuple, TYPE_CHECKING, List
 
+import tcod
 import numpy as np
 
 import config.colour
@@ -289,9 +291,6 @@ class BrainRakerAction(MeleeAction):
         else:
             dodge_roll = 0
 
-        # Debug for testing attack
-        dodge_roll = 0
-
         damage = None
         crit = False
         if attack_roll > dodge_roll:  # Attack hits
@@ -441,3 +440,65 @@ class SwapAction(ActionWithDirection):
         y2 = self.target_actor.y
         self.entity.move(x2 - x1, y2 - y1)
         self.target.move(x1 - x2, y1 - y2)
+
+
+class ExploreAction(Action):
+    def __init__(self, entity: Actor):
+        super().__init__(entity)
+        self.path = []
+
+    def perform(self) -> Optional[None | str]:
+        """Use a dijkstra map to navigate the player towards the nearest unexplored tile."""
+        player = core.g.engine.player
+
+        # First check whether exploring is possible.
+        visible_tiles = np.nonzero(core.g.engine.game_map.visible)
+        for actor in core.g.engine.game_map.dangerous_actors:
+            if actor.x in visible_tiles[0] and actor.y in visible_tiles[1] and actor.name != 'Player':
+                core.g.engine.message_log.add_message(f"You spot a {actor.name} and stop exploring.",
+                                                      config.colour.yellow)
+                return None
+
+        unexplored_coords = []
+        for y in range(core.g.engine.game_map.height):
+            for x in range(core.g.engine.game_map.width):
+                if not core.g.engine.game_map.explored[x, y] and core.g.engine.game_map.accessible[x, y]:
+                    unexplored_coords.append((y, x))
+
+        if logging.DEBUG >= logging.root.level:
+            core.g.engine.message_log.add_message(f"DEBUG: Unexplored coords = {len(unexplored_coords)}",
+                                                  config.colour.debug)
+
+        if len(unexplored_coords) == 0:
+            core.g.engine.message_log.add_message("There is nowhere else to explore.", config.colour.yellow)
+            return None
+
+        # Find the nearest unexplored coords
+        closest_distance = 10000
+        closest_coord = None
+        for y, x in unexplored_coords:
+            new_distance = hypot(x - player.x, y - player.y)
+
+            if new_distance < closest_distance:
+                closest_distance = new_distance
+                closest_coord = (x, y)
+
+        # Try simple A*
+        if closest_coord:
+            cost = np.array(core.g.engine.game_map.accessible, dtype=np.int8)
+
+            # Create a graph from the cost array and pass that graph to a new pathfinder.
+            graph = tcod.path.SimpleGraph(cost=cost, cardinal=2, diagonal=3)
+            pathfinder = tcod.path.Pathfinder(graph)
+            pathfinder.add_root((core.g.engine.player.x, core.g.engine.player.y))  # Start position.
+
+            # Compute the path to the destination and remove the starting point.
+            self.path: List[List[int]] = pathfinder.path_to(closest_coord)[1:].tolist()
+            if not self.path:
+                core.g.engine.message_log.add_message("You cannot explore the remaining tiles.",
+                                                      config.colour.yellow)
+                return None
+            else:
+                BumpAction(core.g.engine.player,
+                           self.path[0][0] - core.g.engine.player.x, self.path[0][1] - core.g.engine.player.y).perform()
+                return "continuous"

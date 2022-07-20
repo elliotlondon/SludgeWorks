@@ -13,10 +13,11 @@ class Action:
         super().__init__()
         self.entity = entity
 
-    def perform(self) -> None:
+    def perform(self) -> Optional[None | str]:
         """
         Perform this action with the objects needed to determine its scope.
         This method must be overridden by Action subclasses.
+        Returns an optional flag if the Action is continuous.
         """
         raise NotImplementedError()
 

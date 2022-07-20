@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-import logging
 import textwrap
-import itertools
 from json import load
-from math import hypot
 from pathlib import Path
 from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union, List, Iterable
 
-import numpy as np
 import tcod
 
 import config.colour
@@ -127,121 +123,24 @@ class PopupMessage(EventHandler):
 class ExploreEventHandler(EventHandler):
     """Handler to initiate the explore sequence. Stops if an enemy is in the fov. Continues until interrupted by
     a keypress, or if there are no more tiles that can be explored."""
+
     def __init__(self):
         super().__init__()
-        # Init message
         core.g.engine.message_log.add_message(f"You begin exploring.", config.colour.yellow)
-        self.path = []
 
     def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
-        """Handle events for input handlers with an engine."""
-        action_or_state = self.dispatch(event)
-        if isinstance(action_or_state, BaseEventHandler):
-            return action_or_state
-
-        if not isinstance(self.handle_action(action_or_state), ExploreEventHandler):
-            # A valid action was performed.
-            if not core.g.engine.player.is_alive:
-                from core.events.death import GameOverEventHandler
-                return GameOverEventHandler()
-            elif core.g.engine.player.level.requires_level_up:
-                return LevelUpEventHandler()
+        while core.actions.ExploreAction(core.g.engine.player).perform() is "continuous":
+            core.g.engine.handle_enemy_turns()
+            core.g.engine.update_fov()
+            render_ui(core.g.console, core.g.engine)
+            render_map(core.g.console, core.g.engine.game_map)
+            core.g.context.present(core.g.console)
+        else:
             return MainGameEventHandler()  # Return to the main handler.
-
-        return self
-
-    def handle_action(self, action: Optional[Action]):
-        """Handle actions returned from event methods. Returns True if the action will advance a turn."""
-        # First check whether exploring is possible.
-        visible_tiles = np.nonzero(core.g.engine.game_map.visible)
-        for actor in core.g.engine.game_map.dangerous_actors:
-            if actor.x in visible_tiles[0] and actor.y in visible_tiles[1] and actor.name != 'Player':
-                core.g.engine.message_log.add_message(f"You spot a {actor.name} and stop exploring.",
-                                                      config.colour.yellow)
-                return MainGameEventHandler()
-        try:
-            # If path exists, perform next step without halting
-            if self.path:
-                self.explore_move()
-            elif not self.path:
-                self.explore()
-                self.explore_move()
-        except Impossible as exc:
-            core.g.engine.message_log.add_message(exc.args[0], config.colour.impossible)
-            return MainGameEventHandler()
-        self.on_render(core.g.console)
-        return self
-
-    def explore(self) -> Optional[List | None]:
-        """Use a dijkstra map to navigate the player towards the nearest unexplored tile."""
-        player = core.g.engine.player
-
-        unexplored_coords = []
-        for y in range(core.g.engine.game_map.height):
-            for x in range(core.g.engine.game_map.width):
-                if not core.g.engine.game_map.explored[x, y] and core.g.engine.game_map.accessible[x, y]:
-                    unexplored_coords.append((y, x))
-
-        if logging.DEBUG >= logging.root.level:
-            core.g.engine.message_log.add_message(f"DEBUG: Unexplored coords = {len(unexplored_coords)}",
-                                                  config.colour.debug)
-
-        if len(unexplored_coords) == 0:
-            core.g.engine.message_log.add_message("There is nowhere else to explore.", config.colour.yellow)
-            return None
-
-        # Find the nearest unexplored coords
-        closest_distance = 10000
-        closest_coord = None
-        for y, x in unexplored_coords:
-            new_distance = hypot(x - player.x, y - player.y)
-
-            if new_distance < closest_distance:
-                closest_distance = new_distance
-                closest_coord = (x, y)
-
-        # Try simple A*
-        if closest_coord:
-            cost = np.array(core.g.engine.game_map.accessible, dtype=np.int8)
-
-            # Create a graph from the cost array and pass that graph to a new pathfinder.
-            graph = tcod.path.SimpleGraph(cost=cost, cardinal=2, diagonal=3)
-            pathfinder = tcod.path.Pathfinder(graph)
-            pathfinder.add_root((core.g.engine.player.x, core.g.engine.player.y))  # Start position.
-
-            # Compute the path to the destination and remove the starting point.
-            self.path: List[List[int]] = pathfinder.path_to(closest_coord)[1:].tolist()
-            if not self.path:
-                core.g.engine.message_log.add_message("You cannot explore the remaining tiles.",
-                                                      config.colour.yellow)
-                return None
-
-    def explore_move(self):
-        """Perform an action to move the player, update fov and the renderer"""
-        # Move player
-        action = core.actions.BumpAction(core.g.engine.player,
-                                         self.path[0][0] - core.g.engine.player.x,
-                                         self.path[0][1] - core.g.engine.player.y)
-        # Remove the tile moved to from the path
-        action.perform()
-        self.path.pop(0)
-
-        # Handle enemy turns
-        core.g.engine.handle_enemy_turns()
-        core.g.engine.update_fov()
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         """By default any key exits this input handler."""
         core.g.engine.message_log.add_message(f"You stop exploring.", config.colour.yellow)
-        return self.on_exit()
-
-    def on_render(self, console: tcod.Console) -> None:
-        render_map(console, core.g.engine.game_map)
-        render_ui(console, core.g.engine)
-
-    def on_exit(self) -> Optional[ActionOrHandler]:
-        """Called when the user is trying to exit or cancel an action.
-        By default this returns to the main event handler."""
         return MainGameEventHandler()
 
 
@@ -703,7 +602,7 @@ class ConversationEventHandler(AskUserEventHandler):
         # Goodbye message
         if self.leave:
             console.print(x=x, y=y + i + 1, string=f"[{chr(ord('a') + i + 1)}]: {self.leave_str}",
-                      alignment=tcod.constants.LEFT, fg=tcod.white)
+                          alignment=tcod.constants.LEFT, fg=tcod.white)
 
 
 class SludgeFountainEventHandler(AskUserEventHandler):

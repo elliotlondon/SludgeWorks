@@ -155,6 +155,47 @@ class ExploreEventHandler(EventHandler):
             return MainGameEventHandler()
 
 
+class TakeStairsEventHandler(EventHandler):
+    """Handler for when the player attempts to descend.
+    If the player is standing on the down stairs, descend.
+    If the player has discovered the down stairs, continuous action move towards them.
+    Else, return a message that the player does not know where the down stairs are.
+    Stops if an enemy enters the FOV. Continues until interrupted by a keypress, or when the player is at the down
+    stairs location."""
+
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        # First check if at the down stairs location.
+        if (core.g.engine.player.x, core.g.engine.player.y) == core.g.engine.game_map.downstairs_location:
+            core.actions.DescendAction(core.g.engine.player).perform()
+            core.g.engine.update_fov()
+            return MainGameEventHandler()
+        if not core.actions.TakeStairsAction(core.g.engine.player).possible():
+            return MainGameEventHandler()
+        else:
+            core.g.engine.message_log.add_message(f"You head towards the exit.", config.colour.yellow)
+        while core.actions.TakeStairsAction(core.g.engine.player).perform() == "continuous":
+            # Check for interrupt
+            tcod.lib.SDL_PumpEvents()
+            num_of_pressed_keys = tcod.lib.SDL_PeepEvents(tcod.ffi.NULL, 0, tcod.lib.SDL_PEEKEVENT,
+                                                          tcod.lib.SDL_KEYDOWN, tcod.lib.SDL_KEYDOWN)
+            if num_of_pressed_keys > 0:
+                core.g.engine.message_log.add_message(f"You stop exploring.", config.colour.yellow)
+                return InterruptHandler()
+            # Handle enemy turns
+            core.g.engine.handle_enemy_turns()
+            core.g.engine.update_fov()
+            # Render all
+            render_ui(core.g.console, core.g.engine)
+            render_map(core.g.console, core.g.engine.game_map)
+            core.g.context.present(core.g.console)
+
+        return MainGameEventHandler()
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
+        if event.sym == tcod.event.K_ESCAPE:
+            return MainGameEventHandler()
+
+
 class InterruptHandler(EventHandler):
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
         return MainGameEventHandler()
@@ -196,7 +237,7 @@ class MainGameEventHandler(EventHandler):
 
         if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT) \
                 or key == tcod.event.K_KP_ENTER:
-            return core.actions.TakeStairsAction(player)
+            return TakeStairsEventHandler()
 
         if key in config.inputs.MOVE_KEYS:
             dx, dy = config.inputs.MOVE_KEYS[key]
@@ -224,6 +265,7 @@ class MainGameEventHandler(EventHandler):
 
         elif key == tcod.event.K_SEMICOLON:
             return LookHandler()
+
         elif key == tcod.event.K_HASH or key == tcod.event.K_BACKSLASH:
             return ExploreEventHandler()
 

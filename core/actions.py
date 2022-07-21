@@ -84,20 +84,6 @@ class FallDownHole(Action):
         )
 
 
-class TakeStairsAction(Action):
-    def perform(self) -> None:
-        """
-        Take the stairs, if any exist at the entity's location.
-        """
-        if (self.entity.x, self.entity.y) == core.g.engine.game_map.downstairs_location:
-            core.g.engine.game_world.generate_floor()
-            core.g.engine.message_log.add_message(
-                "You slide down the tunnel, descending deeper into the Sludgeworks.", config.colour.descend
-            )
-        else:
-            raise Impossible("You cannot descend here.")
-
-
 class ActionWithDirection(Action):
     def __init__(self, entity: Actor, dx: int, dy: int):
         super().__init__(entity)
@@ -540,3 +526,91 @@ class ExploreAction(Action):
                 else:
                     BumpAction(player, self.path[0][0] - player.x, self.path[0][1] - player.y).perform()
                     return "continuous"
+
+
+class TakeStairsAction(Action):
+    def __init__(self, entity: Actor):
+        super().__init__(entity)
+        self.path = []
+
+    def possible(self) -> bool:
+        """Check whether this action is possible."""
+        if self.enemy_in_fov():
+            return False
+
+        # Check if stairs have been found
+        stairs_x = core.g.engine.game_map.downstairs_location[0]
+        stairs_y = core.g.engine.game_map.downstairs_location[1]
+        if core.g.engine.game_map.explored[stairs_x, stairs_y]:
+            return True
+        else:
+            core.g.engine.message_log.add_message("You cannot descend here.", config.colour.yellow)
+            return False
+
+    def enemy_in_fov(self):
+        """Checks if there in an enemy in player FOV which will interrupt the pathing to the stairs."""
+        visible_x, visible_y = np.nonzero(core.g.engine.game_map.visible)
+        for tile_x, tile_y in zip(visible_x, visible_y):
+            for entity in core.g.engine.game_map.get_all_visible_entities(tile_x, tile_y):
+                if entity in core.g.engine.game_map.dangerous_actors:
+                    core.g.engine.message_log.add_message(f"You spot a {entity.name} and stop exploring.",
+                                                          config.colour.yellow)
+
+    def path_isvalid(self):
+        """Helper tool to find out whether a path is valid. This is important as teleportation
+        and forced movement actions can cause the path to move entities to incorrect tiles."""
+        if core.g.engine.player.x == self.path[0][0] and core.g.engine.player.y == self.path[0][1]:
+            return False
+
+        if not core.g.engine.game_map.tiles['walkable'][self.path[0][0], self.path[0][1]]:
+            return False
+
+        next_x = abs(self.entity.x - self.path[0][0])
+        next_y = abs(self.entity.y - self.path[0][1])
+        if next_x > 1 or next_y > 1:
+            return False
+
+        return True
+
+    def perform(self) -> Optional[None | str]:
+        """Use a dijkstra map to navigate the player towards the down stairs location."""
+        player = core.g.engine.player
+
+        # Check if there is an enemy in the FOV
+        if self.enemy_in_fov():
+            return None
+        # If path exists, take the next step
+        elif self.path and self.path_isvalid():
+            BumpAction(player, self.path[0][0] - player.x, self.path[0][1] - player.y).perform()
+            self.path.pop(0)
+            return "continuous"
+        else:
+            cost = np.array(core.g.engine.game_map.accessible, dtype=np.int8)
+
+            # Create a graph from the cost array and pass that graph to a new pathfinder.
+            graph = tcod.path.SimpleGraph(cost=cost, cardinal=2, diagonal=3)
+            pathfinder = tcod.path.Pathfinder(graph)
+            pathfinder.add_root((core.g.engine.player.x, core.g.engine.player.y))  # Start position.
+
+            # Compute the path to the destination and remove the starting point.
+            self.path: List[List[int]] = pathfinder.path_to(core.g.engine.game_map.downstairs_location)[1:].tolist()
+            if core.g.engine.player.x == core.g.engine.game_map.downstairs_location[0] and \
+                    core.g.engine.player.y == core.g.engine.game_map.downstairs_location[1]:
+                return None
+            elif not self.path:
+                core.g.engine.message_log.add_message("You cannot find a clear path to the exit.",
+                                                      config.colour.yellow)
+                return None
+            else:
+                BumpAction(player, self.path[0][0] - player.x, self.path[0][1] - player.y).perform()
+                return "continuous"
+
+
+class DescendAction(Action):
+    """Action for descending to the next floor, including generating the map."""
+
+    def perform(self) -> Optional[None]:
+        core.g.engine.game_world.generate_floor()
+        core.g.engine.message_log.add_message(
+            "You slide down the tunnel, descending deeper into the Sludgeworks.", config.colour.descend
+        )

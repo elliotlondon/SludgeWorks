@@ -139,7 +139,7 @@ class ExploreEventHandler(EventHandler):
                                                           tcod.lib.SDL_KEYDOWN, tcod.lib.SDL_KEYDOWN)
             if num_of_pressed_keys > 0:
                 core.g.engine.message_log.add_message(f"You stop exploring.", config.colour.yellow)
-                break
+                return InterruptHandler()
             # Handle enemy turns
             core.g.engine.handle_enemy_turns()
             core.g.engine.update_fov()
@@ -149,6 +149,19 @@ class ExploreEventHandler(EventHandler):
             core.g.context.present(core.g.console)
 
         return MainGameEventHandler()
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
+        if event.sym == tcod.event.K_ESCAPE:
+            return MainGameEventHandler()
+
+
+class InterruptHandler(EventHandler):
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
+        return MainGameEventHandler()
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Create the popup window with a message within."""
+        super().on_render(console)
 
 
 class MainGameEventHandler(EventHandler):
@@ -163,7 +176,7 @@ class MainGameEventHandler(EventHandler):
                 return GameOverEventHandler()
             elif core.g.engine.player.level.requires_level_up:
                 return LevelUpEventHandler()
-            return MainGameEventHandler()  # Return to the main handler.
+            return MainGameEventHandler()
 
         # Failsafe for recursion
         if not core.g.engine.player.is_alive:

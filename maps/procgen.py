@@ -143,11 +143,13 @@ def get_items_at_random(engine: Engine, path: str, number_of_entities: int) -> [
 
     return chosen_items, chosen_types
 
+
 def get_static_objects_at_random(engine: Engine, path: str, floor_number: int) -> List[parts.entity.StaticObject]:
     # Load drop table for current floor
     f = open(path)
     spawn_table = json.load(f)[0]
     return spawn_table
+
 
 def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map_width: int, map_height: int,
                      engine: Engine) -> SimpleGameMap:
@@ -180,6 +182,7 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
         # Populate dungeon
         place_flora(dungeon, engine, areas=3)
         place_fauna(dungeon, engine)
+        place_npcs(dungeon, engine)
         place_items(dungeon, engine)
         place_static_objects(dungeon, engine)
 
@@ -187,10 +190,7 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
         dungeon = add_stairs(dungeon)
         if isinstance(dungeon, SimpleGameMap):
             # Mapgen successful, use this floor
-
-            # Calculate accessible area for future use
             dungeon.accessible = dungeon.calc_accessible()
-
             return dungeon
         elif isinstance(dungeon, MapGenError):
             # Mapgen unsuccessful, try again until max tries are reached
@@ -297,11 +297,14 @@ def place_fauna(dungeon: SimpleGameMap, engine: Engine) -> None:
                 monster.fighter.hp = random.randint(4, 8)
             monster.spawn(dungeon, x, y)
 
+
+def place_npcs(dungeon: SimpleGameMap, engine: Engine) -> None:
     # Spawn NPCs depending upon floor conditions
     if engine.game_world.current_floor == 1:
         x, y = dungeon.get_random_walkable_nontunnel_tile()
         npc = copy.deepcopy(create_monster_from_json(f"data/monsters/npcs.json", "gilbert"))
         npc.spawn(dungeon, x, y)
+
 
 def place_items(dungeon: SimpleGameMap, engine: Engine) -> None:
     current_floor = engine.game_world.current_floor
@@ -327,7 +330,8 @@ def place_static_objects(dungeon: SimpleGameMap, engine: Engine) -> None:
     # For now simply spawn one sludge fountain per floor
     x, y = dungeon.get_random_unoccupied_nonfov_tile()
 
-    static_object = copy.deepcopy(create_static_object_from_json(f"data/static_objects/core_objects.json", 'sludge_fountain'))
+    static_object = copy.deepcopy(
+        create_static_object_from_json(f"data/static_objects/core_objects.json", 'sludge_fountain'))
     static_object.spawn(dungeon, x, y)
 
 

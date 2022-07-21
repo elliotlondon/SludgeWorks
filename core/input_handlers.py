@@ -126,21 +126,28 @@ class ExploreEventHandler(EventHandler):
 
     def __init__(self):
         super().__init__()
-        core.g.engine.message_log.add_message(f"You begin exploring.", config.colour.yellow)
+        self.action = core.actions.ExploreAction(core.g.engine.player)
+        self.possible = self.action.possible()
+        if self.possible:
+            core.g.engine.message_log.add_message(f"You begin exploring.", config.colour.yellow)
 
     def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
-        while core.actions.ExploreAction(core.g.engine.player).perform() is "continuous":
+        while self.action.perform() == "continuous":
+            # Check for interrupt
+            tcod.lib.SDL_PumpEvents()
+            num_of_pressed_keys = tcod.lib.SDL_PeepEvents(tcod.ffi.NULL, 0, tcod.lib.SDL_PEEKEVENT,
+                                                          tcod.lib.SDL_KEYDOWN, tcod.lib.SDL_KEYDOWN)
+            if num_of_pressed_keys > 0:
+                core.g.engine.message_log.add_message(f"You stop exploring.", config.colour.yellow)
+                break
+            # Handle enemy turns
             core.g.engine.handle_enemy_turns()
             core.g.engine.update_fov()
+            # Render all
             render_ui(core.g.console, core.g.engine)
             render_map(core.g.console, core.g.engine.game_map)
             core.g.context.present(core.g.console)
-        else:
-            return MainGameEventHandler()  # Return to the main handler.
 
-    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
-        """By default any key exits this input handler."""
-        core.g.engine.message_log.add_message(f"You stop exploring.", config.colour.yellow)
         return MainGameEventHandler()
 
 
@@ -1008,7 +1015,6 @@ class HistoryViewer(EventHandler):
             return MainGameEventHandler()
         return None
 
-# TODO: Restore autoexplore
 # TODO: Restore autostairs
 # TODO: Show inventory and message log on player death
 # TODO: Show library of highscores for single player

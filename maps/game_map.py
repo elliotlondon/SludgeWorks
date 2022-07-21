@@ -6,7 +6,7 @@ from typing import Iterable, Iterator, Optional, TYPE_CHECKING, Tuple, Dict, Lis
 import numpy as np
 
 import parts.entity
-from parts.ai import PassiveStationary
+from parts.ai import PassiveStationary, NPC
 from parts.entity import Item
 from utils.math_utils import Graph
 
@@ -54,6 +54,7 @@ class SimpleGameMap:
             for entity in self.entities
             if
             isinstance(entity, parts.entity.Actor) and entity.is_alive and not isinstance(entity.ai, PassiveStationary)
+            and not isinstance(entity.ai, NPC) and not entity.name == "Player"
         )
 
     @property
@@ -185,6 +186,11 @@ class SimpleGameMap:
 
         graph = Graph(self.width, self.height, walkable)
         accessible = graph.find_connected_area(player.x, player.y)
+
+        # Tiles with blocking objects are inaccessible
+        for entity in self.entities:
+            if isinstance(entity, parts.entity.StaticObject):
+                accessible[entity.x, entity.y] = False
 
         return accessible
 

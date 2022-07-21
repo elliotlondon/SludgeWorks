@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from math import hypot
 import logging
 import random
+from math import hypot
 from typing import Optional, Tuple, TYPE_CHECKING, List
 
-import tcod
 import numpy as np
+import tcod
 
 import config.colour
 import core.g
@@ -17,7 +17,6 @@ from utils.random_utils import roll_dice
 
 if TYPE_CHECKING:
     from parts.entity import Entity, Actor, Item
-    from parts.ai import NPC
 
 
 class PickupAction(Action):
@@ -420,6 +419,7 @@ class MovementAction(ActionWithDirection):
 
 class SwapAction(ActionWithDirection):
     """Swap the positions of two entities."""
+
     def __init__(self, entity: Actor, target: Actor, dx: int, dy: int):
         super().__init__(entity, dx, dy)
         self.target = target
@@ -443,62 +443,100 @@ class SwapAction(ActionWithDirection):
 
 
 class ExploreAction(Action):
-    def __init__(self, entity: Actor):
+    def __init__(self, entity: Actor, unexplored_coords=None):
         super().__init__(entity)
         self.path = []
+        self.unexplored_coords = unexplored_coords
+
+    def possible(self) -> bool:
+        """Check whether this action is possible."""
+        if self.enemy_in_fov():
+            return False
+
+        self.init_coords()
+        if len(self.unexplored_coords) == 0:
+            return False
+
+        return True
+
+    def init_coords(self):
+        self.unexplored_coords = []
+        for y in range(core.g.engine.game_map.height):
+            for x in range(core.g.engine.game_map.width):
+                if not core.g.engine.game_map.explored[x, y] and core.g.engine.game_map.accessible[x, y]:
+                    self.unexplored_coords.append((y, x))
+
+    def enemy_in_fov(self) -> str:
+        """Checks if there in an enemy in player FOV which will interrupt the explore action."""
+        visible_x, visible_y = np.nonzero(core.g.engine.game_map.visible)
+        for tile_x, tile_y in zip(visible_x, visible_y):
+            for entity in core.g.engine.game_map.get_all_visible_entities(tile_x, tile_y):
+                if entity in core.g.engine.game_map.dangerous_actors:
+                    return entity.name
+
+    def path_isvalid(self):
+        """Helper tool to find out whether a path is valid. This is important as teleportation
+        and forced movement actions can cause the path to move entities to incorrect tiles."""
+        if core.g.engine.player.x == self.path[0][0] and core.g.engine.player.y == self.path[0][1]:
+            return False
+
+        if not core.g.engine.game_map.tiles['walkable'][self.path[0][0], self.path[0][1]]:
+            return False
+
+        next_x = abs(self.entity.x - self.path[0][0])
+        next_y = abs(self.entity.y - self.path[0][1])
+        if next_x > 1 or next_y > 1:
+            return False
+
+        return True
 
     def perform(self) -> Optional[None | str]:
         """Use a dijkstra map to navigate the player towards the nearest unexplored tile."""
         player = core.g.engine.player
 
-        # First check whether exploring is possible.
-        visible_tiles = np.nonzero(core.g.engine.game_map.visible)
-        for actor in core.g.engine.game_map.dangerous_actors:
-            if actor.x in visible_tiles[0] and actor.y in visible_tiles[1] and actor.name != 'Player':
-                core.g.engine.message_log.add_message(f"You spot a {actor.name} and stop exploring.",
-                                                      config.colour.yellow)
-                return None
+        # First check whether exploring is possible and init unexplored coords
+        in_fov = self.enemy_in_fov()
+        if in_fov:
+            core.g.engine.message_log.add_message(f"You spot a {in_fov} and stop exploring.",
+                                                  config.colour.yellow)
+            return None
 
-        unexplored_coords = []
-        for y in range(core.g.engine.game_map.height):
-            for x in range(core.g.engine.game_map.width):
-                if not core.g.engine.game_map.explored[x, y] and core.g.engine.game_map.accessible[x, y]:
-                    unexplored_coords.append((y, x))
-
-        if logging.DEBUG >= logging.root.level:
-            core.g.engine.message_log.add_message(f"DEBUG: Unexplored coords = {len(unexplored_coords)}",
-                                                  config.colour.debug)
-
-        if len(unexplored_coords) == 0:
+        # Recalculate unexplored coords
+        self.init_coords()
+        if len(self.unexplored_coords) == 0:
             core.g.engine.message_log.add_message("There is nowhere else to explore.", config.colour.yellow)
             return None
 
-        # Find the nearest unexplored coords
-        closest_distance = 10000
-        closest_coord = None
-        for y, x in unexplored_coords:
-            new_distance = hypot(x - player.x, y - player.y)
+        # If a path already exists, finish it before moving to another coord
+        if self.path and self.path_isvalid():
+            BumpAction(player, self.path[0][0] - player.x, self.path[0][1] - player.y).perform()
+            self.path.pop(0)
+            return "continuous"
+        else:
+            # Find the nearest unexplored coords
+            closest_distance = 10000
+            closest_coord = None
+            for y, x in self.unexplored_coords:
+                new_distance = hypot(x - player.x, y - player.y)
+                if new_distance < closest_distance:
+                    closest_distance = new_distance
+                    closest_coord = (x, y)
 
-            if new_distance < closest_distance:
-                closest_distance = new_distance
-                closest_coord = (x, y)
+            # Try simple A*
+            if closest_coord:
+                cost = np.array(core.g.engine.game_map.accessible, dtype=np.int8)
 
-        # Try simple A*
-        if closest_coord:
-            cost = np.array(core.g.engine.game_map.accessible, dtype=np.int8)
+                # Create a graph from the cost array and pass that graph to a new pathfinder.
+                graph = tcod.path.SimpleGraph(cost=cost, cardinal=2, diagonal=3)
+                pathfinder = tcod.path.Pathfinder(graph)
+                pathfinder.add_root((core.g.engine.player.x, core.g.engine.player.y))  # Start position.
 
-            # Create a graph from the cost array and pass that graph to a new pathfinder.
-            graph = tcod.path.SimpleGraph(cost=cost, cardinal=2, diagonal=3)
-            pathfinder = tcod.path.Pathfinder(graph)
-            pathfinder.add_root((core.g.engine.player.x, core.g.engine.player.y))  # Start position.
-
-            # Compute the path to the destination and remove the starting point.
-            self.path: List[List[int]] = pathfinder.path_to(closest_coord)[1:].tolist()
-            if not self.path:
-                core.g.engine.message_log.add_message("You cannot explore the remaining tiles.",
-                                                      config.colour.yellow)
-                return None
-            else:
-                BumpAction(core.g.engine.player,
-                           self.path[0][0] - core.g.engine.player.x, self.path[0][1] - core.g.engine.player.y).perform()
-                return "continuous"
+                # Compute the path to the destination and remove the starting point.
+                self.path: List[List[int]] = pathfinder.path_to(closest_coord)[1:].tolist()
+                if not self.path:
+                    core.g.engine.message_log.add_message("You cannot explore the remaining tiles.",
+                                                          config.colour.yellow)
+                    return None
+                else:
+                    BumpAction(player, self.path[0][0] - player.x, self.path[0][1] - player.y).perform()
+                    return "continuous"

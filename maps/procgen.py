@@ -180,8 +180,8 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
         engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
 
         # Populate dungeon
-        # place_flora(dungeon, engine, areas=3)
-        # place_fauna(dungeon, engine)
+        place_flora(dungeon, engine, areas=3)
+        place_fauna(dungeon, engine)
         place_npcs(dungeon, engine)
         place_items(dungeon, engine)
         place_static_objects(dungeon, engine)

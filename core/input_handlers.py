@@ -95,8 +95,10 @@ class PopupMessage(EventHandler):
         self.text = text
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
-        if event.sym == tcod.event.K_ESCAPE:
-            return MainGameEventHandler()
+        return MainGameEventHandler()
+
+    def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[MainGameEventHandler]:
+        return MainGameEventHandler()
 
     def on_render(self, console: tcod.Console) -> None:
         """Create the popup window with a message within."""
@@ -235,10 +237,7 @@ class MainGameEventHandler(EventHandler):
         modifier = event.mod
         player = core.g.engine.player
 
-        if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT) \
-                or key == tcod.event.K_KP_ENTER:
-            return TakeStairsEventHandler()
-
+        # Movement
         if key in config.inputs.MOVE_KEYS:
             dx, dy = config.inputs.MOVE_KEYS[key]
             # Failsafe OOB check
@@ -251,11 +250,13 @@ class MainGameEventHandler(EventHandler):
         elif key in config.inputs.WAIT_KEYS:
             action = core.actions.WaitAction(player)
 
+        # Info menus
         elif key == tcod.event.K_m:
             return HistoryViewer()
         elif key == tcod.event.K_c:
             return CharacterScreenEventHandler()
-
+        elif key == tcod.event.K_e:
+            return LookHandler()
         elif key == tcod.event.K_g:
             action = core.actions.PickupAction(player)
         elif key == tcod.event.K_i:
@@ -263,10 +264,11 @@ class MainGameEventHandler(EventHandler):
         elif key == tcod.event.K_d:
             return InventoryDropHandler()
 
-        elif key == tcod.event.K_SEMICOLON:
-            return LookHandler()
-
-        elif key == tcod.event.K_HASH or key == tcod.event.K_BACKSLASH:
+        # Continuous actions
+        if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT) \
+                or key == tcod.event.K_KP_ENTER:
+            return TakeStairsEventHandler()
+        elif key == tcod.event.K_x:
             return ExploreEventHandler()
 
         # Space-to-interact. If nothing around, create popup. If something, interact. If multiple, prompt user.
@@ -288,8 +290,9 @@ class MainGameEventHandler(EventHandler):
             else:
                 raise NotImplementedError("Too may objects to interact with surrounding the player.")
 
+        # Settings
         elif key == tcod.event.K_ESCAPE:
-            raise SystemExit()
+            return EscMenuEventHandler()
         # elif key == tcod.event.K_F11:
         #     self.toggle_fullscreen()
 
@@ -338,41 +341,244 @@ class AskUserEventHandler(EventHandler):
         return MainGameEventHandler()
 
 
-class CharacterScreenEventHandler(AskUserEventHandler):
-    TITLE = "Character Sheet"
+class EscMenuEventHandler(EventHandler):
+    """Handler for the menu which appears when the user presses Esc while inside the main game loop."""
 
     def on_render(self, console: tcod.Console) -> None:
         super().on_render(console)
-
-        level_str = f"Level: {core.g.engine.player.level.current_level}"
-        xp_str = f"XP: {core.g.engine.player.level.current_xp}"
-        xp_next_str = f"XP for next level: {core.g.engine.player.level.experience_to_next_level}"
-
-        width = len(xp_next_str) + 2
+        width = 34
+        height = 6
         x = console.width // 2 - int(width / 2)
-        y = console.height // 2
+        y = console.height // 2 - int(height / 2)
 
         console.draw_frame(
             x=x,
             y=y,
             width=width,
-            height=7,
-            title=self.TITLE,
+            height=height,
+            title='',
             clear=True,
-            fg=(255, 255, 255),
+            fg=tcod.white,
             bg=(0, 0, 0),
         )
+        console.print(console.width // 2, y, f"┤Esc. Menu├",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=x + 1, y=y + 2, string=f"[H]: Help & Controls",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + 3, string=f"[S]: Save & Quit to Main Menu",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + 4, string=f"[Q]: Save & Quit to Desktop",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
 
-        console.print(x=x + 1, y=y + 1, string=level_str)
-        console.print(x=x + 1, y=y + 2, string=xp_str)
-        console.print(x=x + 1, y=y + 3, string=xp_next_str)
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        from config.setup_game import save_game, MainMenu
+        key = event.sym
 
-        console.print(x=x + 1, y=y + 4, string=f"Strength: {core.g.engine.player.fighter.base_strength}")
-        console.print(x=x + 1, y=y + 5, string=f"Dexterity: {core.g.engine.player.fighter.base_dexterity}")
+        if key == tcod.event.K_s:
+            save_game(Path("savegames/savegame.sav"))
+            return MainMenu()
+        elif key == tcod.event.K_h:
+            return HelpScreenEventHandler()
+        elif key == tcod.event.K_q:
+            raise SystemExit()
+        elif key == tcod.event.K_ESCAPE:
+            return MainGameEventHandler()
+
+
+class HelpScreenEventHandler(EventHandler):
+    """Handler for when the user accesses the help/controls screen from the Esc menu."""
+    def __init__(self):
+        super().__init__()
+        self.log_length = 80
+        self.cursor = self.log_length - 1
+        self.text_list = []
+
+    def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[EventHandler]:
+        return EscMenuEventHandler()
+
+    @staticmethod
+    def wrap(string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():
+            yield from textwrap.wrap(line, width, expand_tabs=True)
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Create the popup window with a message within."""
+        super().on_render(console)
+        width = console.width - 18
+        height = console.height - 6
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - int(height / 2)
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=(255, 255, 255),
+            bg=(0, 0, 0)
+        )
+        console.print(console.width // 2, y, f"┤Help and Controls├",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(console.width // 2, y + 2, f"Welcome to the SludgeWorks",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+
+        y_offset = 4
+        info_message = "SludgeWorks is a traditional ASCII roguelike game where you must explore your surroundings " \
+                       "and learn about the world around you to survive and progress. You cannot ascend back " \
+                       "to the surface, and so your only option is to descend. Be aware that "
+        for line in self.wrap(info_message, width - 2):
+            console.print(x=x + 1, y=y + y_offset, string=line, alignment=tcod.LEFT)
+            y_offset += 1
+        console.print(x=console.width // 2 - 1, y=y + y_offset - 1, string=f"if you die your save will be deleted.",
+                      alignment=tcod.constants.CENTER, fg=tcod.dark_red)
+
+        console.print(x=console.width // 2, y=y + y_offset + 1, string=f"Controls",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 3, string=f"Movement Keys:",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+
+        y_offset = y_offset + 4
+        info_message = "You may move around the map using either 'vi' keys, or numpad controls. These move you in " \
+                       "every cardinal direction, including diagonally. You may press '.' to wait a turn. "
+        for line in self.wrap(info_message, width - 2):
+            console.print(x=x + 1, y=y + y_offset, string=line, alignment=tcod.LEFT)
+            y_offset += 1
+
+        # vi keys
+        console.print(x=console.width // 2 - 8, y=y + y_offset + 1, string=f"y k u",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 - 8, y=y + y_offset + 2, string=f"\\ | /",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 - 8, y=y + y_offset + 3, string=f"h . l",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 - 8, y=y + y_offset + 4, string=f"/ | \\",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 - 8, y=y + y_offset + 5, string=f"b j n",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+
+        # Numpad
+        console.print(x=console.width // 2 + 8, y=y + y_offset + 1, string=f"7 8 9",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 + 8, y=y + y_offset + 2, string=f"\\ | /",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 + 8, y=y + y_offset + 3, string=f"4 5 6",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 + 8, y=y + y_offset + 4, string=f"/ | \\",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 + 8, y=y + y_offset + 5, string=f"1 2 3",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        y_offset = y_offset + 6
+
+        console.print(x=x + 1, y=y + y_offset + 1, string=f"Menu & Action Keys:",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 3, string=f"'E'   Look around",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 4, string=f"'I'   Organize your inventory",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 5, string=f"'G'   Get items at your location",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 6, string=f"'D'   Drop items from your inventory",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 7, string=f"'C'   See your character's stats",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 8, string=f"'X'   Explore your surroundings automatically",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 9, string=f"'>'   Descend to the next level",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+
+        console.print(x=x + 1, y=y + y_offset + 11, string=f"Press 'Space' to interact with something nearby.",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 12, string=f"Press 'Esc' at any time to abort most normal actions.",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+
+        y_offset = y_offset + 14
+        info_message = "This game is still under active development and you are playing a pre-alpha version. " \
+                       "If you encounter any bugs, please inform the developer at:"
+        for line in self.wrap(info_message, width - 2):
+            console.print(x=x + 1, y=y + y_offset, string=line, alignment=tcod.LEFT)
+            y_offset += 1
+        console.print(x=console.width // 2, y=y + y_offset + 1, string=f"https://github.com/elliotlondon/SludgeWorks",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2, y=y + y_offset + 3, string=f"Have Fun!!!",
+                      alignment=tcod.constants.CENTER, fg=tcod.yellow)
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[EventHandler]:
+        # Fancy conditional movement to make it feel right.
+        if event.sym in config.inputs.CURSOR_Y_KEYS:
+            adjust = config.inputs.CURSOR_Y_KEYS[event.sym]
+            if adjust < 0 and self.cursor == 0:
+                # Only move from the top to the bottom when you're on the edge.
+                self.cursor = self.log_length - 1
+            elif adjust > 0 and self.cursor == self.log_length - 1:
+                # Same with bottom to top movement.
+                self.cursor = 0
+            else:
+                # Otherwise move while staying clamped to the bounds of the history log.
+                self.cursor = max(0, min(self.cursor + adjust, self.log_length - 1))
+        elif event.sym == tcod.event.K_HOME:
+            self.cursor = 0  # Move directly to the top message.
+        elif event.sym == tcod.event.K_END:
+            self.cursor = self.log_length - 1  # Move directly to the last message.
+        else:  # Any other key moves back to the help screen
+            return EscMenuEventHandler()
+        return None
+
+
+
+class CharacterScreenEventHandler(AskUserEventHandler):
+    """Handler to show the user their character stats and status during the main game loop."""
+
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)
+
+        width = 40
+        height = 14
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - int(height / 2)
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title="",
+            clear=True,
+            fg=tcod.white
+        )
+        console.print(x=console.width // 2, y=y, string="┤Character Information├", alignment=tcod.CENTER, fg=tcod.white)
+
+        console.print(x=x + 1, y=y + 2, string=f"Current level: {core.g.engine.player.level.current_level}")
+        console.print(x=x + 1, y=y + 3, string=f"Total XP: {core.g.engine.player.level.current_xp}")
+        console.print(x=x + 1, y=y + 4, string=f"XP for next level: "
+                                               f"{core.g.engine.player.level.experience_to_next_level}")
+
+        console.print(x=x + 1, y=y + 6, string=f"Current armour rating: {core.g.engine.player.fighter.armour_total}",
+                      alignment=tcod.LEFT)
+
+        # Calculate current dice and sides
+        if core.g.engine.player.equipment.main_hand:
+            dice = core.g.engine.player.equipment.damage_dice
+            sides = core.g.engine.player.equipment.damage_sides
+        else:
+            dice = core.g.engine.player.fighter.damage_dice
+            sides = core.g.engine.player.fighter.damage_sides
+        console.print(x=x + 1, y=y + 7, string=f"Current weapon damage: {dice}d{sides}", alignment=tcod.LEFT)
+
+        console.print(x=x + 1, y=y + 9, string=f"Strength: {core.g.engine.player.fighter.base_strength}",
+                      alignment=tcod.LEFT)
+        console.print(x=x + 1, y=y + 10, string=f"Dexterity: {core.g.engine.player.fighter.base_dexterity}",
+                      alignment=tcod.LEFT)
+        console.print(x=x + 1, y=y + 11, string=f"Vitality: {core.g.engine.player.fighter.base_vitality}",
+                      alignment=tcod.LEFT)
+        console.print(x=x + 1, y=y + 12, string=f"Intellect: {core.g.engine.player.fighter.base_intellect}",
+                      alignment=tcod.LEFT)
 
 
 class LevelUpEventHandler(AskUserEventHandler):
-    TITLE = "<Untitled>"
+    """Handler for when the trigger to level up the user is activated."""
 
     def on_render(self, console: tcod.Console) -> None:
         super().on_render(console)
@@ -447,10 +653,7 @@ class LevelUpEventHandler(AskUserEventHandler):
 
 
 class InventoryEventHandler(AskUserEventHandler):
-    """
-    This handler lets the user select an item.
-    What happens then depends on the subclass.
-    """
+    """This handler lets the user select an item. What happens then depends on the subclass."""
     TITLE = "<missing title>"
 
     def on_render(self, console: tcod.Console) -> None:

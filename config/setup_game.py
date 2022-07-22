@@ -146,7 +146,7 @@ class MainMenuPopupMessage(core.input_handlers.BaseEventHandler):
         self.text = text
 
     def on_render(self, console: tcod.Console) -> None:
-        """Render the parent and dim the result, then print the message on top."""
+        """Render the parent and print the message on top."""
         self.parent.on_render(console)
 
         width = len(self.text) + 4

@@ -65,6 +65,8 @@ class GameOverEventHandler(EventHandler):
                       alignment=tcod.constants.LEFT, fg=tcod.white)
 
     def ev_quit(self, event: tcod.event.Quit) -> None:
+        if os.path.exists("savegames/savegame.sav"):
+            os.remove("savegames/savegame.sav")  # Deletes the active save file.
         self.on_quit()
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> BaseEventHandler:

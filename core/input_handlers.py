@@ -597,7 +597,7 @@ class AbilityScreenEventHandler(AskUserEventHandler):
     def on_render(self, console: tcod.Console) -> None:
         super().on_render(console)
         width = 40
-        height = (4 + len(core.g.engine.player.abilities) * 4) <= (console.height - 4)
+        height = 24
         x = console.width // 2 - int(width / 2)
         y = console.height // 2 - int(height / 2)
 
@@ -614,7 +614,7 @@ class AbilityScreenEventHandler(AskUserEventHandler):
 
         y_offset = 0
         if not core.g.engine.player.abilities:
-            console.print(x=x + 1, y=y + 2, string=f"Your body is a blank slate, with no abilities...")
+            console.print(x=x + 1, y=y + 2, string=f"Your body is a blank slate, with no special traits...")
         else:
             for ability in core.g.engine.player.abilities:
                 self.abilities.append(ability)
@@ -1064,14 +1064,22 @@ class AbilitySelectHandler(SelectIndexHandler):
     def on_index_selected(self, x: int, y: int) -> ActionOrHandler:
         # Check if valid
         player = core.g.engine.player
-        if abs(player.x - x) >= 1.5 or abs(player.y - y) >= 1.5:
-            core.g.engine.message_log.add_message("You must select a tile up to 1 square away.",
+        if x == player.x and y == player.y:
+            core.g.engine.message_log.add_message("You cannot perform this action upon yourself.",
                                                   config.colour.impossible)
             return self
+        if abs(player.x - x) >= 1.5 or abs(player.y - y) >= 1.5:
+            core.g.engine.message_log.add_message("You must select a tile more than 1 square away.",
+                                                  config.colour.impossible)
+            return self
+        target = core.g.engine.game_map.get_blocking_entity_at_location(x, y)
+        if not target:
+            core.g.engine.message_log.add_message("You must select a tile more than 1 square away.",
+                                                  config.colour.impossible)
+            return self
+        else:
+            return self.ability(core.g.engine.player, target, x, y).perform()
 
-        action = self.ability()
-
-        return self.ability.perform()
 
 
 class LookHandler(SelectIndexHandler):

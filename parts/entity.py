@@ -7,6 +7,7 @@ from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union, List
 import tcod
 
 from core.render_functions import RenderOrder
+from core.action import AbilityAction
 from parts.level import Level
 
 if TYPE_CHECKING:
@@ -41,10 +42,11 @@ class Entity:
                  ai: Optional[parts.ai.BaseAI] = None,
                  item: Optional[parts.entity.Item] = None,
                  inventory: Optional[parts.inventory.Inventory] = None,
-                 loadout=None,
                  equipment: Optional[parts.equipment.Equipment] = None,
                  equippable: Optional[parts.equippable.Equippable] = None,
-                 active_effects: Optional[List[parts.effects.Effect]] = None
+                 active_effects: Optional[List[parts.effects.Effect]] = None,
+                 abilities: Optional[List[AbilityAction]] = None,   # Inherent abilities
+                 mutations: Optional[List[AbilityAction]] = None    # Added mutations/abilities
                  ):
         if active_effects is None:
             active_effects = []
@@ -64,10 +66,11 @@ class Entity:
         self.ai = ai
         self.item = item
         self.inventory = inventory
-        self.loadout = loadout
         self.equipment = equipment
         self.equippable = equippable
         self.active_effects = active_effects
+        self.abilities = abilities
+        self.mutations = mutations
 
         if self.fighter:
             self.fighter.owner = self
@@ -77,8 +80,6 @@ class Entity:
             self.item.owner = self
         if self.inventory:
             self.inventory.owner = self
-        if self.loadout:
-            self.loadout.owner = self
         if self.equipment:
             self.equipment.owner = self
         if self.equippable:
@@ -91,6 +92,10 @@ class Entity:
                 self.item.owner = self
         if self.active_effects:
             self.active_effects.owner = self
+        if self.abilities:
+            self.abilities.owner = self
+        if self.mutations:
+            self.mutations.owner = self
 
     @property
     def gamemap(self) -> SimpleGameMap:

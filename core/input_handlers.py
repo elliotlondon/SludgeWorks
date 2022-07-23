@@ -255,6 +255,8 @@ class MainGameEventHandler(EventHandler):
             return HistoryViewer()
         elif key == tcod.event.K_c:
             return CharacterScreenEventHandler()
+        elif key == tcod.event.K_a:
+            return AbilityScreenEventHandler()
         elif key == tcod.event.K_e:
             return LookHandler()
         elif key == tcod.event.K_g:
@@ -341,7 +343,7 @@ class AskUserEventHandler(EventHandler):
         return MainGameEventHandler()
 
 
-class EscMenuEventHandler(EventHandler):
+class EscMenuEventHandler(AskUserEventHandler):
     """Handler for the menu which appears when the user presses Esc while inside the main game loop."""
 
     def on_render(self, console: tcod.Console) -> None:
@@ -575,6 +577,32 @@ class CharacterScreenEventHandler(AskUserEventHandler):
                       alignment=tcod.LEFT)
         console.print(x=x + 1, y=y + 12, string=f"Intellect: {core.g.engine.player.fighter.base_intellect}",
                       alignment=tcod.LEFT)
+
+
+class AbilityScreenEventHandler(AskUserEventHandler):
+    """Handler for the screen which shows all user abilities. If ability is selected, provide a prompt
+    to use it."""
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)
+        abilities = core.g.engine.player.abilities
+
+        width = 40
+        height = 14
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - int(height / 2)
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title="",
+            clear=True,
+            fg=tcod.white
+        )
+        console.print(x=console.width // 2, y=y, string="┤Abilities├", alignment=tcod.CENTER, fg=tcod.white)
+
+        console.print(x=x + 1, y=y + 2, string=f"Current level: {core.g.engine.player.level.current_level}")
 
 
 class LevelUpEventHandler(AskUserEventHandler):

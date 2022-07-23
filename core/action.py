@@ -6,6 +6,7 @@ import core.g
 
 if TYPE_CHECKING:
     from parts.entity import Actor, Item
+    from parts.mutations import Ability
 
 
 class Action:
@@ -41,3 +42,20 @@ class ItemAction(Action):
         """Invoke the items ability, this action will be given to provide context."""
         if self.item.consumable:
             self.item.consumable.activate(self)
+
+
+class AbilityAction(Action):
+
+    def __init__(self, entity: Actor, ability: Ability, target_xy: Optional[Tuple[int, int]]):
+        super().__init__(entity)
+        self.ability = ability
+        self.target_xy = target_xy
+
+    @property
+    def target_actor(self) -> Optional[Actor]:
+        """Return the actor at this actions destination."""
+        return core.g.engine.game_map.get_actor_at_location(*self.target_xy)
+
+    def perform(self) -> None:
+        """Invoke the ability, this action will be given to provide context."""
+        self.ability.activate()

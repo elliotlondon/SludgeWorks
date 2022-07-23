@@ -33,7 +33,8 @@
         "level_up_base": 100,
         "xp_given": 0
       },
-      "description": "This is you."
+      "description": "This is you.",
+      "abilities": ["Shove"]
     }
   }
 ]

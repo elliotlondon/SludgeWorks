@@ -45,8 +45,6 @@ class Entity:
                  equipment: Optional[parts.equipment.Equipment] = None,
                  equippable: Optional[parts.equippable.Equippable] = None,
                  active_effects: Optional[List[parts.effects.Effect]] = None,
-                 abilities: Optional[List[AbilityAction]] = None,   # Inherent abilities
-                 mutations: Optional[List[AbilityAction]] = None    # Added mutations/abilities
                  ):
         if active_effects is None:
             active_effects = []
@@ -69,8 +67,6 @@ class Entity:
         self.equipment = equipment
         self.equippable = equippable
         self.active_effects = active_effects
-        self.abilities = abilities
-        self.mutations = mutations
 
         if self.fighter:
             self.fighter.owner = self
@@ -92,10 +88,6 @@ class Entity:
                 self.item.owner = self
         if self.active_effects:
             self.active_effects.owner = self
-        if self.abilities:
-            self.abilities.owner = self
-        if self.mutations:
-            self.mutations.owner = self
 
     @property
     def gamemap(self) -> SimpleGameMap:
@@ -208,7 +200,9 @@ class Actor(Entity):
             corpse: Corpse,
             inventory: Inventory,
             level: Level,
-            description: str
+            description: str,
+            abilities: Optional[List[AbilityAction]] = None,  # Inherent abilities
+            mutations: Optional[List[AbilityAction]] = None  # Added mutations/abilities
     ):
         super().__init__(
             x=x,
@@ -233,6 +227,9 @@ class Actor(Entity):
         self.level = level
         self.level.parent = self
         self.description = description
+
+        self.abilities = abilities
+        self.mutations = mutations
 
     @property
     def is_alive(self) -> bool:

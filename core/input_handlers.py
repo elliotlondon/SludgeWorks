@@ -19,6 +19,7 @@ from core.rendering import render_map, render_ui
 from maps.tiles import get_clean_name
 from parts.ai import NPC
 from parts.entity import Actor
+import core.action
 
 if TYPE_CHECKING:
     from parts.entity import Item
@@ -582,12 +583,21 @@ class CharacterScreenEventHandler(AskUserEventHandler):
 class AbilityScreenEventHandler(AskUserEventHandler):
     """Handler for the screen which shows all user abilities. If ability is selected, provide a prompt
     to use it."""
+
+    def __init__(self):
+        super(AbilityScreenEventHandler, self).__init__()
+        self.abilities = []
+
+    @staticmethod
+    def wrap(string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():
+            yield from textwrap.wrap(line, width, expand_tabs=True)
+
     def on_render(self, console: tcod.Console) -> None:
         super().on_render(console)
-        abilities = core.g.engine.player.abilities
-
         width = 40
-        height = 14
+        height = (4 + len(core.g.engine.player.abilities) * 4) <= (console.height - 4)
         x = console.width // 2 - int(width / 2)
         y = console.height // 2 - int(height / 2)
 
@@ -602,8 +612,32 @@ class AbilityScreenEventHandler(AskUserEventHandler):
         )
         console.print(x=console.width // 2, y=y, string="┤Abilities├", alignment=tcod.CENTER, fg=tcod.white)
 
-        console.print(x=x + 1, y=y + 2, string=f"Current level: {core.g.engine.player.level.current_level}")
+        y_offset = 0
+        if not core.g.engine.player.abilities:
+            console.print(x=x + 1, y=y + 2, string=f"Your body is a blank slate, with no abilities...")
+        else:
+            for ability in core.g.engine.player.abilities:
+                self.abilities.append(ability)
+                console.print(x=x + 1, y=y + y_offset + 2, string=f"[{y_offset + 1}]: {ability.name}")
+                for line in self.wrap(ability.description, width - 4):
+                    console.print(x=x + 3, y=y + y_offset + 3, string=f"{line}")
+                    y_offset += 1
+                y_offset += 1
 
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        # All abilities bound to a number key. Return action if selected.
+        num_abilities = len(self.abilities)
+        key = event.sym
+        index = key - tcod.event.K_1
+        if 0 < index + 1 <= num_abilities:
+            try:
+                ability = core.g.engine.player.abilities[index]
+                if ability.req_target:
+                    return AbilitySelectHandler(ability.action)
+            except IndexError:
+                core.g.engine.message_log.add_message("Invalid entry.", config.colour.invalid)
+                return None
+        return super().ev_keydown(event)
 
 class LevelUpEventHandler(AskUserEventHandler):
     """Handler for when the trigger to level up the user is activated."""
@@ -1017,6 +1051,27 @@ class SelectIndexHandler(AskUserEventHandler):
     def on_index_selected(self, x: int, y: int) -> Optional[ActionOrHandler]:
         """Called when an index is selected."""
         raise NotImplementedError()
+
+
+class AbilitySelectHandler(SelectIndexHandler):
+    """Handler for when an ability is chosen and a target is required.
+    Return the ability to be performed upon the selected tile."""
+
+    def __init__(self, ability: core.action.AbilityAction):
+        super(AbilitySelectHandler, self).__init__()
+        self.ability = ability
+
+    def on_index_selected(self, x: int, y: int) -> ActionOrHandler:
+        # Check if valid
+        player = core.g.engine.player
+        if abs(player.x - x) >= 1.5 or abs(player.y - y) >= 1.5:
+            core.g.engine.message_log.add_message("You must select a tile up to 1 square away.",
+                                                  config.colour.impossible)
+            return self
+
+        action = self.ability()
+
+        return self.ability.perform()
 
 
 class LookHandler(SelectIndexHandler):

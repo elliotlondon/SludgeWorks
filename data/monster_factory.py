@@ -1,5 +1,6 @@
 import json
 
+import parts.mutations
 import parts.ai
 from parts.entity import Actor, Corpse
 from parts.equipment import Equipment
@@ -73,4 +74,18 @@ def create_monster(data: dict) -> Actor:
         ),
         description=data['description']
     )
+
+    if 'abilities' in data:
+        monster.abilities = []
+        for ability in data['abilities']:
+            ability_obj = None
+            if ability == "Shove":
+                ability_obj = parts.mutations.Shove()
+            monster.abilities.append(ability_obj)
+    if 'mutations' in data:
+        monster.mutations = []
+        mutation_obj = None
+        for mutation in data['mutations']:
+            # if mutation == "Entomb":
+            monster.mutations.append(mutation)
     return monster

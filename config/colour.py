@@ -47,6 +47,10 @@ poison_end = tcod.green
 bleed = tcod.light_red
 bleed_end = tcod.lightest_red
 
+# Liquids
+blood = tcod.darker_crimson
+sap = tcod.dark_yellow
+
 # Screen info
 bar_text = white
 hp_bar_filled = (0x0, 0x60, 0x0)

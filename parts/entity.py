@@ -201,6 +201,7 @@ class Actor(Entity):
             inventory: Inventory,
             level: Level,
             description: str,
+            blood: str,
             abilities: Optional[List[Mutation]] = None,  # Inherent abilities
             mutations: Optional[List[Mutation]] = None  # Added mutations/abilities
     ):
@@ -227,6 +228,7 @@ class Actor(Entity):
         self.level = level
         self.level.parent = self
         self.description = description
+        self.blood = blood
 
         self.abilities = abilities
         self.mutations = mutations

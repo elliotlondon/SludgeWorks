@@ -156,6 +156,9 @@ class BiteAction(AbilityAction):
         # Check for damage and display chat messages
         if damage > 0:
             if crit:
+                if defender.blood == "Blood":
+                    core.g.engine.game_map.splatter_tiles(defender.x, defender.y,
+                                                          light_fg=config.colour.blood, modifiers="Bloody")
                 # Always bleed on crit.
                 if not bleeding:
                     effect = parts.effects.BleedEffect(self.damage, self.turns, self.difficulty)

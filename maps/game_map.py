@@ -6,6 +6,7 @@ from typing import Iterable, Iterator, Optional, TYPE_CHECKING, Tuple, Dict, Lis
 import numpy as np
 
 import parts.entity
+from maps import tiles
 from parts.ai import PassiveStationary, NPC
 from parts.entity import Item
 from utils.math_utils import Graph
@@ -25,6 +26,7 @@ class SimpleGameMap:
         self.entities = set(entities)
         self.exiles = []
         self.tiles = np.full((width, height), fill_value=maps.tiles.wall, order="F")
+        self.tile_modifiers = np.full((width, height), fill_value=[None], order="F")
         self.rooms = []
         self.tunnel = np.full((width, height), fill_value=False, order="F")  # Tunnel tiles
         self.visible = np.full((width, height), fill_value=False, order="F")  # Tiles the player can currently see
@@ -156,8 +158,8 @@ class SimpleGameMap:
         """Return the coordinates of a random tile of radius away from location x, y."""
         walkable = np.logical_and(self.tiles['walkable'], self.tiles['name'] != 'hole')
         unoccupied = np.nonzero(np.logical_xor(walkable, self.get_occupied()))
-        x_region = list(np.unique(unoccupied[0])[location_x-radius:location_x+radius])
-        y_region = list(np.unique(unoccupied[1])[location_y-radius:location_y+radius])
+        x_region = list(np.unique(unoccupied[0])[location_x - radius:location_x + radius])
+        y_region = list(np.unique(unoccupied[1])[location_y - radius:location_y + radius])
         if x_region == []:
             x_region = [location_x]
         if y_region == []:
@@ -193,6 +195,63 @@ class SimpleGameMap:
                 accessible[entity.x, entity.y] = False
 
         return accessible
+
+    def stain_tile(self, x: int, y: int, **kwargs):
+        """Change the colour of a tile at the current game map position"""
+        name = self.tiles[x, y][0]
+        walkable = self.tiles[x, y][1]
+        transparent = self.tiles[x, y][2]
+        dark_char = self.tiles[x, y][3][0]
+        dark_fg = self.tiles[x, y][3][1]
+        dark_bg = self.tiles[x, y][3][2]
+        light_char = self.tiles[x, y][4][0]
+        light_fg = self.tiles[x, y][4][1]
+        light_bg = self.tiles[x, y][4][2]
+        description = self.tiles[x, y][5]
+        modifiers = []
+        for key in kwargs:
+            if key == "name":
+                name = kwargs[key]
+            elif key == "light_char":
+                light_char = kwargs[key]
+            elif key == "light_fg":
+                light_fg = kwargs[key]
+            elif key == "light_bg":
+                light_bg = kwargs[key]
+            elif key == "modifiers":
+                modifiers.append(kwargs[key])
+
+        # Make new tile from kwargs and parent inheritance
+        self.tiles[x, y] = maps.tiles.new_tile(name=name,
+                                               walkable=walkable,
+                                               transparent=transparent,
+                                               dark=(dark_char, dark_fg, dark_bg),
+                                               light=(light_char, light_fg, light_bg),
+                                               description=description
+                                               )
+        self.tile_modifiers[x, y] = list(np.unique(modifiers))
+
+    def splatter_tiles(self, x: int, y: int, **kwargs):
+        """Change the colour of some random tiles. Chooses 2-4 random tiles around the given location to change."""
+        coords = [(1, 1,), (1, 0), (1, -1),
+                  (0, 1), (0, 1), (0, -1),
+                  (-1, 1), (-1, 0), (-1, -1)]
+
+        coords = random.sample(coords, k=random.randint(1, 3))
+        for coord in coords:
+            light_fg = self.tiles[coord[0], coord[1]][4][1]
+            light_bg = self.tiles[coord[0], coord[1]][4][2]
+            modifiers = []
+            for key in kwargs:
+                if key == "light_fg":
+                    light_fg = kwargs[key]
+                elif key == "light_bg":
+                    light_bg = kwargs[key]
+                elif key == "modifiers":
+                    modifiers = kwargs[key]
+            self.stain_tile(x + coord[0], y + coord[1],
+                            light_fg=light_fg, light_bg=light_bg,
+                            modifiers=modifiers)
 
 
 # TODO: Add saved gamemaps to gameworld
@@ -480,55 +539,6 @@ class GameWorld:
 #             self.rooms_chamber(8, 4, 50, player, entities)
 #             self.caves_chamber(60, 2)
 #             self.erode(1)
-#
-#
-# def to_down_stairs(self, player, entities, message_log):
-#     """Create a Dijkstra path to the down stairs. Dijkstra was chosen over A* because tcod's built-in dijkstra
-#     seems much faster."""
-#     stairs_x = None
-#     stairs_y = None
-#     stairs_found = False
-#     for entity in entities:
-#         if entity.name == 'Down Stairs':
-#             if self.tiles[entity.x][entity.y].explored:
-#                 stairs_x = entity.x
-#                 stairs_y = entity.y
-#                 stairs_found = True
-#
-#     if stairs_found:
-#         my_map = tcod.map_new(self.width, self.height)
-#
-#         for y in range(self.height):
-#             for x in range(self.width):
-#                 if self.tiles[x][y].explored:
-#                     tcod.map_set_properties(my_map, x, y, not self.tiles[x][y].block_sight,
-#                                             not self.tiles[x][y].blocked)
-#
-#         dij_path = tcod.dijkstra_new(my_map)
-#         tcod.dijkstra_compute(dij_path, player.x, player.y)
-#         tcod.dijkstra_path_set(dij_path, stairs_x, stairs_y)
-#
-#         if not tcod.dijkstra_is_empty(dij_path):
-#             x, y = tcod.dijkstra_path_walk(dij_path)
-#
-#             # Move player along the path
-#             if not x and not y:
-#                 # message_log.add_message(
-#                 # Message('You cannot safely reach the next set of down stairs from here.',
-#                 #         tcod.yellow))
-#                 return False
-#             else:
-#                 player.x = x
-#                 player.y = y
-#                 return True
-#         elif player.x == stairs_x and player.y == stairs_y:
-#             return False
-#         else:
-#             # message_log.add_message(Message('Path to stairs does not exist.', tcod.yellow))
-#             return False
-#     else:
-#         # message_log.add_message(Message('You have not yet discovered the path to the next floor.', tcod.yellow))
-#         return False
 
 
 class Tile:

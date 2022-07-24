@@ -479,27 +479,29 @@ class HelpScreenEventHandler(EventHandler):
 
         console.print(x=x + 1, y=y + y_offset + 1, string=f"Menu & Action Keys:",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + y_offset + 3, string=f"'E'   Look around",
+        console.print(x=x + 1, y=y + y_offset + 3, string=f"'A'   Use abilities",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + y_offset + 4, string=f"'I'   Organize your inventory",
+        console.print(x=x + 1, y=y + y_offset + 4, string=f"'E'   Look around",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + y_offset + 5, string=f"'G'   Get items at your location",
+        console.print(x=x + 1, y=y + y_offset + 5, string=f"'I'   Organize your inventory",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + y_offset + 6, string=f"'D'   Drop items from your inventory",
+        console.print(x=x + 1, y=y + y_offset + 6, string=f"'G'   Get items at your location",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + y_offset + 7, string=f"'C'   See your character's stats",
+        console.print(x=x + 1, y=y + y_offset + 7, string=f"'D'   Drop items from your inventory",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + y_offset + 8, string=f"'X'   Explore your surroundings automatically",
+        console.print(x=x + 1, y=y + y_offset + 8, string=f"'C'   See your character's stats",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + y_offset + 9, string=f"'>'   Descend to the next level",
+        console.print(x=x + 1, y=y + y_offset + 9, string=f"'X'   Explore your surroundings automatically",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
-
-        console.print(x=x + 1, y=y + y_offset + 11, string=f"Press 'Space' to interact with something nearby.",
-                      alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + y_offset + 12, string=f"Press 'Esc' at any time to abort most normal actions.",
+        console.print(x=x + 1, y=y + y_offset + 10, string=f"'>'   Descend to the next level",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
 
-        y_offset = y_offset + 14
+        console.print(x=x + 1, y=y + y_offset + 12, string=f"Press 'Space' to interact with something nearby.",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 13, string=f"Press 'Esc' at any time to abort most normal actions.",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+
+        y_offset = y_offset + 15
         info_message = "This game is still under active development and you are playing a pre-alpha version. " \
                        "If you encounter any bugs, please inform the developer at:"
         for line in self.wrap(info_message, width - 2):
@@ -1155,9 +1157,13 @@ class LookHandler(SelectIndexHandler):
                 tile_content['colour'] = list(tile[4][1])
             else:
                 tile_content['colour'] = list(tile[4][1])
+            tile_content['modifiers'] = core.g.engine.game_map.tile_modifiers[x_pos, y_pos]
 
             # Look box size
-            width = console.width // 4 + 2
+            if len(tile_content['name']) > console.width // 4 + 2:
+                width = len(tile_content['name']) + 4
+            else:
+                width = console.width // 4 + 2
             height = len(tile_content['description']) // (console.width // 4) + 8
 
             # Calculate whether the box should be rendered above or below the selected tile
@@ -1241,6 +1247,16 @@ class LookHandler(SelectIndexHandler):
             console.print(x=x + 1, y=y + y_offset, string=line, fg=tcod.white)
             y_offset += 1
 
+        # Cool footer zone B-)
+        if 'modifiers' in content_dict:
+            if content_dict['modifiers'] is not None:
+                console.print(x=x + 11, y=y + height - 2, string="Modifiers: ",
+                              fg=tcod.white, alignment=tcod.constants.RIGHT)
+                str_len = 0
+                for modifier in content_dict['modifiers']:
+                    console.print(x=x + 17 + str_len, y=y + height - 2, string="bloody",
+                                  fg=tcod.darker_crimson, alignment=tcod.constants.RIGHT)
+                    str_len += len(modifier)
         console.print(x=x + 1, y=y + height - 1, string=content_dict['footer'], fg=content_dict['footer_colour'],
                       alignment=tcod.constants.LEFT)
 

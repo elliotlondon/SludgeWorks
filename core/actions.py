@@ -186,6 +186,9 @@ class MeleeAction(ActionWithDirection):
             # Check for damage and display chat messages
             if damage > 0:
                 if crit:
+                    if defender.blood == "Blood":
+                        core.g.engine.game_map.splatter_tiles(defender.x, defender.y,
+                                                              light_fg=config.colour.blood, modifiers="Bloody")
                     if attacker.name.capitalize() == 'Player':
                         core.g.engine.message_log.add_message(f'You crit the {defender.name.capitalize()} for '
                                                               f'{str(damage)} damage!', config.colour.player_atk)
@@ -320,6 +323,9 @@ class BrainRakerAction(MeleeAction):
             # Check for damage and display chat messages
             if damage > 0:
                 if crit:
+                    if defender.blood == "Blood":
+                        core.g.engine.game_map.splatter_tiles(defender.x, defender.y,
+                                                              light_fg=config.colour.blood, modifiers="Bloody")
                     if defender.name.capitalize() == 'Player':
                         # If crit remove random tiles from explored tiles!
                         explored_nonfov = np.logical_xor(self.entity.gamemap.explored, self.entity.gamemap.visible)

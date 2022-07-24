@@ -33,7 +33,8 @@
         "level_up_base": 0,
         "xp_given": 25
       },
-      "description": "A highly specialized carnivorous plant resembling a dead, waist-high bush that flays the skin off any creature that wanders nearby."
+      "description": "A highly specialized carnivorous plant resembling a dead, waist-high bush that flays the skin off any creature that wanders nearby.",
+      "blood": "Sap"
     }
   },
   {
@@ -70,7 +71,8 @@
         "level_up_base": 0,
         "xp_given": 0
       },
-      "description": "A delicate plant with weeping blue flowers that illuminate the caves with a soothing glow."
+      "description": "A delicate plant with weeping blue flowers that illuminate the caves with a soothing glow.",
+      "blood": "Sap"
     }
   }
 ]

@@ -1,7 +1,7 @@
 import json
 
-import parts.mutations
 import parts.ai
+import parts.mutations
 from parts.entity import Actor, Corpse
 from parts.equipment import Equipment
 from parts.fighter import Fighter
@@ -40,6 +40,11 @@ def create_monster(data: dict) -> Actor:
     else:
         raise NotImplementedError()
 
+    if "blood" in data:
+        blood = data["blood"]
+    else:
+        blood = "Blood"
+
     monster = Actor(
         char=data['char'],
         colour=(data['colour'][0], data['colour'][1], data['colour'][2]),
@@ -72,7 +77,8 @@ def create_monster(data: dict) -> Actor:
             level_up_base=data['level']['level_up_base'],
             xp_given=data['level']['xp_given']
         ),
-        description=data['description']
+        description=data['description'],
+        blood=blood
     )
 
     if 'abilities' in data:

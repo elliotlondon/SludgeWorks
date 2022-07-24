@@ -15,12 +15,12 @@ graphic_dt = np.dtype([
 # Tile struct used for statically defined tile data.
 tile_dt = np.dtype(
     [
-        ("name", "U", 16),  # Name of the tile for ease of access
+        ("name", "U", 64),  # Name of the tile for ease of access
         ("walkable", np.bool),  # True if this tile can be walked over.
         ("transparent", np.bool),  # True if this tile doesn"t block FOV.
         ("dark", graphic_dt),  # Graphics for when this tile is not in FOV.
         ("light", graphic_dt),  # Graphics for when the tile is in FOV.
-        ("description", list)  # Description of the tile for the look menu
+        ("description", list),  # Description of the tile for the look menu
     ]
 )
 
@@ -30,26 +30,24 @@ def new_tile(*, name: str,
              dark: Tuple[int, Tuple[int, int, int], Tuple[int, int, int]],
              light: Tuple[int, Tuple[int, int, int], Tuple[int, int, int]],
              description: list) -> np.ndarray:
-    """
-    Helper function for defining individual tile types
-    """
+    """Helper function for defining individual tile types"""
     return np.array((name, walkable, transparent, dark, light, description), dtype=tile_dt)
 
 
 def get_clean_name(tile: tile_dt) -> str:
-    """Return the information of a selected tile without decoration, for use in look menu."""
+    """Return the information of a selected tile without decoration, for use in the look menu."""
     name = tile[0]
     name = name.replace('_', '').capitalize()
     name = name.translate({ord(k): None for k in digits})
 
-    if name == "Dirt":
-        name = "Cave Floor"
-    elif name == "Verdant":
-        name = "Verdant Cave Floor"
-    elif name == "Down_stairs":
-        name = "Next Floor (press '<')"
-    elif name == "Hole":
-        name = "Chasm"
+    name = name.replace("Dirt", "Cave Floor")
+    name = name.replace("dirt", "Cave Floor")
+    name = name.replace("Verdant", "Verdant Cave Floor")
+    name = name.replace("verdant", "Verdant Cave Floor")
+    name = name.replace("Down stairs", "Next Floor")
+    name = name.replace("down stairs", "Next Floor")
+    name = name.replace("Hole", "Chasm")
+    name = name.replace("hole", "Chasm")
 
     return name
 
@@ -139,6 +137,13 @@ water = new_tile(name="water",
                  description=list("Deep, murky water covered with glowing green algae forms pools that twist and "
                                   "flow, pulled lower into the caves by tiny, hidden whirlpools. Fresh water "
                                   "trickles from cracks in the ceiling, balancing the equilibrium."))
+blood = new_tile(name="blood",
+                 walkable=False, transparent=True,
+                 dark=(ord("≈"), tcod.grey, (0, 0, 0)),
+                 light=(ord("≈"), tcod.crimson, (0, 0, 0)),
+                 description=list("You have never seen this much blood in one place before. A thin coagulated layer "
+                                  "sits on the surface, but the liquid flows enough to never fully solidify. The stench "
+                                  "is cloying and revolting."))
 
 # Stairs
 down_stairs = new_tile(

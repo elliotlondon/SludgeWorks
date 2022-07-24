@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Optional
 
+import config.colour
 import core.g
 import parts.entity
 from parts.base_component import BaseComponent
-import config.colour
-
 from utils.random_utils import roll_dice
 
 if TYPE_CHECKING:
@@ -55,11 +54,12 @@ class Effect(BaseComponent):
 
 class PoisonEffect(Effect):
     """Poison an entity, dealing X damage for Y turns"""
+
     def __init__(self,
                  damage: int,
                  turns: int,
                  parent: Optional[parts.entity.Actor] = None,
-    ):
+                 ):
         self.damage = damage
         self.turns = turns
         if parent:
@@ -84,15 +84,15 @@ class PoisonEffect(Effect):
                                                   config.colour.poison)
 
 
-
 class BleedEffect(Effect):
     """Start a bleed on an entity, dealing X damage while a Y vit save fails, for up to Z turns"""
+
     def __init__(self,
                  damage: int,
                  turns: int,
                  difficulty: int,
                  parent: Optional[parts.entity.Actor] = None,
-    ):
+                 ):
         self.damage = damage
         self.turns = turns
         self.difficulty = difficulty
@@ -104,12 +104,19 @@ class BleedEffect(Effect):
         # Check if this turn the bleeding is resisted
         if not roll_dice(1, 20) + self.parent.fighter.vitality_modifier > self.difficulty:
             self.parent.fighter.hp -= self.damage
+
+            # If it bleeds, add blood to the floor
+            if self.parent.blood == "Blood":
+                core.g.engine.game_map.stain_tile(self.parent.x, self.parent.y,
+                                                  light_fg=config.colour.blood, modifiers="Bloody")
+            # Messages
             if self.parent.name == "Player":
                 core.g.engine.message_log.add_message(f"You bleed for {self.damage} damage.",
                                                       config.colour.bleed)
             else:
-                core.g.engine.message_log.add_message(f"The {self.parent.name} takes {self.damage} damage from bleeding.",
-                                                      config.colour.bleed)
+                core.g.engine.message_log.add_message(
+                    f"The {self.parent.name} takes {self.damage} damage from bleeding.",
+                    config.colour.bleed)
         self.turns -= 1
 
     def expiry_message(self):

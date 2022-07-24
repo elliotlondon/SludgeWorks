@@ -20,23 +20,25 @@ Are you dumb enough to impale a Bloodseeker?
 
 Welcome to the SludgeWorks.
 
+SludgeWorks is a traditional ASCII roguelike game where you must explore your surroundings and learn about the world around you to survive and progress. 
+You cannot ascend back to the surface, and so your only option is to descend. Be aware that if you die your save will be deleted.
+
 # Controls
-Arrow keys / numpad keys / yuihjkbnm: Move around diagonally.
-Bump into enemies to attack them. Full stop (.) to wait a turn
+You may move around the map using either 'vi' keys, or numpad controls. These move you in every cardinal direction, including diagonally. 
+You may press '.' to wait a turn.
 
-; (Semicolon): Look around
-/ (Forward slash): Explore your surroundings
+Menu & Action Keys:
+'A'   Use abilities
+'E'   Look around
+'I'   Organize your inventory
+'G'   Get items at your location
+'D'   Drop items from your inventory
+'C'   See your character's stats
+'X'   Explore your surroundings automatically
+'>'   Descend to the next level
 
-i: Inventory
-Select items in your inventory with the corresponding alphabetical keys.
-The TAB key can be used to automatically sort your inventory.
-
-g: Get/Pick up items
-d: Drop items
-c: Character sheet
-m: Message log
-
-ESC: Save & Quit
+Press 'Space' to interact with something nearby.
+Press 'Esc' to access the menu which allows you to see key bindings, and to save & quit
 
 # Tips
 Long-dead plants in the upper caves leave behind plenty of strange artefacts. They could be useful in combat...

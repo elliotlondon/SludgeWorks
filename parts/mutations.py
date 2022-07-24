@@ -51,7 +51,8 @@ class Shove(Mutation):
     def __init__(self):
         super().__init__(
             name="Shove",
-            description="Attempt to push an entity away from you. Deals no damage.",
+            description="Attempt to push an entity away from you. "
+                        "Can deal minor damage if the target collides with another enemy",
             req_target=True,
             continuous=False,
             cooldown=0,

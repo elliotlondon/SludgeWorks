@@ -1,9 +1,11 @@
-from typing import List, Optional
+from typing import Optional
 
+import config.colour
 import core.abilities
+import core.abilities
+import core.g
 from parts.base_component import BaseComponent
-from parts.entity import Actor, Entity
-import core.abilities
+from parts.entity import Actor
 
 
 class Mutation(BaseComponent):
@@ -13,14 +15,16 @@ class Mutation(BaseComponent):
 
     def __init__(self,
                  name: str = "<Undefined>",
-                 description: str  = "<Undefined>",
+                 description: str = "<Undefined>",
                  req_target: bool = False,
-                 continuous: bool = False
+                 continuous: bool = False,
+                 cooldown: int = 0
                  ):
         self.name = name
         self.description = description
         self.req_target = req_target
         self.continuous = continuous
+        self.cooldown = cooldown
 
     def __iter__(self):
         for x in self.__dict__:
@@ -36,7 +40,7 @@ class Mutation(BaseComponent):
 
     def tick(self):
         """On the passing of a turn, apply this effect."""
-        raise NotImplementedError()
+        pass
 
 
 class Shove(Mutation):
@@ -47,9 +51,20 @@ class Shove(Mutation):
             name="Shove",
             description="Attempt to push an entity away from you. Deals no damage.",
             req_target=True,
-            continuous=False
+            continuous=False,
+            cooldown=0
         )
         self.action = core.abilities.ShoveAction
 
-    def activate(self, caster: Actor, target: Entity, x: int, y: int) -> Optional[core.abilities.ShoveAction]:
-        return core.abilities.ShoveAction(caster, target, x, y)
+    def tick(self):
+        """On the passing of a turn, apply this effect."""
+        if self.cooldown > 0:
+            self.cooldown -= 1
+
+    def activate(self, caster: Actor, target: Actor, x: int, y: int) -> Optional[core.abilities.ShoveAction]:
+        if self.cooldown > 0:
+            core.g.engine.message_log.add_message("You cannot perform this ability yet.", config.colour.impossible)
+            return None
+        else:
+            self.cooldown = 6
+            return core.abilities.ShoveAction(caster, target, x, y)

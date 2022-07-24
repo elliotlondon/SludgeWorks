@@ -7,7 +7,6 @@ from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union, List
 import tcod
 
 from core.render_functions import RenderOrder
-from core.action import AbilityAction
 from parts.level import Level
 
 if TYPE_CHECKING:
@@ -19,6 +18,7 @@ if TYPE_CHECKING:
     from parts.equippable import Equippable
     from parts.inventory import Inventory
     from maps.game_map import SimpleGameMap
+    from parts.mutations import Mutation
 
 T = TypeVar("T", bound="Entity")
 
@@ -201,8 +201,8 @@ class Actor(Entity):
             inventory: Inventory,
             level: Level,
             description: str,
-            abilities: Optional[List[AbilityAction]] = None,  # Inherent abilities
-            mutations: Optional[List[AbilityAction]] = None  # Added mutations/abilities
+            abilities: Optional[List[Mutation]] = None,  # Inherent abilities
+            mutations: Optional[List[Mutation]] = None  # Added mutations/abilities
     ):
         super().__init__(
             x=x,

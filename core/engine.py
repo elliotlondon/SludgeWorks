@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 import tcod
 from tcod.map import compute_fov
@@ -27,6 +27,15 @@ class Engine:
         self.convos: dict[str, core.input_handlers.ConversationEventHandler] = {}
 
     def handle_enemy_turns(self) -> None:
+        # When enemy turn starts, first tick all player abilities/mutations
+        if self.player.abilities:
+            for ability in self.player.abilities:
+                if ability.cooldown > 0:
+                    ability.tick()
+        if self.player.mutations:
+            for mutation in self.player.mutations:
+                if mutation.cooldown > 0:
+                    mutation.tick()
         for entity in set(self.game_map.actors) - {self.player}:
             if entity.ai:
                 entity.trigger_active_effects()

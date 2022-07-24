@@ -9,6 +9,7 @@ import tcod
 
 import config.colour
 import config.inputs
+import core.action
 import core.actions
 import core.g
 import parts.inventory
@@ -19,7 +20,7 @@ from core.rendering import render_map, render_ui
 from maps.tiles import get_clean_name
 from parts.ai import NPC
 from parts.entity import Actor
-import core.action
+from parts.mutations import Mutation
 
 if TYPE_CHECKING:
     from parts.entity import Item
@@ -390,6 +391,7 @@ class EscMenuEventHandler(AskUserEventHandler):
 
 class HelpScreenEventHandler(EventHandler):
     """Handler for when the user accesses the help/controls screen from the Esc menu."""
+
     def __init__(self):
         super().__init__()
         self.log_length = 80
@@ -530,7 +532,6 @@ class HelpScreenEventHandler(EventHandler):
         return None
 
 
-
 class CharacterScreenEventHandler(AskUserEventHandler):
     """Handler to show the user their character stats and status during the main game loop."""
 
@@ -618,7 +619,14 @@ class AbilityScreenEventHandler(AskUserEventHandler):
         else:
             for ability in core.g.engine.player.abilities:
                 self.abilities.append(ability)
-                console.print(x=x + 1, y=y + y_offset + 2, string=f"[{y_offset + 1}]: {ability.name}")
+
+                # Change colour and add turns left if ability is on cooldown
+                if ability.cooldown > 0:
+                    console.print(x=x + 1, y=y + y_offset + 2,
+                                  string=f"[{y_offset + 1}]: {ability.name} [{ability.cooldown}]", fg=tcod.grey)
+                else:
+                    console.print(x=x + 1, y=y + y_offset + 2,
+                                  string=f"[{y_offset + 1}]: {ability.name}", fg=tcod.white)
                 for line in self.wrap(ability.description, width - 4):
                     console.print(x=x + 3, y=y + y_offset + 3, string=f"{line}")
                     y_offset += 1
@@ -632,12 +640,21 @@ class AbilityScreenEventHandler(AskUserEventHandler):
         if 0 < index + 1 <= num_abilities:
             try:
                 ability = core.g.engine.player.abilities[index]
+                # Check for cooldowns first
+                if ability.cooldown > 0:
+                    core.g.engine.message_log.add_message("You cannot perform this ability yet.",
+                                                          config.colour.impossible)
+                    return self
+                # Now parse
                 if ability.req_target:
-                    return AbilitySelectHandler(ability.action)
+                    return AbilitySelectHandler(ability)
+                else:
+                    return ability.activate()
             except IndexError:
                 core.g.engine.message_log.add_message("Invalid entry.", config.colour.invalid)
                 return None
         return super().ev_keydown(event)
+
 
 class LevelUpEventHandler(AskUserEventHandler):
     """Handler for when the trigger to level up the user is activated."""
@@ -1057,29 +1074,19 @@ class AbilitySelectHandler(SelectIndexHandler):
     """Handler for when an ability is chosen and a target is required.
     Return the ability to be performed upon the selected tile."""
 
-    def __init__(self, ability: core.action.AbilityAction):
+    def __init__(self, ability: parts.mutations.Mutation):
         super(AbilitySelectHandler, self).__init__()
         self.ability = ability
 
     def on_index_selected(self, x: int, y: int) -> ActionOrHandler:
-        # Check if valid
-        player = core.g.engine.player
-        if x == player.x and y == player.y:
-            core.g.engine.message_log.add_message("You cannot perform this action upon yourself.",
-                                                  config.colour.impossible)
-            return self
-        if abs(player.x - x) >= 1.5 or abs(player.y - y) >= 1.5:
-            core.g.engine.message_log.add_message("You must select a tile more than 1 square away.",
-                                                  config.colour.impossible)
-            return self
         target = core.g.engine.game_map.get_blocking_entity_at_location(x, y)
         if not target:
-            core.g.engine.message_log.add_message("You must select a tile more than 1 square away.",
+            core.g.engine.message_log.add_message("There is no target at that location.",
                                                   config.colour.impossible)
             return self
-        else:
-            return self.ability(core.g.engine.player, target, x, y).perform()
-
+        action = self.ability.activate(core.g.engine.player, target, x, y)
+        action.perform()
+        return MainGameEventHandler()
 
 
 class LookHandler(SelectIndexHandler):

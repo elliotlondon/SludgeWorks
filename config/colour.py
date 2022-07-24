@@ -24,6 +24,9 @@ enemy_evade = tcod.lightest_pink
 player_die = (0xFF, 0x30, 0x30)
 enemy_die = (0xFF, 0xA0, 0x30)
 
+# Mutations and abilities
+ability_used = tcod.orange
+
 # Item str colours
 hp_consumable = tcod.light_green
 twigs = tcod.light_amber

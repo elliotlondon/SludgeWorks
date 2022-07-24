@@ -355,9 +355,6 @@ class BrainRakerAction(MeleeAction):
                 else:
                     core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
                                                           f'but does no damage.', config.colour.enemy_evade)
-                if logging.DEBUG >= logging.root.level:
-                    core.g.engine.message_log.add_message(f"DEBUG: Roll [{attack_roll} vs. {defence_roll}].",
-                                                          config.colour.debug)
         else:
             if defender.name.capitalize() == 'Player':
                 core.g.engine.message_log.add_message(f'You evade the {attacker.name.capitalize()}\'s attack.',
@@ -365,15 +362,13 @@ class BrainRakerAction(MeleeAction):
             else:
                 core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
                                                       f'but the attack is evaded.', config.colour.enemy_evade)
-            if logging.DEBUG >= logging.root.level:
-                core.g.engine.message_log.add_message(f"DEBUG: Roll [{attack_roll} vs. {dodge_roll}].",
-                                                      config.colour.debug)
 
 
 class BumpAction(ActionWithDirection):
     """Bump action to move in a single cardinal direction"""
 
     def perform(self) -> None:
+        from parts.ai import NPC
         if self.dx > 1 or self.dx < -1 or self.dy > 1 or self.dy < -1:
             raise Impossible(f"Movement coords for {self.entity.name} are invalid for cardinal movement. "
                              f"({self.dx, self.dy})", config.colour.debug)

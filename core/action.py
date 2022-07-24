@@ -5,7 +5,7 @@ from typing import Optional, Tuple, TYPE_CHECKING
 import core.g
 
 if TYPE_CHECKING:
-    from parts.entity import Actor, Item, Entity
+    from parts.entity import Actor, Item
 
 
 class Action:
@@ -46,7 +46,7 @@ class ItemAction(Action):
 class AbilityAction(Action):
     """Parent action class for abilities/mutations which have an action when activated."""
 
-    def __init__(self, entity: Actor, target: Entity, x: int, y: int):
+    def __init__(self, entity: Actor, target: Actor, x: int, y: int):
         super().__init__(entity)
         self.caster = entity
         self.target = target

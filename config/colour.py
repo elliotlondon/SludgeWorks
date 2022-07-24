@@ -44,6 +44,8 @@ descend = (0x9F, 0x3F, 0xFF)
 # Status effects
 poison = tcod.dark_green
 poison_end = tcod.green
+bleed = tcod.light_red
+bleed_end = tcod.lightest_red
 
 # Screen info
 bar_text = white

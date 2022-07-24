@@ -70,7 +70,15 @@
         "level_up_base": 0,
         "xp_given": 50
       },
-      "description": "A ravenous humanoid creature with a maw of sharp yellowed teeth. The remains of clothing cover its torso, and discoloured spikes erupt in clusters from its emaciated body."
+      "description": "A ravenous humanoid creature with a maw of sharp yellowed teeth. The remains of clothing cover its torso, and discoloured spikes erupt in clusters from its emaciated body.",
+      "abilities": {
+         "Bite": {
+          "damage": 1,
+          "turns": 4,
+          "difficulty": 12,
+           "cooldown": 4
+        }
+      }
     }
   },
   {

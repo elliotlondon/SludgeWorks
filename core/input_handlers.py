@@ -622,13 +622,24 @@ class AbilityScreenEventHandler(AskUserEventHandler):
 
                 # Change colour and add turns left if ability is on cooldown
                 if ability.cooldown > 0:
+                    fg_colour = tcod.grey
                     console.print(x=x + 1, y=y + y_offset + 2,
-                                  string=f"[{y_offset + 1}]: {ability.name} [{ability.cooldown}]", fg=tcod.grey)
+                                  string=f"[{y_offset + 1}]: {ability.name} ({ability.cooldown})", fg=fg_colour)
                 else:
+                    fg_colour = tcod.white
                     console.print(x=x + 1, y=y + y_offset + 2,
-                                  string=f"[{y_offset + 1}]: {ability.name}", fg=tcod.white)
+                                  string=f"[{y_offset + 1}]: {ability.name}", fg=fg_colour)
+                # Dispay ability range
+                if ability.range == 0:
+                    range_str = "Self"
+                elif ability.range == 1:
+                    range_str = "Melee"
+                else:
+                    range_str = f"{ability.range} tiles"
+                console.print(x=width + x - 2, y=y + y_offset + 2,
+                              string=f"[Range: {range_str}]", alignment=tcod.RIGHT, fg=fg_colour)
                 for line in self.wrap(ability.description, width - 4):
-                    console.print(x=x + 3, y=y + y_offset + 3, string=f"{line}")
+                    console.print(x=x + 3, y=y + y_offset + 3, string=f"{line}", fg=fg_colour)
                     y_offset += 1
                 y_offset += 1
 

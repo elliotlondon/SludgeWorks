@@ -73,9 +73,20 @@ class HostileEnemy(BaseAI):
         dy = target.y - self.entity.y
         distance = max(abs(dx), abs(dy))  # Chebyshev distance.
 
+        # Get melee abilities
+        melee_abilities = []
+        if self.entity.abilities:
+            for ability in self.entity.abilities:
+                if ability.cooldown == 0 and ability.range == 1:
+                    melee_abilities.append(ability)
+
         # Attack player if they are visible
         if core.g.engine.game_map.visible[self.entity.x, self.entity.y]:
             if distance <= 1:
+                # Decide whether to use melee abilities
+                if len(melee_abilities) > 0:
+                    action = random.choice(melee_abilities).activate(self.entity, target, target.x, target.y)
+                    return action.perform()
                 return core.actions.MeleeAction(self.entity, dx, dy).perform()
             self.path = self.get_path_to(target.x, target.y)
 

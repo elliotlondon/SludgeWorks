@@ -42,16 +42,19 @@ class Mutation(BaseComponent):
 
     def tick(self):
         """On the passing of a turn, apply this effect."""
-        pass
+        if self.cooldown > 0:
+            self.cooldown -= 1
 
 
 class Shove(Mutation):
+    """Push a hostile entity away. Deals no damage.
+    Entities can collide and suffer 1 point of damage (str roll, difficulty 8)"""
     parent: Actor
 
     def __init__(self):
         super().__init__(
             name="Shove",
-            description="Attempt to push an entity away from you. "
+            description="Attempt to push a creature away from you. "
                         "Can deal minor damage if the target collides with another enemy",
             req_target=True,
             continuous=False,
@@ -60,15 +63,38 @@ class Shove(Mutation):
         )
         self.action = core.abilities.ShoveAction
 
-    def tick(self):
-        """On the passing of a turn, apply this effect."""
-        if self.cooldown > 0:
-            self.cooldown -= 1
-
     def activate(self, caster: Actor, target: Actor, x: int, y: int) -> Optional[core.abilities.ShoveAction]:
-        if self.cooldown > 0:
+        if self.cooldown > 0 and self.parent.name == "Player":
             core.g.engine.message_log.add_message("You cannot perform this ability yet.", config.colour.impossible)
             return None
         else:
             self.cooldown = 6
             return core.abilities.ShoveAction(caster, target, x, y)
+
+class Bite(Mutation):
+    """Bite the target. Cannot be dodged but damage can be resisted. Can cause bleeding if vit check 12 fails."""
+    parent: Actor
+
+    def __init__(self, damage: int, turns: int, difficulty: int, cooldown: int):
+        super().__init__(
+            name="Shove",
+            description="Bite a neaby creature. Deals 1d4, and can cause minor bleeding on hit.",
+            req_target=True,
+            continuous=False,
+            cooldown=0,
+            range=1
+        )
+        self.action = core.abilities.ShoveAction
+        self.damage = damage
+        self.turns = turns
+        self.difficulty = difficulty
+        self.cooldown_max = cooldown
+
+    def activate(self, caster: Actor, target: Actor, x: int, y: int) -> \
+            Optional[core.abilities.BiteAction]:
+        if self.cooldown > 0 and self.parent.name == "Player":
+            core.g.engine.message_log.add_message("You cannot perform this ability yet.", config.colour.impossible)
+            return None
+        else:
+            self.cooldown = self.cooldown_max
+            return core.abilities.BiteAction(caster, target, x, y, self.damage, self.turns, self.difficulty)

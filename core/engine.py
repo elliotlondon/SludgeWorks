@@ -36,9 +36,14 @@ class Engine:
             for mutation in self.player.mutations:
                 if mutation.cooldown > 0:
                     mutation.tick()
+        self.player.trigger_active_effects()
+        # Iterate over all enemy turns
         for entity in set(self.game_map.actors) - {self.player}:
             if entity.ai:
                 entity.trigger_active_effects()
+                if entity.abilities:
+                    for ability in entity.abilities:
+                        ability.tick()
                 try:
                     entity.ai.perform()
                 except Impossible:

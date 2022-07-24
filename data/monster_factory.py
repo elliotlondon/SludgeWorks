@@ -81,6 +81,11 @@ def create_monster(data: dict) -> Actor:
             ability_obj = None
             if ability == "Shove":
                 ability_obj = parts.mutations.Shove()
+            elif ability == "Bite":
+                ability_obj = parts.mutations.Bite(data['abilities']['Bite']['damage'],
+                                                   data['abilities']['Bite']['turns'],
+                                                   data['abilities']['Bite']['difficulty'],
+                                                   data['abilities']['Bite']['cooldown'])
             monster.abilities.append(ability_obj)
     if 'mutations' in data:
         monster.mutations = []

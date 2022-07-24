@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import time
 import traceback
 from pathlib import Path
 
@@ -26,15 +27,15 @@ def main() -> None:
     with tcod.context.new_window(screen_width * 16, screen_height * 16, tileset=tileset, title="SludgeWorks",
                                  vsync=True) \
             as core.g.context:
-        root_console = tcod.Console(screen_width, screen_height, order="F")
+        core.g.console = tcod.Console(screen_width, screen_height, order="F")
         try:
             while True:
-                root_console.clear()
-                handler.on_render(console=root_console)
-                core.g.context.present(root_console)
+                core.g.console.clear()
+                handler.on_render(console=core.g.console)
+                core.g.context.present(core.g.console)
 
                 try:
-                    for event in tcod.event.wait():
+                    for event in tcod.event.get():
                         core.g.context.convert_event(event)
                         handler = handler.handle_events(event)
                 except Exception:  # Handle exceptions in game.

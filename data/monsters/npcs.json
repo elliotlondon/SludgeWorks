@@ -20,6 +20,12 @@
         "xp": 0,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [127, 0, 0],
+        "name": "Human corpse",
+        "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
+      },
       "inventory": {
         "capacity": 12
       },
@@ -27,7 +33,7 @@
         "level_up_base": 0,
         "xp_given": 100
       },
-      "description": "<Blank>"
+      "description": "This stout, red-haired man is clothed in brown leather armour covered in small pockets. He carries himself anxiously, constantly checking them for missing items, both real and imagined."
     }
   }
 ]

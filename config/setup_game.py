@@ -13,10 +13,14 @@ import tcod
 import config.colour
 import core.g
 import core.input_handlers
+from config.inputs import YESNO_KEYS
 from core.engine import Engine
 from data.item_factory import create_item_from_json
 from data.monster_factory import create_monster_from_json
 from maps.game_map import GameWorld
+
+
+save_location = Path("savegames/savegame.sav")
 
 
 def new_game() -> Engine:
@@ -118,15 +122,97 @@ class MainMenu(core.input_handlers.BaseEventHandler):
             raise SystemExit()
         elif event.sym == tcod.event.K_c:
             try:
-                load_game(Path("savegames/savegame.sav"))
+                load_game(save_location)
                 return core.input_handlers.MainGameEventHandler()
             except FileNotFoundError:
-                return core.input_handlers.PopupMessage(self, "No saved game to load.")
+                return MainMenuPopupMessage(self, "No saved game to load.")
             except Exception as exc:
                 traceback.print_exc()  # Print to stderr.
-                return core.input_handlers.PopupMessage(self, f"Failed to load save:\n{exc}")
+                return MainMenuPopupMessage(self, f"Failed to load save:\n{exc}")
         elif event.sym == tcod.event.K_n:
-            new_game()
-            return core.input_handlers.MainGameEventHandler()
-
+            if Path.exists(save_location):
+                return SaveExistsEventHandler(self)
+            else:
+                new_game()
+                return core.input_handlers.MainGameEventHandler()
         return None
+
+
+class MainMenuPopupMessage(core.input_handlers.BaseEventHandler):
+    """Display a popup text window."""
+
+    def __init__(self, parent_handler: core.input_handlers.BaseEventHandler, text: str):
+        self.parent = parent_handler
+        self.text = text
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Render the parent and print the message on top."""
+        self.parent.on_render(console)
+
+        width = len(self.text) + 4
+        height = 6
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - int(height / 2)
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=(255, 255, 255),
+            bg=(0, 0, 0)
+        )
+        console.print(x=x + int(width / 2), y=y + 2, string=self.text, alignment=tcod.CENTER)
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[core.input_handlers.BaseEventHandler]:
+        """Any key returns to the parent handler."""
+        return self.parent
+
+
+class SaveExistsEventHandler(core.input_handlers.BaseEventHandler):
+    """Check to see if a saved game already exists. If so, return a popup confirming whether to proceed."""
+    def __init__(self, parent_handler: core.input_handlers.BaseEventHandler):
+        self.parent = parent_handler
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[core.input_handlers.MainGameEventHandler or MainMenu]:
+        if event.sym in config.inputs.YESNO_KEYS:
+            if event.sym not in (tcod.event.K_n, tcod.event.K_ESCAPE):
+                new_game()
+                return core.input_handlers.MainGameEventHandler()
+            else:
+                return MainMenu()
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Create the popup window allowing the user to choose whether to descend"""
+        title = "┤WARNING: Saved game already exists!├"
+        self.parent.on_render(console)
+        width = len(title) + 6
+        height = 8
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - height
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=tcod.white,
+            bg=(0, 0, 0),
+        )
+        console.print(console.width // 2, y, title,
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(console.width // 2, y + 2, f"Starting a new game will",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(console.width // 2, y + 3, f"overwrite your existing save.",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(console.width // 2, y + 5, f"Start new game?",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 - 6, y=y + 7, string=f"[Y]: Yes",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 + 6, y=y + 7, string=f"[N]: No",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+

@@ -13,10 +13,11 @@ class Action:
         super().__init__()
         self.entity = entity
 
-    def perform(self) -> None:
+    def perform(self) -> Optional[None | str]:
         """
         Perform this action with the objects needed to determine its scope.
         This method must be overridden by Action subclasses.
+        Returns an optional flag if the Action is continuous.
         """
         raise NotImplementedError()
 
@@ -40,3 +41,17 @@ class ItemAction(Action):
         """Invoke the items ability, this action will be given to provide context."""
         if self.item.consumable:
             self.item.consumable.activate(self)
+
+
+class AbilityAction(Action):
+    """Parent action class for abilities/mutations which have an action when activated."""
+
+    def __init__(self, entity: Actor, target: Actor, x: int, y: int):
+        super().__init__(entity)
+        self.caster = entity
+        self.target = target
+        self.x = x
+        self.y = y
+
+    def perform(self) -> Optional[None | str]:
+        raise NotImplementedError()

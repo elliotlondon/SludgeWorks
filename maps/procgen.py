@@ -10,9 +10,11 @@ import numpy as np
 
 import config.colour
 import maps.tiles
+import parts.entity
 from config.exceptions import MapGenError, FatalMapGenError
 from data.item_factory import create_item_from_json
 from data.monster_factory import create_monster_from_json
+from data.object_factory import create_static_object_from_json
 from maps.game_map import SimpleGameMap
 
 if TYPE_CHECKING:
@@ -142,47 +144,11 @@ def get_items_at_random(engine: Engine, path: str, number_of_entities: int) -> [
     return chosen_items, chosen_types
 
 
-class RectangularRoom:
-    def __init__(self, x: int, y: int, width: int, height: int):
-        self.x1 = x
-        self.y1 = y
-        self.x2 = x + width
-        self.y2 = y + height
-
-    @property
-    def center(self) -> Tuple[int, int]:
-        """
-        Provide coordinates of the center of the room
-        """
-        center_x = int((self.x1 + self.x2) / 2)
-        center_y = int((self.y1 + self.y2) / 2)
-
-        return center_x, center_y
-
-    @property
-    def inner(self) -> Tuple[slice, slice]:
-        """
-        Return the inner area of this room as a 2D array index.
-        """
-        return slice(self.x1 + 1, self.x2), slice(self.y1 + 1, self.y2)
-
-    @property
-    def tile_indices(self) -> List[np.ndarray, np.ndarray]:
-        """
-        Return the inner area of this room as a 2D array index.
-        """
-        return [np.arange(self.x1 + 1, self.x2), np.arange(self.y1 + 1, self.y2)]
-
-    def intersects(self, other: RectangularRoom) -> bool:
-        """
-        Return True if this room overlaps with another RectangularRoom.
-        """
-        return (
-                self.x1 <= other.x2
-                and self.x2 >= other.x1
-                and self.y1 <= other.y2
-                and self.y2 >= other.y1
-        )
+def get_static_objects_at_random(engine: Engine, path: str, floor_number: int) -> List[parts.entity.StaticObject]:
+    # Load drop table for current floor
+    f = open(path)
+    spawn_table = json.load(f)[0]
+    return spawn_table
 
 
 def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map_width: int, map_height: int,
@@ -216,16 +182,15 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
         # Populate dungeon
         place_flora(dungeon, engine, areas=3)
         place_fauna(dungeon, engine)
+        place_npcs(dungeon, engine)
         place_items(dungeon, engine)
+        place_static_objects(dungeon, engine)
 
         # Finally, add stairs
         dungeon = add_stairs(dungeon)
         if isinstance(dungeon, SimpleGameMap):
             # Mapgen successful, use this floor
-
-            # Calculate accessible area for future use
             dungeon.accessible = dungeon.calc_accessible()
-
             return dungeon
         elif isinstance(dungeon, MapGenError):
             # Mapgen unsuccessful, try again until max tries are reached
@@ -309,9 +274,9 @@ def place_fauna(dungeon: SimpleGameMap, engine: Engine) -> None:
     max_monsters = get_max_value_for_floor(max_monsters_by_floor, current_floor)
     number_of_monsters = random.randint(int(max_monsters / 2), max_monsters)
 
+    # Spawn monsters
     monsters, monster_types = get_monsters_at_random(engine, 'data/monsters/spawn_table_monsters.json',
                                                      number_of_monsters)
-
     for i in range(len(monsters)):
         # Get the indices of tiles which are walkable
         x, y = dungeon.get_random_walkable_tile()
@@ -326,11 +291,19 @@ def place_fauna(dungeon: SimpleGameMap, engine: Engine) -> None:
             continue
 
         # Spawn in free, non-blocked location
-        if not any(entity.x == x and entity.y == y for entity in dungeon.entities) and dungeon.tiles[x, y]['walkable']:
+        if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
             monster = copy.deepcopy(create_monster_from_json(f"data/monsters/{monster_types[i]}.json", monsters[i]))
             if monster.name == "Risen Sacrifice":
                 monster.fighter.hp = random.randint(4, 8)
             monster.spawn(dungeon, x, y)
+
+
+def place_npcs(dungeon: SimpleGameMap, engine: Engine) -> None:
+    # Spawn NPCs depending upon floor conditions
+    if engine.game_world.current_floor == 1:
+        x, y = dungeon.get_random_walkable_nontunnel_tile()
+        npc = copy.deepcopy(create_monster_from_json(f"data/monsters/npcs.json", "gilbert"))
+        npc.spawn(dungeon, x, y)
 
 
 def place_items(dungeon: SimpleGameMap, engine: Engine) -> None:
@@ -345,9 +318,21 @@ def place_items(dungeon: SimpleGameMap, engine: Engine) -> None:
         x, y = dungeon.get_random_walkable_tile()
 
         # Spawn in free, non-blocked location
-        if not any(entity.x == x and entity.y == y for entity in dungeon.entities) and dungeon.tiles[x, y]['walkable']:
+        if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
             item = copy.deepcopy(create_item_from_json(f"data/items/{item_types[i]}.json", items[i]))
             item.spawn(dungeon, x, y)
+
+
+def place_static_objects(dungeon: SimpleGameMap, engine: Engine) -> None:
+    current_floor = engine.game_world.current_floor
+    static_objects = get_static_objects_at_random(engine, 'data/static_objects/spawn_table_objects.json', current_floor)
+
+    # For now simply spawn one sludge fountain per floor
+    x, y = dungeon.get_random_unoccupied_nonfov_tile()
+
+    static_object = copy.deepcopy(
+        create_static_object_from_json(f"data/static_objects/core_objects.json", 'sludge_fountain'))
+    static_object.spawn(dungeon, x, y)
 
 
 def tunnel_between(start: Tuple[int, int], end: Tuple[int, int]) -> Iterator[Tuple[int, int]]:
@@ -630,3 +615,46 @@ def add_features(dungeon: SimpleGameMap) -> SimpleGameMap:
                     dungeon.tiles[x, y] = maps.tiles.waterfall
 
     return dungeon
+
+
+class RectangularRoom:
+    def __init__(self, x: int, y: int, width: int, height: int):
+        self.x1 = x
+        self.y1 = y
+        self.x2 = x + width
+        self.y2 = y + height
+
+    @property
+    def center(self) -> Tuple[int, int]:
+        """
+        Provide coordinates of the center of the room
+        """
+        center_x = int((self.x1 + self.x2) / 2)
+        center_y = int((self.y1 + self.y2) / 2)
+
+        return center_x, center_y
+
+    @property
+    def inner(self) -> Tuple[slice, slice]:
+        """
+        Return the inner area of this room as a 2D array index.
+        """
+        return slice(self.x1 + 1, self.x2), slice(self.y1 + 1, self.y2)
+
+    @property
+    def tile_indices(self) -> List[np.ndarray, np.ndarray]:
+        """
+        Return the inner area of this room as a 2D array index.
+        """
+        return [np.arange(self.x1 + 1, self.x2), np.arange(self.y1 + 1, self.y2)]
+
+    def intersects(self, other: RectangularRoom) -> bool:
+        """
+        Return True if this room overlaps with another RectangularRoom.
+        """
+        return (
+                self.x1 <= other.x2
+                and self.x2 >= other.x1
+                and self.y1 <= other.y2
+                and self.y2 >= other.y1
+        )

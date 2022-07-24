@@ -1,8 +1,8 @@
 import json
 
+import parts.mutations
 import parts.ai
-from config.exceptions import DataLoadError
-from parts.entity import Actor
+from parts.entity import Actor, Corpse
 from parts.equipment import Equipment
 from parts.fighter import Fighter
 from parts.inventory import Inventory
@@ -59,6 +59,12 @@ def create_monster(data: dict) -> Actor:
             armour=data['fighter']['armour'],
             dodges=data['fighter']['dodges'],
         ),
+        corpse=Corpse(
+            char=data['corpse']['char'],
+            colour=(data['corpse']['colour'][0], data['corpse']['colour'][1], data['corpse']['colour'][2]),
+            name=data['corpse']['name'],
+            description=data['corpse']['description']
+        ),
         inventory=Inventory(
             capacity=data['inventory']['capacity']
         ),
@@ -68,4 +74,18 @@ def create_monster(data: dict) -> Actor:
         ),
         description=data['description']
     )
+
+    if 'abilities' in data:
+        monster.abilities = []
+        for ability in data['abilities']:
+            ability_obj = None
+            if ability == "Shove":
+                ability_obj = parts.mutations.Shove()
+            monster.abilities.append(ability_obj)
+    if 'mutations' in data:
+        monster.mutations = []
+        mutation_obj = None
+        for mutation in data['mutations']:
+            # if mutation == "Entomb":
+            monster.mutations.append(mutation)
     return monster

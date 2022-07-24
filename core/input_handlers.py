@@ -1,26 +1,26 @@
 from __future__ import annotations
 
-import logging
-import math
-import os
 import textwrap
+from json import load
+from pathlib import Path
 from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union, List, Iterable
 
-import numpy as np
 import tcod
 
 import config.colour
 import config.inputs
+import core.action
 import core.actions
 import core.g
 import parts.inventory
 from config.exceptions import Impossible
 from core.actions import Action
+from core.render_functions import RenderOrder
 from core.rendering import render_map, render_ui
 from maps.tiles import get_clean_name
 from parts.ai import NPC
 from parts.entity import Actor
-from core.render_functions import RenderOrder
+from parts.mutations import Mutation
 
 if TYPE_CHECKING:
     from parts.entity import Item
@@ -50,50 +50,15 @@ class BaseEventHandler(tcod.event.EventDispatch[ActionOrHandler]):
         raise SystemExit()
 
 
-class PopupMessage(BaseEventHandler):
-    """Display a popup text window."""
-
-    def __init__(self, parent_handler: BaseEventHandler, text: str):
-        self.parent = parent_handler
-        self.text = text
-
-    def on_render(self, console: tcod.Console) -> None:
-        """Render the parent and dim the result, then print the message on top."""
-        self.parent.on_render(console)
-        console.tiles_rgb["fg"] //= 8
-        console.tiles_rgb["bg"] //= 8
-
-        width = len(self.text) + 4
-        x = console.width // 2 - int(width / 2)
-        y = console.height // 2
-
-        console.draw_frame(
-            x=x,
-            y=y,
-            width=width,
-            height=7,
-            title='',
-            clear=True,
-            fg=(255, 255, 255),
-            bg=(0, 0, 0),
-            decoration="╔═╗║ ║╚═╝"
-        )
-
-        console.print(x=x + 1, y=y + 1, string=self.text)
-
-    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[BaseEventHandler]:
-        """Any key returns to the parent handler."""
-        return self.parent
-
-
 class EventHandler(BaseEventHandler):
     def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
         """Handle an event, perform any actions, then return the next active event handler."""
         action_or_state = self.dispatch(event)
-        if isinstance(action_or_state, EventHandler):
+        if isinstance(action_or_state, EventHandler) or isinstance(action_or_state, BaseEventHandler):
             return action_or_state
         if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
             if not core.g.engine.player.is_alive:
+                from core.events.death import GameOverEventHandler
                 return GameOverEventHandler()
             elif core.g.engine.player.level.requires_level_up:
                 return LevelUpEventHandler()
@@ -125,143 +90,123 @@ class EventHandler(BaseEventHandler):
         render_ui(console, core.g.engine)
 
 
-class ExploreEventHandler(EventHandler):
-    def __init__(self):
-        super().__init__()
-        # Init message
-        core.g.engine.message_log.add_message(f"You begin exploring.", config.colour.yellow)
-        self.path = []
+class PopupMessage(EventHandler):
+    TITLE = "<Untitled>"
 
-    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
-        """Handle events for input handlers with an engine."""
-        action_or_state = self.dispatch(event)
-        if isinstance(action_or_state, BaseEventHandler):
-            return action_or_state
-        if self.handle_action(action_or_state):
-            # A valid action was performed.
-            if not core.g.engine.player.is_alive:
-                # The player was killed sometime during or after the action.
-                return GameOverEventHandler()
-            elif core.g.engine.player.level.requires_level_up:
-                return LevelUpEventHandler()
-            return MainGameEventHandler()  # Return to the main handler.
+    def __init__(self, text: str):
+        self.text = text
 
-        # Failsafe for recursion
-        if not core.g.engine.player.is_alive:
-            return GameOverEventHandler()
-        elif core.g.engine.player.level.requires_level_up:
-            return LevelUpEventHandler()
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
+        return MainGameEventHandler()
 
-        # Garbage collection for exiled entities
-        exiles = []
-        for entity in core.g.engine.game_map.entities:
-            if entity.name == ' ':
-                exiles.append(entity)
-        core.g.engine.game_map.entities = set([x for x in core.g.engine.game_map.entities
-                                               if x not in exiles])
-
-        return self
-
-    def handle_action(self, action: Optional[Action]):
-        """Handle actions returned from event methods. Returns True if the action will advance a turn."""
-        player = core.g.engine.player
-
-        if action is not tcod.event.KeyDown:
-            if self.actor_in_fov():
-                return MainGameEventHandler()
-            try:
-                path = self.explore()
-                if path is not None:
-                    action = core.actions.BumpAction(player, path[0] - player.x, path[1] - player.y)
-                    action.perform()
-                    core.g.engine.handle_enemy_turns()
-                    core.g.engine.update_fov()
-                    # if self.actor_in_fov():
-                    #     return MainGameEventHandler()
-                    return MainGameEventHandler()
-                else:
-                    return MainGameEventHandler()
-            except Impossible as exc:
-                core.g.engine.message_log.add_message(exc.args[0], config.colour.impossible)
-                return True  # Skip enemy turn on exceptions.
-        else:
-            return MainGameEventHandler()
-
-    def actor_in_fov(self) -> bool:
-        """Check if there are any enemies in the FOV."""
-        visible_tiles = np.nonzero(core.g.engine.game_map.visible)
-        for actor in core.g.engine.game_map.dangerous_actors:
-            if actor.x in visible_tiles[0] and actor.y in visible_tiles[1] and actor.name != 'Player':
-                core.g.engine.message_log.add_message(f"You spot a {actor.name} and stop exploring.",
-                                                      config.colour.yellow)
-                return True
-        return False
-
-    def explore(self) -> Optional[List]:
-        """Use a dijkstra map to navigate the player towards the nearest unexplored tile."""
-        player = core.g.engine.player
-
-        unexplored_coords = []
-        for y in range(core.g.engine.game_map.height):
-            for x in range(core.g.engine.game_map.width):
-                if not core.g.engine.game_map.explored[x, y] and core.g.engine.game_map.accessible[x, y]:
-                    unexplored_coords.append((y, x))
-
-        if logging.DEBUG >= logging.root.level:
-            core.g.engine.message_log.add_message(f"DEBUG: Unexplored coords = {len(unexplored_coords)}",
-                                                  config.colour.debug)
-
-        if len(unexplored_coords) == 0:
-            core.g.engine.message_log.add_message("There is nowhere else to explore.", config.colour.yellow)
-            return None
-
-        # Find the nearest unexplored coords
-        closest_distance = 10000
-        closest_coord = None
-        for y, x in unexplored_coords:
-            new_distance = math.hypot(x - player.x, y - player.y)
-
-            if new_distance < closest_distance:
-                closest_distance = new_distance
-                closest_coord = (x, y)
-
-        # Try simple A*
-        if closest_coord:
-            if len(self.path) <= 1:
-                # No path exists, so make one
-                cost = np.array(core.g.engine.game_map.accessible, dtype=np.int8)
-
-                # Create a graph from the cost array and pass that graph to a new pathfinder.
-                graph = tcod.path.SimpleGraph(cost=cost, cardinal=2, diagonal=3)
-                pathfinder = tcod.path.Pathfinder(graph)
-                pathfinder.add_root((core.g.engine.player.x, core.g.engine.player.y))  # Start position.
-
-                # Compute the path to the destination and remove the starting point.
-                self.path: List[List[int]] = pathfinder.path_to(closest_coord)[1:].tolist()
-                if not self.path:
-                    core.g.engine.message_log.add_message("You cannot explore the remaining tiles.",
-                                                          config.colour.yellow)
-                    return None
-                return self.path[0]
-            else:
-                # Path already exists: use it and prune it
-                self.path.pop(0)
-                new_coords = self.path[0]
-                return new_coords
-
-    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
-        """By default any key exits this input handler."""
-        core.g.engine.message_log.add_message(f"You stop exploring.", config.colour.yellow)
-        return self.on_exit()
+    def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[MainGameEventHandler]:
+        return MainGameEventHandler()
 
     def on_render(self, console: tcod.Console) -> None:
-        render_map(console, core.g.engine.game_map)
-        render_ui(console, core.g.engine)
+        """Create the popup window with a message within."""
+        super().on_render(console)
+        width = len(self.text) + 4
+        height = 6
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - int(height / 2)
 
-    def on_exit(self) -> Optional[ActionOrHandler]:
-        """Called when the user is trying to exit or cancel an action.
-        By default this returns to the main event handler."""
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=(255, 255, 255),
+            bg=(0, 0, 0)
+        )
+        console.print(x=x + int(width / 2), y=y + 2, string=self.text, alignment=tcod.CENTER)
+        console.print(x=x + int(width / 2), y=y + height - 1, string="[OK]", alignment=tcod.CENTER)
+
+
+class ExploreEventHandler(EventHandler):
+    """Handler to initiate the explore sequence. Stops if an enemy is in the fov. Continues until interrupted by
+    a keypress, or if there are no more tiles that can be explored."""
+
+    def __init__(self):
+        super().__init__()
+        self.action = core.actions.ExploreAction(core.g.engine.player)
+        self.possible = self.action.possible()
+        if self.possible:
+            core.g.engine.message_log.add_message(f"You begin exploring.", config.colour.yellow)
+
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        while self.action.perform() == "continuous":
+            # Check for interrupt
+            tcod.lib.SDL_PumpEvents()
+            num_of_pressed_keys = tcod.lib.SDL_PeepEvents(tcod.ffi.NULL, 0, tcod.lib.SDL_PEEKEVENT,
+                                                          tcod.lib.SDL_KEYDOWN, tcod.lib.SDL_KEYDOWN)
+            if num_of_pressed_keys > 0:
+                core.g.engine.message_log.add_message(f"You stop exploring.", config.colour.yellow)
+                return InterruptHandler()
+            # Handle enemy turns
+            core.g.engine.handle_enemy_turns()
+            core.g.engine.update_fov()
+            # Render all
+            render_ui(core.g.console, core.g.engine)
+            render_map(core.g.console, core.g.engine.game_map)
+            core.g.context.present(core.g.console)
+
         return MainGameEventHandler()
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
+        if event.sym == tcod.event.K_ESCAPE:
+            return MainGameEventHandler()
+
+
+class TakeStairsEventHandler(EventHandler):
+    """Handler for when the player attempts to descend.
+    If the player is standing on the down stairs, descend.
+    If the player has discovered the down stairs, continuous action move towards them.
+    Else, return a message that the player does not know where the down stairs are.
+    Stops if an enemy enters the FOV. Continues until interrupted by a keypress, or when the player is at the down
+    stairs location."""
+
+    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        # First check if at the down stairs location.
+        if (core.g.engine.player.x, core.g.engine.player.y) == core.g.engine.game_map.downstairs_location:
+            core.actions.DescendAction(core.g.engine.player).perform()
+            core.g.engine.update_fov()
+            return MainGameEventHandler()
+        if not core.actions.TakeStairsAction(core.g.engine.player).possible():
+            return MainGameEventHandler()
+        else:
+            core.g.engine.message_log.add_message(f"You head towards the exit.", config.colour.yellow)
+        while core.actions.TakeStairsAction(core.g.engine.player).perform() == "continuous":
+            # Check for interrupt
+            tcod.lib.SDL_PumpEvents()
+            num_of_pressed_keys = tcod.lib.SDL_PeepEvents(tcod.ffi.NULL, 0, tcod.lib.SDL_PEEKEVENT,
+                                                          tcod.lib.SDL_KEYDOWN, tcod.lib.SDL_KEYDOWN)
+            if num_of_pressed_keys > 0:
+                core.g.engine.message_log.add_message(f"You stop exploring.", config.colour.yellow)
+                return InterruptHandler()
+            # Handle enemy turns
+            core.g.engine.handle_enemy_turns()
+            core.g.engine.update_fov()
+            # Render all
+            render_ui(core.g.console, core.g.engine)
+            render_map(core.g.console, core.g.engine.game_map)
+            core.g.context.present(core.g.console)
+
+        return MainGameEventHandler()
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
+        if event.sym == tcod.event.K_ESCAPE:
+            return MainGameEventHandler()
+
+
+class InterruptHandler(EventHandler):
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
+        return MainGameEventHandler()
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Create the popup window with a message within."""
+        super().on_render(console)
 
 
 class MainGameEventHandler(EventHandler):
@@ -272,24 +217,18 @@ class MainGameEventHandler(EventHandler):
             return action_or_state
         if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
             if not core.g.engine.player.is_alive:
+                from core.events.death import GameOverEventHandler
                 return GameOverEventHandler()
             elif core.g.engine.player.level.requires_level_up:
                 return LevelUpEventHandler()
-            return MainGameEventHandler()  # Return to the main handler.
+            return MainGameEventHandler()
 
         # Failsafe for recursion
         if not core.g.engine.player.is_alive:
+            from core.events.death import GameOverEventHandler
             return GameOverEventHandler()
         elif core.g.engine.player.level.requires_level_up:
             return LevelUpEventHandler()
-
-        # Garbage collection for exiled entities
-        exiles = []
-        for entity in core.g.engine.game_map.entities:
-            if entity.name == ' ':
-                exiles.append(entity)
-        core.g.engine.game_map.entities = set([x for x in core.g.engine.game_map.entities
-                                               if x not in exiles])
 
         return self
 
@@ -300,12 +239,9 @@ class MainGameEventHandler(EventHandler):
         modifier = event.mod
         player = core.g.engine.player
 
-        if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT):
-            return core.actions.TakeStairsAction(player)
-
+        # Movement
         if key in config.inputs.MOVE_KEYS:
             dx, dy = config.inputs.MOVE_KEYS[key]
-
             # Failsafe OOB check
             if not core.g.engine.game_map.in_bounds(player.x + dx, player.y + dy):
                 core.g.engine.message_log.add_message("That way is blocked.", config.colour.impossible)
@@ -316,18 +252,15 @@ class MainGameEventHandler(EventHandler):
         elif key in config.inputs.WAIT_KEYS:
             action = core.actions.WaitAction(player)
 
-        elif key == tcod.event.K_ESCAPE:
-            raise SystemExit()
-        # elif key == tcod.event.K_F11:
-        #     self.engine.event_handler.toggle_fullscreen()
-
+        # Info menus
         elif key == tcod.event.K_m:
             return HistoryViewer()
-        elif key == tcod.event.K_SEMICOLON:
-            return LookHandler()
         elif key == tcod.event.K_c:
             return CharacterScreenEventHandler()
-
+        elif key == tcod.event.K_a:
+            return AbilityScreenEventHandler()
+        elif key == tcod.event.K_e:
+            return LookHandler()
         elif key == tcod.event.K_g:
             action = core.actions.PickupAction(player)
         elif key == tcod.event.K_i:
@@ -335,8 +268,37 @@ class MainGameEventHandler(EventHandler):
         elif key == tcod.event.K_d:
             return InventoryDropHandler()
 
-        elif key == tcod.event.K_HASH or key == tcod.event.K_SLASH:
+        # Continuous actions
+        if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT) \
+                or key == tcod.event.K_KP_ENTER:
+            return TakeStairsEventHandler()
+        elif key == tcod.event.K_x:
             return ExploreEventHandler()
+
+        # Space-to-interact. If nothing around, create popup. If something, interact. If multiple, prompt user.
+        elif key == tcod.event.K_SPACE or key == tcod.event.K_KP_SPACE:
+            interactables = core.g.engine.game_map.get_surrounding_interactables(player.x, player.y)
+            if len(interactables) == 0:
+                return PopupMessage("There is nothing nearby to interact with.")
+            elif len(interactables) == 1:
+                # Decide which interaction to return, depending upon context.
+                if isinstance(interactables[0].ai, parts.ai.NPC):
+                    # Check if convo has been started before in engine, if not, start a new one
+                    if interactables[0].name in core.g.engine.convos:
+                        return core.g.engine.convos[interactables[0].name]
+                    else:
+                        return ConversationEventHandler(interactables[0])
+                elif isinstance(interactables[0], parts.entity.StaticObject):
+                    if interactables[0].name == "Fountain of Sludge":
+                        return SludgeFountainEventHandler(interactables[0])
+            else:
+                raise NotImplementedError("Too may objects to interact with surrounding the player.")
+
+        # Settings
+        elif key == tcod.event.K_ESCAPE:
+            return EscMenuEventHandler()
+        # elif key == tcod.event.K_F11:
+        #     self.toggle_fullscreen()
 
         return action
 
@@ -383,41 +345,319 @@ class AskUserEventHandler(EventHandler):
         return MainGameEventHandler()
 
 
-class CharacterScreenEventHandler(AskUserEventHandler):
-    TITLE = "Character Sheet"
+class EscMenuEventHandler(AskUserEventHandler):
+    """Handler for the menu which appears when the user presses Esc while inside the main game loop."""
 
     def on_render(self, console: tcod.Console) -> None:
         super().on_render(console)
-
-        level_str = f"Level: {core.g.engine.player.level.current_level}"
-        xp_str = f"XP: {core.g.engine.player.level.current_xp}"
-        xp_next_str = f"XP for next level: {core.g.engine.player.level.experience_to_next_level}"
-
-        width = len(xp_next_str) + 2
+        width = 34
+        height = 6
         x = console.width // 2 - int(width / 2)
-        y = console.height // 2
+        y = console.height // 2 - int(height / 2)
 
         console.draw_frame(
             x=x,
             y=y,
             width=width,
-            height=7,
-            title=self.TITLE,
+            height=height,
+            title='',
             clear=True,
-            fg=(255, 255, 255),
+            fg=tcod.white,
             bg=(0, 0, 0),
         )
+        console.print(console.width // 2, y, f"┤Esc. Menu├",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=x + 1, y=y + 2, string=f"[H]: Help & Controls",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + 3, string=f"[S]: Save & Quit to Main Menu",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + 4, string=f"[Q]: Save & Quit to Desktop",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
 
-        console.print(x=x + 1, y=y + 1, string=level_str)
-        console.print(x=x + 1, y=y + 2, string=xp_str)
-        console.print(x=x + 1, y=y + 3, string=xp_next_str)
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        from config.setup_game import save_game, MainMenu
+        key = event.sym
 
-        console.print(x=x + 1, y=y + 4, string=f"Strength: {core.g.engine.player.fighter.base_strength}")
-        console.print(x=x + 1, y=y + 5, string=f"Dexterity: {core.g.engine.player.fighter.base_dexterity}")
+        if key == tcod.event.K_s:
+            save_game(Path("savegames/savegame.sav"))
+            return MainMenu()
+        elif key == tcod.event.K_h:
+            return HelpScreenEventHandler()
+        elif key == tcod.event.K_q:
+            raise SystemExit()
+        elif key == tcod.event.K_ESCAPE:
+            return MainGameEventHandler()
+
+
+class HelpScreenEventHandler(EventHandler):
+    """Handler for when the user accesses the help/controls screen from the Esc menu."""
+
+    def __init__(self):
+        super().__init__()
+        self.log_length = 80
+        self.cursor = self.log_length - 1
+        self.text_list = []
+
+    def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[EventHandler]:
+        return EscMenuEventHandler()
+
+    @staticmethod
+    def wrap(string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():
+            yield from textwrap.wrap(line, width, expand_tabs=True)
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Create the popup window with a message within."""
+        super().on_render(console)
+        width = console.width - 18
+        height = console.height - 6
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - int(height / 2)
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=(255, 255, 255),
+            bg=(0, 0, 0)
+        )
+        console.print(console.width // 2, y, f"┤Help and Controls├",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(console.width // 2, y + 2, f"Welcome to the SludgeWorks",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+
+        y_offset = 4
+        info_message = "SludgeWorks is a traditional ASCII roguelike game where you must explore your surroundings " \
+                       "and learn about the world around you to survive and progress. You cannot ascend back " \
+                       "to the surface, and so your only option is to descend. Be aware that "
+        for line in self.wrap(info_message, width - 2):
+            console.print(x=x + 1, y=y + y_offset, string=line, alignment=tcod.LEFT)
+            y_offset += 1
+        console.print(x=console.width // 2 - 1, y=y + y_offset - 1, string=f"if you die your save will be deleted.",
+                      alignment=tcod.constants.CENTER, fg=tcod.dark_red)
+
+        console.print(x=console.width // 2, y=y + y_offset + 1, string=f"Controls",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 3, string=f"Movement Keys:",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+
+        y_offset = y_offset + 4
+        info_message = "You may move around the map using either 'vi' keys, or numpad controls. These move you in " \
+                       "every cardinal direction, including diagonally. You may press '.' to wait a turn. "
+        for line in self.wrap(info_message, width - 2):
+            console.print(x=x + 1, y=y + y_offset, string=line, alignment=tcod.LEFT)
+            y_offset += 1
+
+        # vi keys
+        console.print(x=console.width // 2 - 8, y=y + y_offset + 1, string=f"y k u",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 - 8, y=y + y_offset + 2, string=f"\\ | /",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 - 8, y=y + y_offset + 3, string=f"h . l",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 - 8, y=y + y_offset + 4, string=f"/ | \\",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 - 8, y=y + y_offset + 5, string=f"b j n",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+
+        # Numpad
+        console.print(x=console.width // 2 + 8, y=y + y_offset + 1, string=f"7 8 9",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 + 8, y=y + y_offset + 2, string=f"\\ | /",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 + 8, y=y + y_offset + 3, string=f"4 5 6",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 + 8, y=y + y_offset + 4, string=f"/ | \\",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 + 8, y=y + y_offset + 5, string=f"1 2 3",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        y_offset = y_offset + 6
+
+        console.print(x=x + 1, y=y + y_offset + 1, string=f"Menu & Action Keys:",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 3, string=f"'E'   Look around",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 4, string=f"'I'   Organize your inventory",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 5, string=f"'G'   Get items at your location",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 6, string=f"'D'   Drop items from your inventory",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 7, string=f"'C'   See your character's stats",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 8, string=f"'X'   Explore your surroundings automatically",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 9, string=f"'>'   Descend to the next level",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+
+        console.print(x=x + 1, y=y + y_offset + 11, string=f"Press 'Space' to interact with something nearby.",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+        console.print(x=x + 1, y=y + y_offset + 12, string=f"Press 'Esc' at any time to abort most normal actions.",
+                      alignment=tcod.constants.LEFT, fg=tcod.white)
+
+        y_offset = y_offset + 14
+        info_message = "This game is still under active development and you are playing a pre-alpha version. " \
+                       "If you encounter any bugs, please inform the developer at:"
+        for line in self.wrap(info_message, width - 2):
+            console.print(x=x + 1, y=y + y_offset, string=line, alignment=tcod.LEFT)
+            y_offset += 1
+        console.print(x=console.width // 2, y=y + y_offset + 1, string=f"https://github.com/elliotlondon/SludgeWorks",
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2, y=y + y_offset + 3, string=f"Have Fun!!!",
+                      alignment=tcod.constants.CENTER, fg=tcod.yellow)
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[EventHandler]:
+        # Fancy conditional movement to make it feel right.
+        if event.sym in config.inputs.CURSOR_Y_KEYS:
+            adjust = config.inputs.CURSOR_Y_KEYS[event.sym]
+            if adjust < 0 and self.cursor == 0:
+                # Only move from the top to the bottom when you're on the edge.
+                self.cursor = self.log_length - 1
+            elif adjust > 0 and self.cursor == self.log_length - 1:
+                # Same with bottom to top movement.
+                self.cursor = 0
+            else:
+                # Otherwise move while staying clamped to the bounds of the history log.
+                self.cursor = max(0, min(self.cursor + adjust, self.log_length - 1))
+        elif event.sym == tcod.event.K_HOME:
+            self.cursor = 0  # Move directly to the top message.
+        elif event.sym == tcod.event.K_END:
+            self.cursor = self.log_length - 1  # Move directly to the last message.
+        else:  # Any other key moves back to the help screen
+            return EscMenuEventHandler()
+        return None
+
+
+class CharacterScreenEventHandler(AskUserEventHandler):
+    """Handler to show the user their character stats and status during the main game loop."""
+
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)
+
+        width = 40
+        height = 14
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - int(height / 2)
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title="",
+            clear=True,
+            fg=tcod.white
+        )
+        console.print(x=console.width // 2, y=y, string="┤Character Information├", alignment=tcod.CENTER, fg=tcod.white)
+
+        console.print(x=x + 1, y=y + 2, string=f"Current level: {core.g.engine.player.level.current_level}")
+        console.print(x=x + 1, y=y + 3, string=f"Total XP: {core.g.engine.player.level.current_xp}")
+        console.print(x=x + 1, y=y + 4, string=f"XP for next level: "
+                                               f"{core.g.engine.player.level.experience_to_next_level}")
+
+        console.print(x=x + 1, y=y + 6, string=f"Current armour rating: {core.g.engine.player.fighter.armour_total}",
+                      alignment=tcod.LEFT)
+
+        # Calculate current dice and sides
+        if core.g.engine.player.equipment.main_hand:
+            dice = core.g.engine.player.equipment.damage_dice
+            sides = core.g.engine.player.equipment.damage_sides
+        else:
+            dice = core.g.engine.player.fighter.damage_dice
+            sides = core.g.engine.player.fighter.damage_sides
+        console.print(x=x + 1, y=y + 7, string=f"Current weapon damage: {dice}d{sides}", alignment=tcod.LEFT)
+
+        console.print(x=x + 1, y=y + 9, string=f"Strength: {core.g.engine.player.fighter.base_strength}",
+                      alignment=tcod.LEFT)
+        console.print(x=x + 1, y=y + 10, string=f"Dexterity: {core.g.engine.player.fighter.base_dexterity}",
+                      alignment=tcod.LEFT)
+        console.print(x=x + 1, y=y + 11, string=f"Vitality: {core.g.engine.player.fighter.base_vitality}",
+                      alignment=tcod.LEFT)
+        console.print(x=x + 1, y=y + 12, string=f"Intellect: {core.g.engine.player.fighter.base_intellect}",
+                      alignment=tcod.LEFT)
+
+
+class AbilityScreenEventHandler(AskUserEventHandler):
+    """Handler for the screen which shows all user abilities. If ability is selected, provide a prompt
+    to use it."""
+
+    def __init__(self):
+        super(AbilityScreenEventHandler, self).__init__()
+        self.abilities = []
+
+    @staticmethod
+    def wrap(string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():
+            yield from textwrap.wrap(line, width, expand_tabs=True)
+
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)
+        width = 40
+        height = 24
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - int(height / 2)
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title="",
+            clear=True,
+            fg=tcod.white
+        )
+        console.print(x=console.width // 2, y=y, string="┤Abilities├", alignment=tcod.CENTER, fg=tcod.white)
+
+        y_offset = 0
+        if not core.g.engine.player.abilities:
+            console.print(x=x + 1, y=y + 2, string=f"Your body is a blank slate, with no special traits...")
+        else:
+            for ability in core.g.engine.player.abilities:
+                self.abilities.append(ability)
+
+                # Change colour and add turns left if ability is on cooldown
+                if ability.cooldown > 0:
+                    console.print(x=x + 1, y=y + y_offset + 2,
+                                  string=f"[{y_offset + 1}]: {ability.name} [{ability.cooldown}]", fg=tcod.grey)
+                else:
+                    console.print(x=x + 1, y=y + y_offset + 2,
+                                  string=f"[{y_offset + 1}]: {ability.name}", fg=tcod.white)
+                for line in self.wrap(ability.description, width - 4):
+                    console.print(x=x + 3, y=y + y_offset + 3, string=f"{line}")
+                    y_offset += 1
+                y_offset += 1
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        # All abilities bound to a number key. Return action if selected.
+        num_abilities = len(self.abilities)
+        key = event.sym
+        index = key - tcod.event.K_1
+        if 0 < index + 1 <= num_abilities:
+            try:
+                ability = core.g.engine.player.abilities[index]
+                # Check for cooldowns first
+                if ability.cooldown > 0:
+                    core.g.engine.message_log.add_message("You cannot perform this ability yet.",
+                                                          config.colour.impossible)
+                    return self
+                # Now parse
+                if ability.req_target:
+                    return AbilitySelectHandler(ability)
+                else:
+                    return ability.activate()
+            except IndexError:
+                core.g.engine.message_log.add_message("Invalid entry.", config.colour.invalid)
+                return None
+        return super().ev_keydown(event)
 
 
 class LevelUpEventHandler(AskUserEventHandler):
-    TITLE = "<Untitled>"
+    """Handler for when the trigger to level up the user is activated."""
 
     def on_render(self, console: tcod.Console) -> None:
         super().on_render(console)
@@ -492,10 +732,7 @@ class LevelUpEventHandler(AskUserEventHandler):
 
 
 class InventoryEventHandler(AskUserEventHandler):
-    """
-    This handler lets the user select an item.
-    What happens then depends on the subclass.
-    """
+    """This handler lets the user select an item. What happens then depends on the subclass."""
     TITLE = "<missing title>"
 
     def on_render(self, console: tcod.Console) -> None:
@@ -514,7 +751,7 @@ class InventoryEventHandler(AskUserEventHandler):
 
         width = len(self.TITLE) + 20
         x = console.width // 2 - int(width / 2)
-        y = console.height // 2
+        y = console.height // 2 - int(height / 2)
 
         console.draw_frame(
             x=x,
@@ -588,6 +825,171 @@ class InventoryDropHandler(InventoryEventHandler):
         return core.actions.DropItem(core.g.engine.player, item)
 
 
+class ConversationEventHandler(AskUserEventHandler):
+    """Handle space-to-interact with entities around the character."""
+
+    def __init__(self, interactee: parts.entity.Actor):
+        super().__init__(),
+        self.interactee = interactee
+        self.width: int
+        self.height: int
+        self.y_offset: int
+        self.len_replies: int = 0
+        self.current_screen: str = "0"
+        self.new_screen: int
+        self.leave = True
+        self.leave_str = "Goodbye."
+        self.convo_json = self.get_convo_from_json(self.interactee.name.lower())
+        self.speech = []
+        self.replies = []
+
+    @staticmethod
+    def wrap(string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():
+            yield from textwrap.wrap(line, width, expand_tabs=True)
+
+    def get_convo_from_json(self, convo: str) -> dict:
+        """Load a conversation json file for a specified character."""
+        path = Path(f"data/convos/{convo}.json")
+        f = open(path, 'r', encoding='utf-8')
+        return load(f)
+
+    def init_convo(self, index: str):
+        """Logic to set up the conversation with the player on first interaction."""
+        self.speech = self.convo_json[index]["speech"]
+        replies = []
+        for i in self.convo_json[index]:
+            if i != "speech":
+                replies.append(self.convo_json[index][f'{i}'])
+        self.replies = replies
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler, PopupMessage]:
+        key = event.sym
+        index = key - tcod.event.K_a
+
+        if 0 <= index < self.len_replies:
+            selected = list(self.convo_json[self.current_screen])[index + 1]
+            self.new_screen = selected
+            # If first interaction, provide init
+            for element in self.convo_json[f"{self.current_screen}"]:
+                if element == "speech":
+                    continue
+                elif element == self.new_screen:
+                    self.current_screen = self.new_screen
+                    self.speech = self.convo_json[f"{self.current_screen}"]['speech']
+                    replies = []
+                    for i in self.convo_json[f"{self.current_screen}"]:
+                        if i != "speech":
+                            replies.append(self.convo_json[f"{self.current_screen}"][f'{i}'])
+                    self.replies = replies
+                    break
+            return self
+        elif key == tcod.event.K_ESCAPE or index == self.len_replies:
+            # Make it so that the next interaction returns the generic interaction
+            self.init_convo("-1")
+
+            # Save to engine on exit
+            core.g.engine.convos[self.interactee.name] = self
+            return MainGameEventHandler()
+
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)
+        # Populate speech and replies
+        if not self.speech or not self.replies:
+            self.init_convo("0")
+
+        # Init console sizing
+        self.len_replies = len(self.replies)
+        self.width = console.width // 2 + 20
+        self.len_speech = len(list(self.wrap(self.speech, self.width - 2)))
+        self.height = 4 + self.len_speech + self.len_replies
+        x = console.width // 2 - int(self.width / 2)
+        y = console.height // 3  # Clamp height so that extra text moves downwards
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=self.width,
+            height=self.height,
+            title='',
+            clear=True,
+            fg=tcod.white,
+            bg=(0, 0, 0),
+        )
+        console.print(console.width // 2, y, f"┤{self.interactee.name}├",
+                      alignment=tcod.constants.CENTER, fg=self.interactee.colour)
+
+        self.draw_speech(console, self.speech, x + 1, y)
+        self.draw_replies(console, self.replies, x + 1, y + self.y_offset + 3)
+
+    def draw_speech(self, console: tcod.console, speech: List[str] | str, x: int, y: int) -> int:
+        """Draws the text spoken by the Actor to the main part of the message menu."""
+        to_draw = ''.join(speech)
+
+        # Loop over all paragraphs
+        self.y_offset = 0
+        for line in list(self.wrap(to_draw, self.width - 2)):
+            console.print(x=x, y=y + 2 + self.y_offset, string=line, alignment=tcod.constants.LEFT, fg=tcod.white)
+            self.y_offset += 1
+
+    def draw_replies(self, console: tcod.console, replies: List[str], x: int, y: int):
+        """Draws the replies that may be chosen by the player for a given speech option."""
+        self.len_replies = len(replies)
+
+        i = 0
+        for i, reply in enumerate(replies):
+            reply_key = chr(ord("a") + i)
+            reply_str = f"[{reply_key}]: {reply}"
+            console.print(x, y + i, reply_str, fg=tcod.white)
+
+        # Goodbye message
+        if self.leave:
+            console.print(x=x, y=y + i + 1, string=f"[{chr(ord('a') + i + 1)}]: {self.leave_str}",
+                          alignment=tcod.constants.LEFT, fg=tcod.white)
+
+
+class SludgeFountainEventHandler(AskUserEventHandler):
+    """Handle space-to-interact with entities around the character."""
+
+    def __init__(self, interactee: parts.entity.StaticObject):
+        super().__init__(),
+        self.interactee = interactee
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler, PopupMessage]:
+        if event.sym in config.inputs.YESNO_KEYS or event.sym == tcod.event.K_SPACE:
+            if event.sym not in (tcod.event.K_n, tcod.event.K_ESCAPE, tcod.event.K_SPACE):
+                return PopupMessage("You bathe in the sludge...")
+            return MainGameEventHandler()
+        return None
+
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)
+        width = len(self.interactee.interact_message) + 4
+        height = 6
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - height
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=self.interactee.colour,
+            bg=(0, 0, 0),
+        )
+        console.print(console.width // 2, y, f"┤{self.interactee.name}├",
+                      alignment=tcod.constants.CENTER, fg=self.interactee.colour)
+        console.print(x=console.width // 2, y=y + 2, string=self.interactee.interact_message,
+                      alignment=tcod.constants.CENTER, fg=tcod.white)
+        console.print(x=console.width // 2 - 6, y=y + 5, string=f"[Y]: Yes",
+                      alignment=tcod.constants.CENTER, fg=self.interactee.colour)
+        console.print(x=console.width // 2 + 6, y=y + 5, string=f"[N]: No",
+                      alignment=tcod.constants.CENTER, fg=self.interactee.colour)
+
+
 class SelectIndexHandler(AskUserEventHandler):
     """Handles asking the user for an index on the map."""
 
@@ -604,7 +1006,7 @@ class SelectIndexHandler(AskUserEventHandler):
             return action_or_state
         if isinstance(action_or_state, Action) and self.handle_action(action_or_state):
             if not core.g.engine.player.is_alive:
-                return GameOverEventHandler()
+                return core.events.death.GameOverEventHandler()
             elif core.g.engine.player.level.requires_level_up:
                 return LevelUpEventHandler()
             return MainGameEventHandler()  # Return to the main handler.
@@ -666,6 +1068,25 @@ class SelectIndexHandler(AskUserEventHandler):
     def on_index_selected(self, x: int, y: int) -> Optional[ActionOrHandler]:
         """Called when an index is selected."""
         raise NotImplementedError()
+
+
+class AbilitySelectHandler(SelectIndexHandler):
+    """Handler for when an ability is chosen and a target is required.
+    Return the ability to be performed upon the selected tile."""
+
+    def __init__(self, ability: parts.mutations.Mutation):
+        super(AbilitySelectHandler, self).__init__()
+        self.ability = ability
+
+    def on_index_selected(self, x: int, y: int) -> ActionOrHandler:
+        target = core.g.engine.game_map.get_blocking_entity_at_location(x, y)
+        if not target:
+            core.g.engine.message_log.add_message("There is no target at that location.",
+                                                  config.colour.impossible)
+            return self
+        action = self.ability.activate(core.g.engine.player, target, x, y)
+        action.perform()
+        return MainGameEventHandler()
 
 
 class LookHandler(SelectIndexHandler):
@@ -747,6 +1168,9 @@ class LookHandler(SelectIndexHandler):
                     elif isinstance(entity, parts.entity.Item):
                         entity_content['footer'] = "ITEM"
                         entity_content['footer_colour'] = tcod.yellow
+                    elif isinstance(entity, parts.entity.StaticObject):
+                        entity_content['footer'] = "OBJECT"
+                        entity_content['footer_colour'] = tcod.light_sky
                     elif isinstance(entity.ai, parts.ai.NPC):
                         entity_content['footer'] = "NPC"
                         entity_content['footer_colour'] = tcod.blue
@@ -760,6 +1184,10 @@ class LookHandler(SelectIndexHandler):
                     else:
                         entity_content["footer"] = "ENEMY"
                         entity_content['footer_colour'] = tcod.red
+
+                    # Look box size
+                    width = console.width // 4 + 2
+                    height = len(entity_content['description']) // (console.width // 4) + 8
                     # Scale width in case of long item names
                     if len(entity_content['name']) > width:
                         width = len(entity_content['name']) + 4
@@ -866,19 +1294,16 @@ class HoleJumpEventHandler(AskUserEventHandler):
     def on_render(self, console: tcod.Console) -> None:
         """Create the popup window allowing the user to choose whether to descend"""
         super().on_render(console)
-
-        # x = round(self.engine.game_map.width / 2)
-        # y = round(self.engine.game_map.height)
-
         width = len(self.TITLE) + 34
+        height = 6
         x = console.width // 2 - int(width / 2)
-        y = console.height // 2
+        y = console.height // 2 - height
 
         console.draw_frame(
             x=x,
             y=y,
             width=width,
-            height=6,
+            height=height,
             title='',
             clear=True,
             fg=tcod.gray,
@@ -895,21 +1320,6 @@ class HoleJumpEventHandler(AskUserEventHandler):
                       alignment=tcod.constants.CENTER, fg=tcod.white)
         console.print(x=console.width // 2 + 6, y=y + 5, string=f"[N]: No",
                       alignment=tcod.constants.CENTER, fg=tcod.white)
-
-
-class GameOverEventHandler(EventHandler):
-    def on_quit(self) -> None:
-        """Handle exiting out of a finished game."""
-        if os.path.exists("savegames/savegame.sav"):
-            os.remove("savegames/savegame.sav")  # Deletes the active save file.
-        raise config.exceptions.QuitWithoutSaving()  # Avoid saving a finished game.
-
-    def ev_quit(self, event: tcod.event.Quit) -> None:
-        self.on_quit()
-
-    def ev_keydown(self, event: tcod.event.KeyDown) -> None:
-        if event.sym == tcod.event.K_ESCAPE:
-            self.on_quit()
 
 
 class HistoryViewer(EventHandler):
@@ -961,7 +1371,6 @@ class HistoryViewer(EventHandler):
             return MainGameEventHandler()
         return None
 
-# TODO: Restore autoexplore
 # TODO: Restore autostairs
 # TODO: Show inventory and message log on player death
 # TODO: Show library of highscores for single player

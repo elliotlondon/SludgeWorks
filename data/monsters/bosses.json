@@ -20,6 +20,12 @@
         "xp": 2500,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [255, 255, 63],
+        "name": "Human corpse",
+        "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
+      },
       "inventory": {
         "capacity": 8
       },
@@ -51,6 +57,12 @@
         "xp": 2500,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [63, 63, 0],
+        "name": "Mutated corpse",
+        "description": "A mangled mound of mutated flesh. This creature used to be human."
+      },
       "inventory": {
         "capacity": 8
       },
@@ -81,6 +93,12 @@
         "armour": 2,
         "xp": 2500,
         "dodges": true
+      },
+      "corpse": {
+        "char": "%",
+        "colour": [63, 0, 63],
+        "name": "Mutated corpse",
+        "description": "A mangled mound of mutated flesh. This creature used to be human."
       },
       "inventory": {
         "capacity": 8

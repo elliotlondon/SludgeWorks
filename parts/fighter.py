@@ -3,11 +3,8 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING
 
-import tcod
-
 import core.g
 from config.colour import player_die, enemy_die
-from core.render_functions import RenderOrder
 from maps.tiles import verdant_chars
 from parts.ai import HostileStationary, PassiveStationary
 from parts.base_component import BaseComponent
@@ -121,32 +118,27 @@ class Fighter(BaseComponent):
 
             # Generate floor in its place
             self.parent.char = random.choice(verdant_chars)
-            self.parent.blocks_movement = False
-            self.parent.ai = None
-            self.parent.render_order = RenderOrder.CORPSE
-            self.parent.name = ' '
         else:
             if core.g.engine.player is self.parent:
                 death_message = 'YOU DIED'
                 death_message_color = player_die
+                self.parent.ai = None
             else:
                 death_message = f"The {self.parent.name} dies!"
                 death_message_color = enemy_die
 
-            self.parent.char = "%"
-            self.parent.color = tcod.dark_red
-            self.parent.blocks_movement = False
-            self.parent.ai = None
-            self.parent.render_order = RenderOrder.CORPSE
-            if self.parent.name == 'Player':
-                self.parent.name = 'Your lifeless body'
-            elif self.parent.name[0].lower() in 'aeiou':
-                self.parent.name = 'An ' + self.parent.name + ' corpse'
-            else:
-                self.parent.name = 'A ' + self.parent.name + ' corpse'
-            self.parent.description = f"The SludgeWorks claims another life."
+        # Add to exiles list
+        core.g.engine.game_map.exiles.append(self.parent)
+        core.g.engine.game_map.entities = set([x for x in core.g.engine.game_map.entities
+                                               if x not in core.g.engine.game_map.exiles])
 
+        # Load corpse object if not plant
+        if not isinstance(self.parent.ai, HostileStationary) and not isinstance(self.parent.ai, PassiveStationary):
+            corpse = self.parent.corpse
+            corpse.spawn(core.g.engine.game_map, self.parent.x, self.parent.y)
+
+        # Death message
         core.g.engine.message_log.add_message(death_message, death_message_color)
 
-        # TODO: Award xp to whomever strikes the last blow
-        core.g.engine.player.level.add_xp(xp)
+        # Award xp to whoever performed the last action. Perhaps needs edge case investigation?
+        core.g.engine.last_actor.level.add_xp(xp)

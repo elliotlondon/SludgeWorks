@@ -67,17 +67,19 @@ class HostileEnemy(BaseAI):
         self.path: List[Tuple[int, int]] = []
 
     def perform(self) -> None:
+        # If player in fov, path towards or attack them.
         target = core.g.engine.player
         dx = target.x - self.entity.x
         dy = target.y - self.entity.y
         distance = max(abs(dx), abs(dy))  # Chebyshev distance.
 
+        # Attack player if they are visible
         if core.g.engine.game_map.visible[self.entity.x, self.entity.y]:
             if distance <= 1:
                 return core.actions.MeleeAction(self.entity, dx, dy).perform()
-
             self.path = self.get_path_to(target.x, target.y)
 
+        # If player not visible, check if a valid path exists and follow it
         if self.path:
             if not self.path_isvalid(self.path):
                 self.path = None
@@ -86,18 +88,31 @@ class HostileEnemy(BaseAI):
                 return core.actions.MovementAction(
                     self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
                 ).perform()
-
-        # Wander: either wait or move randomly
-        if randint(0, 100) <= 50:
-            return core.actions.WaitAction(self.entity).perform()
+        # If no valid path exists
         else:
-            dest_x = self.entity.x + randint(-1, 1)
-            dest_y = self.entity.y + randint(-1, 1)
-            if (dest_x < core.g.engine.game_map.width) and (dest_y < core.g.engine.game_map.height):
-                return core.actions.MovementAction(self.entity, dest_x - self.entity.x,
-                                                   dest_y - self.entity.y).perform()
-            else:
+            # 50% chance to do nothing
+            if randint(0, 100) <= 50:
                 return core.actions.WaitAction(self.entity).perform()
+            # 40% chance to move to a random nearby tile
+            elif randint(0, 100) <= 90:
+                dest_x = self.entity.x + randint(-1, 1)
+                dest_y = self.entity.y + randint(-1, 1)
+                if (dest_x < core.g.engine.game_map.width) and (dest_y < core.g.engine.game_map.height):
+                    if dest_x != 0 and dest_y != 0:
+                        return core.actions.MovementAction(self.entity, dest_x - self.entity.x,
+                                                           dest_y - self.entity.y).perform()
+                else:
+                    return core.actions.WaitAction(self.entity).perform()
+            # 10% chance to path to a random nearby tile up to 6 tiles away
+            else:
+                # Make a new path for a tile somewhere nearby
+                dest_x, dest_y = core.g.engine.game_map.get_random_nearby_tile(self.entity.x, self.entity.y,
+                                                                               random.randint(2, 6))
+                if dest_x != 0 and dest_y != 0:
+                    return core.actions.MovementAction(self.entity, dest_x - self.entity.x,
+                                                       dest_y - self.entity.y).perform()
+                else:
+                    return core.actions.WaitAction(self.entity).perform()
 
 
 class HostileStationary(BaseAI):

@@ -7,6 +7,7 @@ from parts.base_component import BaseComponent
 
 if TYPE_CHECKING:
     from parts.entity import Actor, Item
+    from parts.effects import ItemModifier
 
 
 class Inventory(BaseComponent):
@@ -126,20 +127,8 @@ class Inventory(BaseComponent):
     #                 results.append({'message': Message('Inventory full, {0} dropped'.format(item.name), tcod.grey)})
     #     return results
 
-    # @staticmethod
-    # def remove_item(entity, item):
-    #     """Completely removes an object from existence directly from the equipment or inventory."""
-    #     if item in entity.inventory.inv_items:
-    #         entity.inventory.inv_items.remove(item)
-    #     elif item in entity.inventory.equip_items:
-    #         entity.inventory.equip_items.remove(item)
-
     def drop(self, item: Item) -> None:
-        """
-        Removes an item from an inventory and restores it to the game map at the drop location.
-        """
-        # if item in entity.inventory.equip_items:
-        #     entity.inventory.dequip(entity, item)
+        """Removes an item from an inventory and restores it to the game map at the drop location."""
 
         self.items.remove(item)
         item.place(self.parent.x, self.parent.y, self.gamemap)
@@ -149,15 +138,20 @@ class Inventory(BaseComponent):
         else:
             core.g.engine.message_log.add_message(f"{self.parent.name} drops the {item.name}.")
 
-    # @staticmethod
-    # def drop_all(entity, entities):
-    #     """Drops everything at your current location, including equipped items"""
-    #     for item in entity.inventory.equip_items:
-    #         entity.inventory.dequip(entity, item)
-    #     for item in entity.inventory.inv_items:
-    #         item.x = entity.x
-    #         item.y = entity.y
-    #         entities.append(item)
+    def drop_all(self):
+        """Drops everything at your current location, including equipped items."""
+
+        for item in self.items:
+            if item.equipment.item_is_equipped():
+                item.equipment.unequip_from_slot()
+
+            self.items.remove(item)
+            item.place(self.parent.x, self.parent.y, self.gamemap)
+
+            if self.parent.name == 'Player':
+                core.g.engine.message_log.add_message(f"You drop the {item.name}.")
+            else:
+                core.g.engine.message_log.add_message(f"{self.parent.name} drops the {item.name}.")
 
 
 def autosort(items: List[Item]) -> List[Item]:

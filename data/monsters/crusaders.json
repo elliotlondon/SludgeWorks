@@ -20,6 +20,12 @@
         "xp": 350,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [127, 0, 0],
+        "name": "Human corpse",
+        "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
+      },
       "inventory": {
         "capacity": 8
       },
@@ -51,6 +57,12 @@
         "xp": 425,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [127, 0, 0],
+        "name": "Human corpse",
+        "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
+      },
       "inventory": {
         "capacity": 8
       },
@@ -81,6 +93,12 @@
         "armour": 2,
         "xp": 600,
         "dodges": true
+      },
+      "corpse": {
+        "char": "%",
+        "colour": [127, 0, 0],
+        "name": "Human corpse",
+        "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
       },
       "inventory": {
         "capacity": 8

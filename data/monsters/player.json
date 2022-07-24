@@ -20,6 +20,12 @@
         "xp": 0,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [255, 255, 255],
+        "name": "Your lifeless corpse",
+        "description": "Your mind reels at the sight before you. How is this even possible?"
+      },
       "inventory": {
         "capacity": 26
       },
@@ -27,7 +33,8 @@
         "level_up_base": 100,
         "xp_given": 0
       },
-      "description": "This is you."
+      "description": "This is you.",
+      "abilities": ["Shove"]
     }
   }
 ]

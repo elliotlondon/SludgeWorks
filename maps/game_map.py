@@ -6,7 +6,7 @@ from typing import Iterable, Iterator, Optional, TYPE_CHECKING, Tuple, Dict, Lis
 import numpy as np
 
 import parts.entity
-from parts.ai import PassiveStationary
+from parts.ai import PassiveStationary, NPC
 from parts.entity import Item
 from utils.math_utils import Graph
 
@@ -23,6 +23,7 @@ class SimpleGameMap:
         self.engine = engine
         self.width, self.height = width, height
         self.entities = set(entities)
+        self.exiles = []
         self.tiles = np.full((width, height), fill_value=maps.tiles.wall, order="F")
         self.rooms = []
         self.tunnel = np.full((width, height), fill_value=False, order="F")  # Tunnel tiles
@@ -53,6 +54,7 @@ class SimpleGameMap:
             for entity in self.entities
             if
             isinstance(entity, parts.entity.Actor) and entity.is_alive and not isinstance(entity.ai, PassiveStationary)
+            and not isinstance(entity.ai, NPC) and not entity.name == "Player"
         )
 
     @property
@@ -60,10 +62,12 @@ class SimpleGameMap:
         yield from (entity for entity in self.entities if isinstance(entity, parts.entity.Item))
 
     def get_tile_at_explored_location(self, location_x: int, location_y: int) -> Optional[maps.tiles.tile_dt]:
+        """Returns a tile within the explored array."""
         if self.explored[location_x, location_y]:
             return self.tiles[location_x, location_y]
 
     def get_all_entities_at_location(self, location_x: int, location_y: int) -> Optional[List[Entity]]:
+        """Returns all entities at a given tile location x, y."""
         entities = []
         for entity in self.entities:
             if entity.x == location_x and entity.y == location_y:
@@ -71,6 +75,7 @@ class SimpleGameMap:
         return entities
 
     def get_all_visible_entities(self, location_x: int, location_y: int) -> Optional[List[Entity]]:
+        """Returns all enemies within the FOV."""
         entities = []
         for entity in self.entities:
             if entity.x == location_x and entity.y == location_y and self.visible[location_x, location_y]:
@@ -78,13 +83,28 @@ class SimpleGameMap:
         return entities
 
     def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
+        """Returns the entity if it is at location x, y."""
         for entity in self.entities:
             if entity.blocks_movement and entity.x == location_x and entity.y == location_y:
                 return entity
 
         return None
 
+    def get_surrounding_interactables(self, location_x: int, location_y: int) -> Optional[List[Entity]]:
+        """Get list of all entities that can be interacted with surrounding a selected tile, including diagonals."""
+        x_values = [location_x - 1, location_x, location_x + 1]
+        y_values = [location_y - 1, location_y, location_y + 1]
+        interactables = []
+        for x in x_values:
+            for y in y_values:
+                for entity in self.entities:
+                    if (entity.x == x and entity.y == y) and (isinstance(entity, parts.entity.StaticObject) or \
+                                                              isinstance(entity.ai, parts.ai.NPC)):
+                        interactables.append(entity)
+        return interactables
+
     def get_actor_at_location(self, x: int, y: int) -> Optional[parts.entity.Actor]:
+        """Returns the Actor at location x, y."""
         for actor in self.actors:
             if actor.x == x and actor.y == y:
                 return actor
@@ -132,6 +152,21 @@ class SimpleGameMap:
 
         return (x, y)
 
+    def get_random_nearby_tile(self, location_x: int, location_y: int, radius: int) -> Tuple[int, int]:
+        """Return the coordinates of a random tile of radius away from location x, y."""
+        walkable = np.logical_and(self.tiles['walkable'], self.tiles['name'] != 'hole')
+        unoccupied = np.nonzero(np.logical_xor(walkable, self.get_occupied()))
+        x_region = list(np.unique(unoccupied[0])[location_x-radius:location_x+radius])
+        y_region = list(np.unique(unoccupied[1])[location_y-radius:location_y+radius])
+        if x_region == []:
+            x_region = [location_x]
+        if y_region == []:
+            y_region = [location_y]
+        x = random.choice(x_region)
+        y = random.choice(y_region)
+
+        return (x, y)
+
     def get_random_walkable_nontunnel_tile(self) -> Tuple[int, int]:
         """Return the coordinates of a random walkable tile that is not a tunnel within the current floor."""
         walkable = np.nonzero(
@@ -151,6 +186,11 @@ class SimpleGameMap:
 
         graph = Graph(self.width, self.height, walkable)
         accessible = graph.find_connected_area(player.x, player.y)
+
+        # Tiles with blocking objects are inaccessible
+        for entity in self.entities:
+            if isinstance(entity, parts.entity.StaticObject):
+                accessible[entity.x, entity.y] = False
 
         return accessible
 
@@ -325,39 +365,6 @@ class GameWorld:
 #     'fireball_scroll': from_dungeon_level([[5, 4], [10, 6]], self.dungeon_level),
 #     'confusion_scroll': from_dungeon_level([[5, 0], [10, 4]], self.dungeon_level)
 # }
-
-# # Place stationary monsters (plants) independent of monster number
-# for i in range(number_of_plants):
-#     x = randint(room.x1 + 1, room.x2 - 1)
-#     y = randint(room.y1 + 1, room.y2 - 1)
-#     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
-#             and not self.is_blocked(x, y):
-#         plant_choice = random_choice_from_dict(plant_chances)
-#         if plant_choice == 'Whip Vine':
-#             entities.append(whip_vine(x, y))
-#         elif plant_choice == 'Phosphorescent Dahlia':
-#             entities.append(phosphorescent_dahlia(x, y))
-
-# # Place monsters with random spawning chances
-# for i in range(number_of_monsters):
-#     x = randint(room.x1 + 1, room.x2 - 1)
-#     y = randint(room.y1 + 1, room.y2 - 1)
-#     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
-#             and not self.is_blocked(x, y):
-#         monster_choice = random_choice_from_dict(monster_chances)
-#
-# # Place items
-# for i in range(number_of_items):
-#     x = randint(room.x1 + 1, room.x2 - 1)
-#     y = randint(room.y1 + 1, room.y2 - 1)
-#     if not any([entity for entity in entities if entity.x == x and entity.y == y]) \
-#             and not self.is_blocked(x, y):
-#         item_choice = random_choice_from_dict(item_chances)
-
-# def is_blocked(self, x, y):
-#     if self.tiles[x][y].blocked:
-#         return True
-#     return False
 #
 # def returncoordinatesinmap(self, coord_x, coord_y):
 #     if coord_x >= 0 and coord_x < self.width:
@@ -474,68 +481,6 @@ class GameWorld:
 #             self.caves_chamber(60, 2)
 #             self.erode(1)
 #
-# def rooms_chamber(self, max_room_size, min_room_size, max_rooms, player, entities):
-#     """A chamber which is filled with rectangular rooms of random sizes, joined with single-jointed corridors."""
-#     rooms = []
-#     num_rooms = 0
-#     map_width = self.width
-#     map_height = self.height
-#     for r in range(max_rooms):
-#         w = random.randint(min_room_size, max_room_size)
-#         h = random.randint(min_room_size, max_room_size)
-#         x = random.randint(0, map_width - w - 1)
-#         y = random.randint(0, map_height - h - 1)
-#
-#         # "Rect" class makes rectangles easier to work with
-#         new_room = Rect(x, y, w, h)
-#
-#         # Run through the other rooms and see if they intersect with this one
-#         for other_room in rooms:
-#             if new_room.intersect(other_room):
-#                 break
-#         else:
-#             self.create_room(new_room)
-#             (new_x, new_y) = new_room.center()
-#             center_of_last_room_x = new_x
-#             center_of_last_room_y = new_y
-#
-#             if num_rooms == 0:
-#                 player.x = new_x
-#                 player.y = new_y
-#             else:
-#                 # center coordinates of previous room
-#                 (prev_x, prev_y) = rooms[num_rooms - 1].center()
-#
-#                 if random.randint(0, 1) == 1:
-#                     # first move horizontally, then vertically
-#                     self.create_h_tunnel(prev_x, new_x, prev_y)
-#                     self.create_v_tunnel(prev_y, new_y, new_x)
-#                 else:
-#                     # first move vertically, then horizontally
-#                     self.create_v_tunnel(prev_y, new_y, prev_x)
-#                     self.create_h_tunnel(prev_x, new_x, new_y)
-#
-#             rooms.append(new_room)
-#             num_rooms += 1
-
-# if num_rooms > 0:
-#     stairs_component = Stairs(self.dungeon_level + 1)
-#     down_stairs = Entity(center_of_last_room_x, center_of_last_room_y, '>', tcod.white, 'Down Stairs',
-#                          'There\'s a dark chasm here which will allow you to take a one-way trip to'
-#                          'the next chamber of the SludgeWorks.', render_order=RenderOrder.STAIRS,
-#                          stairs=stairs_component)
-#     entities.append(down_stairs)
-# else:
-#     print('Map generation failed: No rooms generated.')
-
-# def find_neighbours(self, x, y):
-#     xi = (0, -1, 1) if 0 < x < self.width - 1 else ((0, -1) if x > 0 else (0, 1))
-#     yi = (0, -1, 1) if 0 < y < self.height - 1 else ((0, -1) if y > 0 else (0, 1))
-#     for a in xi:
-#         for b in yi:
-#             if a == b == 0:
-#                 continue
-#             yield (x + a, y + b)
 #
 # def to_down_stairs(self, player, entities, message_log):
 #     """Create a Dijkstra path to the down stairs. Dijkstra was chosen over A* because tcod's built-in dijkstra

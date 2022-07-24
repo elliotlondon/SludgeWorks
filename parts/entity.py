@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import copy
 import math
-from random import randint
-from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union
+from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union, List
 
 import tcod
 
@@ -12,6 +10,7 @@ from core.render_functions import RenderOrder
 from parts.level import Level
 
 if TYPE_CHECKING:
+    import parts.effects
     from parts.ai import BaseAI
     from parts.fighter import Fighter
     from parts.consumable import Consumable
@@ -19,14 +18,13 @@ if TYPE_CHECKING:
     from parts.equippable import Equippable
     from parts.inventory import Inventory
     from maps.game_map import SimpleGameMap
+    from parts.mutations import Mutation
 
 T = TypeVar("T", bound="Entity")
 
 
 class Entity:
-    """
-    A generic object to represent players, enemies, items, etc.
-    """
+    """A generic parent object to represent players, enemies, items, etc."""
 
     parent: Union[SimpleGameMap, Inventory]
 
@@ -40,8 +38,16 @@ class Entity:
                  blocks_movement: bool = False,
                  description="<Blank>",
                  render_order=RenderOrder.CORPSE,
-                 fighter=None, ai=None, item=None, inventory=None, loadout=None,
-                 equipment=None, equippable=None):
+                 fighter: Optional[parts.fighter.Fighter] = None,
+                 ai: Optional[parts.ai.BaseAI] = None,
+                 item: Optional[parts.entity.Item] = None,
+                 inventory: Optional[parts.inventory.Inventory] = None,
+                 equipment: Optional[parts.equipment.Equipment] = None,
+                 equippable: Optional[parts.equippable.Equippable] = None,
+                 active_effects: Optional[List[parts.effects.Effect]] = None,
+                 ):
+        if active_effects is None:
+            active_effects = []
         self.x = x
         self.y = y
         self.char = char
@@ -58,9 +64,9 @@ class Entity:
         self.ai = ai
         self.item = item
         self.inventory = inventory
-        self.loadout = loadout
         self.equipment = equipment
         self.equippable = equippable
+        self.active_effects = active_effects
 
         if self.fighter:
             self.fighter.owner = self
@@ -70,16 +76,18 @@ class Entity:
             self.item.owner = self
         if self.inventory:
             self.inventory.owner = self
-        if self.loadout:
-            self.loadout.owner = self
         if self.equipment:
             self.equipment.owner = self
         if self.equippable:
             self.equippable.owner = self
             if not self.item:
-                item = Item()
+                item = Item(
+                    description="<Undefined>"
+                )
                 self.item = item
                 self.item.owner = self
+        if self.active_effects:
+            self.active_effects.owner = self
 
     @property
     def gamemap(self) -> SimpleGameMap:
@@ -176,6 +184,8 @@ class Entity:
 
 
 class Actor(Entity):
+    """An entity with an AI which may move and act within the game map."""
+
     def __init__(
             self,
             *,
@@ -187,9 +197,12 @@ class Actor(Entity):
             ai_cls: Type[BaseAI],
             equipment: Equipment,
             fighter: Fighter,
+            corpse: Corpse,
             inventory: Inventory,
             level: Level,
-            description: str
+            description: str,
+            abilities: Optional[List[Mutation]] = None,  # Inherent abilities
+            mutations: Optional[List[Mutation]] = None  # Added mutations/abilities
     ):
         super().__init__(
             x=x,
@@ -207,19 +220,38 @@ class Actor(Entity):
         self.equipment.parent = self
         self.fighter = fighter
         self.fighter.parent = self
+        self.corpse = corpse
+        self.corpse.parent = self
         self.inventory = inventory
         self.inventory.parent = self
         self.level = level
         self.level.parent = self
         self.description = description
 
+        self.abilities = abilities
+        self.mutations = mutations
+
     @property
     def is_alive(self) -> bool:
         """Returns True as long as this actor can perform actions."""
         return bool(self.ai)
 
+    def trigger_active_effects(self):
+        """Function to be performed at the end of a turn. All active effects currently applied to the Actor are
+        cycled through, and their effects are performed."""
+        if self.active_effects:
+            for effect in self.active_effects:
+                if effect.turns > 0:
+                    if self.is_alive:
+                        effect.tick()
+                else:
+                    effect.expiry_message()
+                    self.active_effects.remove(effect)
+
 
 class Item(Entity):
+    """Items which may be placed upon the game map, found in inventories, and can be used or equipped."""
+
     def __init__(
             self,
             *,
@@ -263,6 +295,62 @@ class Item(Entity):
 
         self.usetext = usetext
         self.description = description
+
+
+class Corpse(Entity):
+    """An entity which is spawned upon the death of its parent."""
+
+    def __init__(
+            self,
+            *,
+            x: int = 0,
+            y: int = 0,
+            char: str = "?",
+            colour: Tuple[int, int, int] = (255, 255, 255),
+            name: str = "<Unnamed>",
+            description: str
+    ):
+        super().__init__(
+            x=x,
+            y=y,
+            char=char,
+            colour=colour,
+            name=name,
+            blocks_movement=False,
+            render_order=RenderOrder.CORPSE,
+            description=description
+        )
+
+        self.description = description
+
+
+class StaticObject(Entity):
+    """An entity which exists in place on the game map and can be interacted with, but blocks movement and cannot
+    be picked up or stored in an inventory like an item."""
+
+    def __init__(
+            self,
+            *,
+            x: int = 0,
+            y: int = 0,
+            char: str = "?",
+            colour: Tuple[int, int, int] = (255, 255, 255),
+            name: str = "<Unnamed>",
+            interact_message: str = "<Undefined>",
+            description: str
+    ):
+        super().__init__(
+            x=x,
+            y=y,
+            char=char,
+            colour=colour,
+            name=name,
+            blocks_movement=True,
+            render_order=RenderOrder.STATIC_OBJECT,
+            description=description
+        )
+
+        self.interact_message = interact_message
 
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):

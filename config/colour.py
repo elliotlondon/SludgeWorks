@@ -24,6 +24,9 @@ enemy_evade = tcod.lightest_pink
 player_die = (0xFF, 0x30, 0x30)
 enemy_die = (0xFF, 0xA0, 0x30)
 
+# Mutations and abilities
+ability_used = tcod.orange
+
 # Item str colours
 hp_consumable = tcod.light_green
 twigs = tcod.light_amber
@@ -35,8 +38,12 @@ use = yellow
 needs_target = (0x3F, 0xFF, 0xFF)
 status_effect_applied = (0x3F, 0xFF, 0x3F)
 teleported = tcod.cyan
-health_recovered = (0x0, 0xFF, 0x0)
+health_recovered = tcod.light_green
 descend = (0x9F, 0x3F, 0xFF)
+
+# Status effects
+poison = tcod.dark_green
+poison_end = tcod.green
 
 # Screen info
 bar_text = white

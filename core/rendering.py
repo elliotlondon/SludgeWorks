@@ -79,4 +79,10 @@ def render_ui(console: tcod.Console, engine: core.engine.Engine) -> None:
         location=(0, 47),
     )
 
+    core.render_functions.render_turn_number(
+        console=console,
+        turn_number=engine.turn_number,
+        location=(0, 48)
+    )
+
     core.render_functions.render_names_at_mouse_location(console=console, x=21, y=44, engine=engine)

@@ -20,6 +20,12 @@
         "xp": 30,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [127, 0, 0],
+        "name": "Mutated corpse",
+        "description": "A mangled mound of mutated flesh. This creature used to be human."
+      },
       "inventory": {
         "capacity": 8
       },
@@ -50,6 +56,12 @@
         "armour": 0,
         "xp": 50,
         "dodges": true
+      },
+      "corpse": {
+        "char": "%",
+        "colour": [127, 0, 0],
+        "name": "Mutated corpse",
+        "description": "A mangled mound of mutated flesh. This creature used to be human."
       },
       "inventory": {
         "capacity": 8
@@ -82,6 +94,12 @@
         "xp": 275,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [91, 0, 0],
+        "name": "Giant mutated corpse",
+        "description": "The corpse of a humanoid much larger than a man was stuck down, resting forever here."
+      },
       "inventory": {
         "capacity": 8
       },
@@ -112,6 +130,12 @@
         "armour": 1,
         "xp": 200,
         "dodges": true
+      },
+      "corpse": {
+        "char": "%",
+        "colour": [159, 159, 159],
+        "name": "Dazzling beast corpse",
+        "description": "With the beast dead, the dazzling scintillations of its hide are no more. It's body is agile, cat-like and starved."
       },
       "inventory": {
         "capacity": 0
@@ -144,6 +168,12 @@
         "xp": 200,
         "dodges": true
       },
+      "corpse": {
+        "char": "%",
+        "colour": [91, 0, 0],
+        "name": "Beast corpse",
+        "description": "The corpse of a beast-like predator, with blood-matted fur, yellowed teeth and a horrid odour. This perversion of nature is terrifying."
+      },
       "inventory": {
         "capacity": 0
       },
@@ -174,6 +204,12 @@
         "armour": 0,
         "xp": 1500,
         "dodges": true
+      },
+      "corpse": {
+        "char": "%",
+        "colour": [255, 63, 111],
+        "name": "Bloodseeker corpse",
+        "description": "Death does not greet the body of this terror warmly. It raises no breath and its blood runs cold, but continues to twitch grotesquely as its muscles refuse to disobey the destroyed nervous system."
       },
       "inventory": {
         "capacity": 0

@@ -1,3 +1,4 @@
+import random
 from typing import Optional
 
 import config.colour
@@ -31,18 +32,28 @@ class ShoveAction(AbilityAction):
             core.g.engine.message_log.add_message("You cannot perform this action upon yourself.",
                                                   config.colour.impossible)
             return None
-        if abs(dx) >= 1.5 or abs(dy) >= 1.5:
-            core.g.engine.message_log.add_message("You must select a tile no more than 1 square away.",
-                                                  config.colour.impossible)
-            return None
-        if not self.target.fighter:
-            core.g.engine.message_log.add_message("That is not a valid target.",
-                                                  config.colour.impossible)
-            return None
         if isinstance(self.target.ai, parts.ai.PassiveStationary) or \
                 isinstance(self.target.ai, parts.ai.HostileStationary):
             core.g.engine.message_log.add_message("That target cannot be moved.",
                                                   config.colour.impossible)
+            return None
+
+        # Check if another entity is at the destination, don't attack, but deal damage to one or both
+        extra_target = core.g.engine.game_map.get_blocking_entity_at_location(self.target.x + dx, self.target.y + dy)
+        if extra_target:
+            core.g.engine.message_log.add_message(f"You push the {self.target.name} and "
+                                                  f"it collides with the {extra_target.name}!",
+                                                  config.colour.ability_used)
+            if roll_dice(1, 20) + self.target.fighter.strength_modifier > 8:
+                if self.target.fighter.hp > 1:
+                    core.g.engine.message_log.add_message(f"The {self.target.name} takes 1 damage from the collision.",
+                                                          config.colour.enemy_atk)
+                    self.target.fighter.hp -= 1
+            if roll_dice(1, 20) + extra_target.fighter.strength_modifier > 8:
+                if extra_target.fighter.hp > 1:
+                    core.g.engine.message_log.add_message(f"The {extra_target.name} takes 1 damage from the collision.",
+                                                          config.colour.enemy_atk)
+                    extra_target.fighter.hp -= 1
             return None
 
         # Check if new coords hit a wall or are oob

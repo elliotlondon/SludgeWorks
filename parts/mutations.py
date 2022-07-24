@@ -18,13 +18,15 @@ class Mutation(BaseComponent):
                  description: str = "<Undefined>",
                  req_target: bool = False,
                  continuous: bool = False,
-                 cooldown: int = 0
+                 cooldown: int = 0,
+                 range: int = 0
                  ):
         self.name = name
         self.description = description
         self.req_target = req_target
         self.continuous = continuous
         self.cooldown = cooldown
+        self.range = range
 
     def __iter__(self):
         for x in self.__dict__:
@@ -52,7 +54,8 @@ class Shove(Mutation):
             description="Attempt to push an entity away from you. Deals no damage.",
             req_target=True,
             continuous=False,
-            cooldown=0
+            cooldown=0,
+            range=1
         )
         self.action = core.abilities.ShoveAction
 

@@ -647,7 +647,8 @@ class AbilityScreenEventHandler(AskUserEventHandler):
                     return self
                 # Now parse
                 if ability.req_target:
-                    return AbilitySelectHandler(ability)
+                    if ability.range == 1:
+                        return MeleeAbilitySelectHandler(ability)
                 else:
                     return ability.activate()
             except IndexError:
@@ -1070,21 +1071,30 @@ class SelectIndexHandler(AskUserEventHandler):
         raise NotImplementedError()
 
 
-class AbilitySelectHandler(SelectIndexHandler):
+class MeleeAbilitySelectHandler(SelectIndexHandler):
     """Handler for when an ability is chosen and a target is required.
     Return the ability to be performed upon the selected tile."""
 
     def __init__(self, ability: parts.mutations.Mutation):
-        super(AbilitySelectHandler, self).__init__()
+        super(MeleeAbilitySelectHandler, self).__init__()
         self.ability = ability
 
     def on_index_selected(self, x: int, y: int) -> ActionOrHandler:
+        caster = core.g.engine.player
         target = core.g.engine.game_map.get_blocking_entity_at_location(x, y)
         if not target:
             core.g.engine.message_log.add_message("There is no target at that location.",
                                                   config.colour.impossible)
             return self
-        action = self.ability.activate(core.g.engine.player, target, x, y)
+        if not target.fighter:
+            core.g.engine.message_log.add_message("That is not a valid target.",
+                                                  config.colour.impossible)
+            return self
+        if abs(target.x - caster.x) >= 1.5 or abs(target.y - caster.y) >= 1.5:
+            core.g.engine.message_log.add_message("You must select a tile no more than 1 square away.",
+                                                  config.colour.impossible)
+            return self
+        action = self.ability.activate(caster, target, x, y)
         action.perform()
         return MainGameEventHandler()
 

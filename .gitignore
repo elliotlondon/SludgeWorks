@@ -2,6 +2,9 @@
 *.sav
 savegames/messages.txt
 
+# Mapgen stuff
+maps/*.sav
+
 # Python optimized files
 *.pyo
 

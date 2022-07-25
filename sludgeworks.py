@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import time
 import traceback
 from pathlib import Path
 
@@ -17,8 +16,8 @@ import core.input_handlers
 
 
 def main() -> None:
-    screen_width = 80
-    screen_height = 50
+    screen_width = core.g.screen_width
+    screen_height = core.g.screen_height
 
     tileset = tcod.tileset.load_tilesheet("fonts/DB-curses-12x12.PNG", 16, 16, tcod.tileset.CHARMAP_CP437)
 

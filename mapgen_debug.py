@@ -1,24 +1,24 @@
 """Utility script for checking, debugging and iterating map generation"""
-from typing import Optional
-
+import copy
 import lzma
 import pickle
 import traceback
 from pathlib import Path
+from typing import Optional
 
 import tcod
 
-from maps.game_map import GameWorld
-import copy
-from data.monster_factory import create_monster_from_json
-from core.engine import Engine
-import config.inputs
 import config.colour
 import config.exceptions
+import config.inputs
 import config.setup_game
 import core.g
 import core.input_handlers
+import maps.procgen
 from core.actions import Action
+from core.engine import Engine
+from data.monster_factory import create_monster_from_json
+from maps.game_map import GameWorld, SimpleGameMap
 
 
 def main():
@@ -173,13 +173,16 @@ def new_gameworld():
         map_height=43,
         engine=engine
     )
-    engine.game_world.generate_floor()
+    dungeon = generate_debug_floor(engine)
+    engine.game_map = dungeon
+    engine.game_world.floors[f'level_{engine.game_world.current_floor}'] = dungeon
+
     for x in range(engine.game_map.width):
         for y in range(engine.game_map.height):
             engine.game_map.explored[x, y] = True
-    engine.update_fov()
 
     core.g.engine = engine
+    core.g.engine.game_map.visible[:] = core.g.engine.game_map
     engine.message_log.add_message(f"MapGen successful: floor {core.g.engine.game_world.current_floor}",
                                    config.colour.use)
     return engine
@@ -191,6 +194,56 @@ def save_map(path: Path) -> None:
         return  # If called before a new game is started then g.engine is not assigned.
     path.write_bytes(lzma.compress(pickle.dumps(core.g.engine.game_world)))
     print("GameWorld saved.")
+
+
+def generate_debug_floor(engine: Engine):
+    """Create a new floor in a stepwise manner which continues only when the user presses a key."""
+    engine.game_world.current_floor += 1
+    if engine.game_world.current_floor == 1:
+        tries = 1
+        while tries <= 10:
+            engine.message_log.add_message(f"Attempt {tries}", config.colour.debug)
+
+            # Initialize map
+            dungeon = SimpleGameMap(engine, engine.game_world.map_width, engine.game_world.map_height,
+                                    entities=[engine.player])
+
+            # Make initial cavern
+            dungeon = maps.procgen.add_caves(dungeon, smoothing=1, p=47)
+            # dungeon = maps.procgen.add_rooms(dungeon, 25, 6, 10)
+            # dungeon = maps.procgen.erode(dungeon, 1)
+
+            # Add rocks/water
+            dungeon = maps.procgen.add_rubble(dungeon, events=7)
+            dungeon = maps.procgen.add_hazards(dungeon, floods=5, holes=3)
+            dungeon = maps.procgen.add_features(dungeon)
+
+            # Place player
+            engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
+
+            # Populate dungeon
+            maps.procgen.place_flora(dungeon, engine, areas=3)
+            maps.procgen.place_fauna(dungeon, engine)
+            maps.procgen.place_npcs(dungeon, engine)
+            maps.procgen.place_items(dungeon, engine)
+            maps.procgen.place_static_objects(dungeon, engine)
+
+            # Finally, add stairs
+            dungeon = maps.procgen.add_stairs(dungeon)
+            if isinstance(dungeon, SimpleGameMap):
+                # Mapgen successful, use this floor
+                dungeon.accessible = dungeon.calc_accessible()
+                return dungeon
+            else:
+                print(f"Floor generation failed.", config.colour.debug)
+                tries += 1
+                continue
+
+        # Something went wrong with mapgen, sysexit
+        raise config.exceptions.FatalMapGenError(f"Dungeon generation failed! Reason: floor attempts exceeded.")
+    else:
+        engine.message_log.add_message(f"MapGen failed (floor {engine.game_world.current_floor}. "
+                                       f"Reason: Not Implemented.", config.colour.debug)
 
 
 if __name__ == "__main__":

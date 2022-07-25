@@ -28,17 +28,28 @@ You may move around the map using either 'vi' keys, or numpad controls. These mo
 You may press '.' to wait a turn.
 
 Menu & Action Keys:
+
 'A'   Use abilities
+
 'E'   Look around
+
 'I'   Organize your inventory
+
 'G'   Get items at your location
+
 'D'   Drop items from your inventory
+
 'C'   See your character's stats
+
 'X'   Explore your surroundings automatically
+
 '>'   Descend to the next level
 
+
 Press 'Space' to interact with something nearby.
+
 Press 'Esc' to access the menu which allows you to see key bindings, and to save & quit
+
 
 # Tips
 Long-dead plants in the upper caves leave behind plenty of strange artefacts. They could be useful in combat...

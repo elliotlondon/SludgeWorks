@@ -6,6 +6,13 @@
         "name": "Fountain of Sludge",
         "interact_message": "Bathe in the sludge, absorbing its power?",
         "description": "Layers of downwards-sloping, fossilized bracket fungus have been sculpted by eons of sludge. You cannot see any source of the liquid, only the path of least resistance that it travels towards the moss-thickened cave floor. Bizarre moths flutter about, tasting the cyan goo."
+    },
+    "shanty_door": {
+        "char": "╫",
+        "colour": [200, 200, 200],
+        "name": "Shanty Door",
+        "interact_message": "You open the door.",
+        "description": "This poorly constructed door is made from planks of stained, misshapen wood, covered in knots and burrs. Wood is rarely seen here, but the builder either does not know or does not care."
     }
 }
 ]

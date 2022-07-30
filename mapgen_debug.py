@@ -285,7 +285,7 @@ def generate_debug_floor(engine: Engine):
         engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
 
         # Add some random rooms in accessible locations
-        for room in range(extra_rooms):
+        for room in range(1):
             if isinstance(maps.procgen.place_congruous_room(dungeon, engine), config.exceptions.MapGenError):
                 core.g.engine.message_log.add_message("Could not add new room...", config.colour.debug)
 

@@ -719,32 +719,45 @@ def place_congruous_room(dungeon: SimpleGameMap, engine: Engine) -> Optional[Non
         # Check if there is an available area to place the room NESW by evaluating neighbours
         # North
         if not True in edges[try_index[0] - room_height:try_index[0],
-                       try_index[1] - room_width // 2:try_index[1] + room_width // 2]:
-            dungeon.tiles[try_index[0] + 1 - room_height:try_index[0] + 1,
-            try_index[1] - room_width // 2:try_index[1] + room_width // 2] = maps.tiles.debug
-            return None
+                       try_index[1] - room_width // 2 + 1:try_index[1] + room_width // 2 + 1]:
+            indices_x = np.arange(try_index[0] - room_height - 1 + 2, try_index[0] + 2)
+            indices_y = np.arange(try_index[1] - room_width // 2 - 1, try_index[1] + room_width // 2 + 1)
+            engine.message_log.add_message("North")
+            dungeon.tiles[indices_x[0]:indices_x[-1], indices_y[0]:indices_y[-1]] = maps.tiles.debug
+            break
         # East
-        elif not True in edges[try_index[0] - room_width // 2:try_index[0] + room_width // 2,
-                         try_index[1] + 1:try_index[1] + 1 + room_height]:
-            dungeon.tiles[try_index[0] - room_width // 2:try_index[0] + room_width // 2,
-            try_index[1]:try_index[1] + room_height] = maps.tiles.debug
-            return None
+        elif not True in edges[try_index[0] - room_width // 2:try_index[0] + room_width // 2 + 1,
+                         try_index[1] + 1:try_index[1] + room_height + 1]:
+            indices_x = np.arange(try_index[0] - room_width // 2, try_index[0] + room_width // 2 + 1)
+            indices_y = np.arange(try_index[1] - 1, try_index[1] + room_height + 1)
+            engine.message_log.add_message("East")
+            dungeon.tiles[indices_x[0]:indices_x[-1], indices_y[0]:indices_y[-1]] = maps.tiles.debug
+            break
         # South
-        elif not True in edges[try_index[0] + 1:try_index[0] + 1 + room_height,
+        elif not True in edges[try_index[0] + 1:try_index[0] + room_height + 1,
                          try_index[1] - room_width // 2:try_index[1] + room_width // 2]:
-            dungeon.tiles[try_index[0]:try_index[0] + room_height,
-            try_index[1] - room_width // 2:try_index[1] + room_width // 2] = maps.tiles.debug
-            return None
+            indices_x = np.arange(try_index[0], try_index[0] + room_height + 1)
+            indices_y = np.arange(try_index[1] - room_width // 2, try_index[1] + room_width // 2 + 1)
+            engine.message_log.add_message("South")
+            dungeon.tiles[indices_x[0]:indices_x[-1], indices_y[0]:indices_y[-1]] = maps.tiles.debug
+            break
         # West
-        elif not True in edges[try_index[0] - room_width // 2:try_index[0] + room_width // 2,
+        if not True in edges[try_index[0] - room_width // 2:try_index[0] + room_width // 2,
                          try_index[1] - room_height:try_index[1]]:
-            dungeon.tiles[try_index[0] - room_width // 2:try_index[0] + room_width // 2,
-            try_index[1] - room_height + 1:try_index[1] + 1] = maps.tiles.debug
-            return None
+            indices_x = np.arange(try_index[0] - room_width // 2 - 1, try_index[0] + room_width // 2 + 1)
+            indices_y = np.arange(try_index[1] + 1 - room_height, try_index[1] + 2)
+            engine.message_log.add_message("West")
+            dungeon.tiles[indices_x[0]:indices_x[-1], indices_y[0]:indices_y[-1]] = maps.tiles.debug
+            break
         else:
             edges[try_index[0], try_index[1]] = False
             tries += 1
             continue
+
+    # Add room details to game_map/engine
+    dungeon.room_zone[indices_x[0]:indices_x[-1], indices_y[0]:indices_y[-1]] = True
+
+    return None
 
 
 def create_ca_room(width: int, height: int, p: int) -> np.array([]):

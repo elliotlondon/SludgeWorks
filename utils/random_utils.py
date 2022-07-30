@@ -2,6 +2,8 @@ from logging import getLogger, DEBUG
 from math import floor
 from random import randint, choice, Random
 
+import numpy as np
+
 # Initialize random number generator
 Random(1337)
 
@@ -54,3 +56,17 @@ def dnd_bonus_calc(value):
 
 def is_debug():
     return getLogger("my_logger").getEffectiveLevel() == DEBUG
+
+
+def rotate_array(array: np.ndarray([])) -> [int, np.ndarray([])]:
+    """Randomly rotate an array 90, 180, 270 or 360 degrees."""
+    angle = 0
+    rot_int = randint(0, 3)
+    if rot_int == 0:
+        array = np.rot90(array, 1)
+    elif rot_int == 1:
+        array = np.rot90(array, 2)
+    elif rot_int == 2:
+        array = np.rot90(array, 3)
+
+    return angle, array

@@ -175,3 +175,13 @@ waterfall = new_tile(
     description=list("A rushing waterfall is created from a deep chasm in the ground meeting a nearby body of water, "
                      "falling into the dark depths beneath.")
 )
+
+# Other
+debug = new_tile(
+    name="debug",
+    walkable=False,
+    transparent=True,
+    dark=(ord("░"), tcod.fuchsia, (0, 0, 0)),
+    light=(ord("░"), tcod.fuchsia, (0, 0, 0)),
+    description=list("This tile is used for debugging purposes. If you see this in game, please inform the developer.")
+)

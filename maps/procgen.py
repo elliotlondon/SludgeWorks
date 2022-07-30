@@ -4,11 +4,12 @@ import copy
 import json
 import logging
 import random
-from typing import Tuple, Iterator, List, TYPE_CHECKING
+from typing import Tuple, Iterator, List, TYPE_CHECKING, Optional
 
 import numpy as np
 
 import config.colour
+import core.g
 import maps.tiles
 import parts.entity
 from config.exceptions import MapGenError, FatalMapGenError
@@ -16,6 +17,8 @@ from data.item_factory import create_item_from_json
 from data.monster_factory import create_monster_from_json
 from data.object_factory import create_static_object_from_json
 from maps.game_map import SimpleGameMap
+from utils.math_utils import find_neighbours, Graph
+from utils.random_utils import rotate_array
 
 if TYPE_CHECKING:
     from core.engine import Engine
@@ -164,20 +167,44 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
     while tries <= 10:
         # Initialize map
         dungeon = SimpleGameMap(engine, map_width, map_height, entities=[player])
-        if engine.game_world.caves:
-            dungeon = add_caves(dungeon, smoothing=cave_smoothing, p=cave_p)
-        if engine.game_world.rooms:
-            dungeon = add_rooms(dungeon, max_rooms, room_min_size, room_max_size)
-        if engine.game_world.erode:
-            dungeon = erode(dungeon, 1)
+        # if engine.game_world.caves:
+        #     dungeon = add_caves(dungeon, smoothing=cave_smoothing, p=cave_p)
+        # if engine.game_world.rooms:
+        #     dungeon = add_rooms(dungeon, max_rooms, room_min_size, room_max_size)
+        # if engine.game_world.erode:
+        #     dungeon = erode(dungeon, 1)
+
+        # First create the underlying caves.
+        dungeon = maps.procgen.add_caves(dungeon, smoothing=1, p=42)
+        random_x, random_y = dungeon.get_random_walkable_nontunnel_tile()
+        graph = Graph(map_width, map_height, dungeon.tiles['walkable'])
+        dungeon.accessible = graph.find_connected_area(random_x, random_y)
+
+        # If too few accessible tiles, retry
+        if len(dungeon.accessible.nonzero()[0]) < 80 * 43 / 4:
+            engine.message_log.add_message(f"Too few accessible tiles ({len(dungeon.accessible.nonzero()[0])}).",
+                                           config.colour.debug)
+            tries += 1
+            continue
+        dungeon.prune_inaccessible(maps.tiles.wall)
+
+        # Randomly add some rooms to the dungeon.
+        extra_rooms = 4
+        maps.procgen.place_random_rooms(dungeon, extra_rooms)
+        dungeon.prune_inaccessible(maps.tiles.wall)
+
+        # Place player
+        engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
+
+        # Add some random rooms in accessible locations
+        for room in range(extra_rooms):
+            if isinstance(maps.procgen.place_congruous_room(dungeon, engine), config.exceptions.MapGenError):
+                core.g.engine.message_log.add_message("Could not add new room...", config.colour.debug)
 
         # Add rocks/water
         dungeon = add_rubble(dungeon, events=7)
         dungeon = add_hazards(dungeon, floods=5, holes=3)
         dungeon = add_features(dungeon)
-
-        # Place player
-        engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
 
         # Populate dungeon
         place_flora(dungeon, engine, areas=3)
@@ -378,11 +405,6 @@ def add_rooms(dungeon: SimpleGameMap, max_rooms: int,
         for tile_i in range(new_room.x1, new_room.x2):
             for tile_j in range(new_room.y1, new_room.y2):
                 dungeon.tiles[tile_i, tile_j] = random.choice(maps.tiles.floor_tiles_1)
-
-        # if len(rooms) == 0:
-        # The first room, where the player starts.
-        # engine.player.place(*new_room.center, dungeon)
-        # else:  # All rooms after the first.
 
         if not len(rooms) == 0:
             # Dig out a tunnel between this room and the previous one.
@@ -615,6 +637,146 @@ def add_features(dungeon: SimpleGameMap) -> SimpleGameMap:
                     dungeon.tiles[x, y] = maps.tiles.waterfall
 
     return dungeon
+
+
+def place_random_rooms(dungeon: SimpleGameMap, rooms: int) -> Optional[Exception]:
+    """Place some rooms in random locations for the current map, without any regard for whether there is already
+    something generated at the placement site."""
+
+    for room in range(rooms):
+        # Choose location in dungeon to add random rooms
+        room_width = random.randint(5, 9)
+        room_height = random.randint(5, 9)
+        room_xy = (random.randint(0, dungeon.width - room_width - 1),
+                   random.randint(0, dungeon.height - room_height - 1))
+
+        # Check if new cluster overlaps existing cluster
+        for x in range(room_xy[0], room_width):
+            for y in range(room_xy[1], room_height):
+                if dungeon.room_zone[x, y]:
+                    continue
+
+        # Choose randomly from all appropriate room generation algorithms
+        new_room = random.choice([
+            create_ca_room(room_width, room_height, p=40),
+            # maps.procgen.RectangularRoom(room_location[0], room_location[1], room_width, room_height)
+        ])
+        if not True in new_room:
+            continue
+
+        # Randomly rotate new room
+        _, new_room = rotate_array(new_room)
+
+        # Slap it down
+        for x in range(0, np.size(new_room, 0) - 1):
+            for y in range(0, np.size(new_room, 1) - 1):
+                if new_room[x, y] == True:
+                    try:
+                        dungeon.tiles[room_xy[0] + x, room_xy[1] + y] = random.choice(maps.tiles.floor_tiles_1)
+                    except IndexError:
+                        # For now, skip if there's an OOB
+                        continue
+
+    return MapGenError()
+
+
+def place_congruous_room(dungeon: SimpleGameMap, engine: Engine) -> Optional[None | Exception]:
+    """
+    Place a room according to the following procedure:
+    - Calculate all tiles at the edges of the currently accessible area for the player
+    - Choose a tile at random from this list
+    - Evaluate whether a room of the specified size can be placed in any of the cardinal directions, offset by 1 from
+    the starting tile.
+    - If this does not succeed, continue
+    - If this does succeed, update the list of room locations in the game_map
+    - If the room could not be placed, raise a mapgen error.
+    """
+
+    edges = np.full((dungeon.width, dungeon.height), fill_value=False, order="F")
+
+    # First define the edges
+    for x in range(len(dungeon.tiles[:, 0])):
+        for y in range(len(dungeon.tiles[0, :])):
+            for nx, ny in dungeon.find_neighbours(x, y):
+                if dungeon.tiles[x, y]['name'] == 'wall' and dungeon.accessible[nx, ny]:
+                    edges[x, y] = True
+
+    # Define room size
+    room_width = random.randint(4, 6)
+    room_height = random.randint(4, 8)
+
+    # Find somewhere to start trying to place the room and trim edges so there's no OOB
+    edges[0:room_width + 2, :] = False  # First rows
+    edges[dungeon.width - room_width - 1:dungeon.width, :] = False  # Last rows
+    edges[:, 0:room_width + 2] = False  # First columns
+    edges[:, dungeon.height - room_height - 1:dungeon.height] = False  # Last columns
+
+    tries = 0
+    while True in edges:
+        engine.message_log.add_message(f"Placing random rect. room. Attempt {tries + 1}")
+        try_index = random.choice(np.argwhere(edges == True))
+
+        # Check if there is an available area to place the room NESW by evaluating neighbours
+        # North
+        if not True in edges[try_index[0] - room_height:try_index[0],
+                       try_index[1] - room_width // 2:try_index[1] + room_width // 2]:
+            dungeon.tiles[try_index[0] + 1 - room_height:try_index[0] + 1,
+            try_index[1] - room_width // 2:try_index[1] + room_width // 2] = maps.tiles.debug
+            return None
+        # East
+        elif not True in edges[try_index[0] - room_width // 2:try_index[0] + room_width // 2,
+                         try_index[1] + 1:try_index[1] + 1 + room_height]:
+            dungeon.tiles[try_index[0] - room_width // 2:try_index[0] + room_width // 2,
+            try_index[1]:try_index[1] + room_height] = maps.tiles.debug
+            return None
+        # South
+        elif not True in edges[try_index[0] + 1:try_index[0] + 1 + room_height,
+                         try_index[1] - room_width // 2:try_index[1] + room_width // 2]:
+            dungeon.tiles[try_index[0]:try_index[0] + room_height,
+            try_index[1] - room_width // 2:try_index[1] + room_width // 2] = maps.tiles.debug
+            return None
+        # West
+        elif not True in edges[try_index[0] - room_width // 2:try_index[0] + room_width // 2,
+                         try_index[1] - room_height:try_index[1]]:
+            dungeon.tiles[try_index[0] - room_width // 2:try_index[0] + room_width // 2,
+            try_index[1] - room_height + 1:try_index[1] + 1] = maps.tiles.debug
+            return None
+        else:
+            edges[try_index[0], try_index[1]] = False
+            tries += 1
+            continue
+
+
+def create_ca_room(width: int, height: int, p: int) -> np.array([]):
+    """Create a room which is a shape made from a cellular automata algorithm.
+    Room: True for floor tile, False for wall tile."""
+    # Init room array
+    room = np.full((width, height), fill_value=False, order="F")
+
+    # Select a few random locations to be turned into a floor
+    for x in range(width):
+        for y in range(height):
+            if random.randint(0, 100) > p:
+                room[x, y] = True
+
+    # Perform algorithm
+    for x in range(width):
+        for y in range(height):
+            if x == 0 or x == width - 1 or y == 0 or y == height - 1:
+                room[x, y] = False
+
+    for x in range(width):
+        for y in range(height):
+            touching_empty_space = 0
+            for nx, ny in find_neighbours(width, height, x, y):
+                if not room[nx, ny]:
+                    touching_empty_space += 1
+            if touching_empty_space >= 7:
+                room[x, y] = False
+            elif touching_empty_space <= 2:
+                room[x, y] = True
+
+    return room
 
 
 class RectangularRoom:

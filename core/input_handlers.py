@@ -1408,8 +1408,6 @@ class HistoryViewer(EventHandler):
             return MainGameEventHandler()
         return None
 
-# TODO: Restore autostairs
-# TODO: Show inventory and message log on player death
 # TODO: Show library of highscores for single player
 # def handle_player_dead_events(event):
 #     match event:
@@ -1417,30 +1415,6 @@ class HistoryViewer(EventHandler):
 #             return {'show_inventory': True}
 #         case tcod.event.K_ESCAPE:
 #             return {'quit': True}
-#         case tcod.event.K_F11:
-#             return {'fullscreen': True}
-#     return {}
-
-# TODO: Esc menu
-# def handle_esc_menu_events(event):
-#     match event:
-#         case (tcod.event.K_h, tcod.event.K_a):
-#             return {'help': True}
-#         case (tcod.event.K_r, tcod.event.K_b):
-#             return {'exit': True}
-#         case (tcod.event.K_q, tcod.event.K_c):
-#             return {'quit': True}
-#         case tcod.event.K_ESCAPE:
-#             return {'exit': True}
-#         case tcod.event.K_F11:
-#             return {'fullscreen': True}
-#     return {}
-
-# TODO: Help menu
-# def handle_help_menu_events(event):
-#     match event:
-#         case tcod.event.K_ESCAPE:
-#             return {'exit': True}
 #         case tcod.event.K_F11:
 #             return {'fullscreen': True}
 #     return {}

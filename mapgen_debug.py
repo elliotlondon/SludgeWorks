@@ -1,4 +1,5 @@
 """Utility script for checking, debugging and iterating map generation"""
+import random
 import copy
 import lzma
 import pickle
@@ -6,8 +7,10 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
 import tcod
 
+import maps.tiles
 import config.colour
 import config.exceptions
 import config.inputs
@@ -19,6 +22,7 @@ from core.actions import Action
 from core.engine import Engine
 from data.monster_factory import create_monster_from_json
 from maps.game_map import GameWorld, SimpleGameMap
+from utils.math_utils import Graph, find_neighbours
 
 
 def main():
@@ -104,9 +108,7 @@ class MapGenEventHandler(core.input_handlers.EventHandler):
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[core.input_handlers.ActionOrHandler]:
         action: Optional[Action] = None
-
         key = event.sym
-        modifier = event.mod
 
         # Settings
         if key == tcod.event.K_ESCAPE:
@@ -114,8 +116,60 @@ class MapGenEventHandler(core.input_handlers.EventHandler):
         elif key == tcod.event.K_r:
             new_gameworld()
             return self
+        elif key == tcod.event.K_m:
+            return MapGenHistoryViewer()
 
         return action
+
+
+class MapGenHistoryViewer(core.input_handlers.EventHandler):
+    """Print the history on a larger window which can be navigated."""
+
+    def __init__(self):
+        super().__init__()
+        self.log_length = len(core.g.engine.message_log.messages)
+        self.cursor = self.log_length - 1
+
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)  # Draw the main state as the background.
+
+        log_console = tcod.Console(console.width - 6, console.height - 6)
+
+        # Draw a frame with a custom banner title.
+        log_console.draw_frame(0, 0, log_console.width, log_console.height)
+        log_console.print_box(0, 0, log_console.width, 1, "┤Message history├", alignment=tcod.CENTER)
+
+        # Render the message log using the cursor parameter.
+        core.g.engine.message_log.render_messages(
+            log_console,
+            1,
+            1,
+            log_console.width - 2,
+            log_console.height - 2,
+            core.g.engine.message_log.messages[: self.cursor + 1],
+        )
+        log_console.blit(console, 3, 3)
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MapGenEventHandler]:
+        # Fancy conditional movement to make it feel right.
+        if event.sym in config.inputs.CURSOR_Y_KEYS:
+            adjust = config.inputs.CURSOR_Y_KEYS[event.sym]
+            if adjust < 0 and self.cursor == 0:
+                # Only move from the top to the bottom when you're on the edge.
+                self.cursor = self.log_length - 1
+            elif adjust > 0 and self.cursor == self.log_length - 1:
+                # Same with bottom to top movement.
+                self.cursor = 0
+            else:
+                # Otherwise move while staying clamped to the bounds of the history log.
+                self.cursor = max(0, min(self.cursor + adjust, self.log_length - 1))
+        elif event.sym == tcod.event.K_HOME:
+            self.cursor = 0  # Move directly to the top message.
+        elif event.sym == tcod.event.K_END:
+            self.cursor = self.log_length - 1  # Move directly to the last message.
+        else:  # Any other key moves back to the main game state.
+            return MapGenEventHandler()
+        return None
 
 
 class MapGenEscMenuHandler(core.input_handlers.AskUserEventHandler):
@@ -199,51 +253,70 @@ def save_map(path: Path) -> None:
 def generate_debug_floor(engine: Engine):
     """Create a new floor in a stepwise manner which continues only when the user presses a key."""
     engine.game_world.current_floor += 1
-    if engine.game_world.current_floor == 1:
-        tries = 1
-        while tries <= 10:
-            engine.message_log.add_message(f"Attempt {tries}", config.colour.debug)
+    floor_width = engine.game_world.map_width
+    floor_height = engine.game_world.map_height
+    tries = 1
+    while tries <= 25:
+        engine.message_log.add_message(f"FloorGen attempt {tries}", config.colour.use)
 
-            # Initialize map
-            dungeon = SimpleGameMap(engine, engine.game_world.map_width, engine.game_world.map_height,
-                                    entities=[engine.player])
+        # Initialize map
+        dungeon = SimpleGameMap(engine, floor_width, floor_height, entities=[engine.player])
 
-            # Make initial cavern
-            dungeon = maps.procgen.add_caves(dungeon, smoothing=1, p=47)
-            # dungeon = maps.procgen.add_rooms(dungeon, 25, 6, 10)
-            # dungeon = maps.procgen.erode(dungeon, 1)
+        # First create the underlying caves.
+        dungeon = maps.procgen.add_caves(dungeon, smoothing=1, p=42)
+        random_x, random_y = dungeon.get_random_walkable_nontunnel_tile()
+        graph = Graph(floor_width, floor_height, dungeon.tiles['walkable'])
+        dungeon.accessible = graph.find_connected_area(random_x, random_y)
 
-            # Add rocks/water
-            dungeon = maps.procgen.add_rubble(dungeon, events=7)
-            dungeon = maps.procgen.add_hazards(dungeon, floods=5, holes=3)
-            dungeon = maps.procgen.add_features(dungeon)
+        # If too few accessible tiles, retry
+        if len(dungeon.accessible.nonzero()[0]) < 80 * 43 / 4:
+            engine.message_log.add_message(f"Too few accessible tiles ({len(dungeon.accessible.nonzero()[0])}).",
+                                           config.colour.debug)
+            tries += 1
+            continue
+        dungeon.prune_inaccessible(maps.tiles.wall)
 
-            # Place player
-            engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
+        # Randomly add some rooms to the dungeon.
+        extra_rooms = 4
+        maps.procgen.place_random_rooms(dungeon, extra_rooms)
+        dungeon.prune_inaccessible(maps.tiles.wall)
 
-            # Populate dungeon
-            maps.procgen.place_flora(dungeon, engine, areas=3)
-            maps.procgen.place_fauna(dungeon, engine)
-            maps.procgen.place_npcs(dungeon, engine)
-            maps.procgen.place_items(dungeon, engine)
-            maps.procgen.place_static_objects(dungeon, engine)
+        # Place player
+        engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
 
-            # Finally, add stairs
-            dungeon = maps.procgen.add_stairs(dungeon)
-            if isinstance(dungeon, SimpleGameMap):
-                # Mapgen successful, use this floor
-                dungeon.accessible = dungeon.calc_accessible()
-                return dungeon
-            else:
-                print(f"Floor generation failed.", config.colour.debug)
-                tries += 1
-                continue
+        # Add some random rooms in accessible locations
+        for room in range(extra_rooms):
+            if isinstance(maps.procgen.place_congruous_room(dungeon, engine), config.exceptions.MapGenError):
+                core.g.engine.message_log.add_message("Could not add new room...", config.colour.debug)
 
+        # dungeon = maps.procgen.add_rooms(dungeon, 25, 6, 10)
+        # dungeon = maps.procgen.erode(dungeon, 1)
+
+        # Add rocks/water
+        # dungeon = maps.procgen.add_rubble(dungeon, events=7)
+        # dungeon = maps.procgen.add_hazards(dungeon, floods=5, holes=3)
+        # dungeon = maps.procgen.add_features(dungeon)
+        # prune_inaccessible(dungeon, maps.tiles.wall)
+
+        # Populate dungeon
+        maps.procgen.place_fauna(dungeon, engine)
+        maps.procgen.place_npcs(dungeon, engine)
+        maps.procgen.place_items(dungeon, engine)
+        maps.procgen.place_static_objects(dungeon, engine)
+
+        # Finally, add stairs
+        dungeon = maps.procgen.add_stairs(dungeon)
+        if isinstance(dungeon, SimpleGameMap):
+            # Mapgen successful, use this floor
+            dungeon.accessible = dungeon.calc_accessible()
+            return dungeon
+        else:
+            print(f"Floor generation failed.", config.colour.debug)
+            tries += 1
+            continue
+    else:
         # Something went wrong with mapgen, sysexit
         raise config.exceptions.FatalMapGenError(f"Dungeon generation failed! Reason: floor attempts exceeded.")
-    else:
-        engine.message_log.add_message(f"MapGen failed (floor {engine.game_world.current_floor}. "
-                                       f"Reason: Not Implemented.", config.colour.debug)
 
 
 if __name__ == "__main__":

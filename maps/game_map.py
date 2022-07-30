@@ -28,6 +28,7 @@ class SimpleGameMap:
         self.tiles = np.full((width, height), fill_value=maps.tiles.wall, order="F")
         self.tile_modifiers = np.full((width, height), fill_value=[None], order="F")
         self.rooms = []
+        self.room_zone = np.full((width, height), fill_value=False, order="F")  # Areas which are rooms
         self.tunnel = np.full((width, height), fill_value=False, order="F")  # Tunnel tiles
         self.visible = np.full((width, height), fill_value=False, order="F")  # Tiles the player can currently see
         self.explored = np.full((width, height), fill_value=False, order="F")  # Tiles the player has seen before
@@ -195,6 +196,13 @@ class SimpleGameMap:
                 accessible[entity.x, entity.y] = False
 
         return accessible
+
+    def prune_inaccessible(self, tile: maps.tiles.tile_dt):
+        """Turns inaccessible tiles into the given tile variety."""
+        for x in range(self.width):
+            for y in range(self.height):
+                if not self.accessible[x, y]:
+                    self.tiles[x, y] = tile
 
     def stain_tile(self, x: int, y: int, **kwargs):
         """Change the colour of a tile at the current game map position"""

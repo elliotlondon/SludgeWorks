@@ -46,3 +46,27 @@ class Graph:
                 else:
                     island_arr[x][y] = False
         return island_arr
+
+
+def find_neighbours(width: int, height: int, x: int, y: int):
+    xi = (0, -1, 1) if 0 < x < width - 1 else ((0, -1) if x > 0 else (0, 1))
+    yi = (0, -1, 1) if 0 < y < height - 1 else ((0, -1) if y > 0 else (0, 1))
+    for a in xi:
+        for b in yi:
+            if a == b == 0:
+                continue
+            yield (x + a, y + b)
+
+
+def crop_array(array: np.ndarray):
+    """Crop an array to its content"""
+    # argwhere will give you the coordinates of every non-zero point
+    true_points = np.argwhere(array=True)
+    # take the smallest points and use them as the top left of your crop
+    top_left = true_points.min(axis=0)
+    # take the largest points and use them as the bottom right of your crop
+    bottom_right = true_points.max(axis=0)
+    out = array[top_left[0]:bottom_right[0] + 1,  # plus 1 because slice isn't
+          top_left[1]:bottom_right[1] + 1]  # inclusive
+
+    return out

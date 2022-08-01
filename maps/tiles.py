@@ -176,12 +176,21 @@ waterfall = new_tile(
                      "falling into the dark depths beneath.")
 )
 
-# Other
-debug = new_tile(
-    name="debug",
+# Debug / Other
+debug_wall = new_tile(
+    name="debug_wall",
     walkable=False,
     transparent=True,
     dark=(ord("░"), tcod.fuchsia, (0, 0, 0)),
     light=(ord("░"), tcod.fuchsia, (0, 0, 0)),
+    description=list("This tile is used for debugging purposes. If you see this in game, please inform the developer.")
+)
+
+debug_floor = new_tile(
+    name="debug_floor",
+    walkable=False,
+    transparent=True,
+    dark=(ord("∙"), tcod.fuchsia, (0, 0, 0)),
+    light=(ord("∙"), tcod.fuchsia, (0, 0, 0)),
     description=list("This tile is used for debugging purposes. If you see this in game, please inform the developer.")
 )

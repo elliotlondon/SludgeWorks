@@ -283,11 +283,16 @@ def generate_debug_floor(engine: Engine):
 
         # Place player
         engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
+        graph = Graph(floor_width, floor_height, dungeon.tiles['walkable'])
+        dungeon.accessible = graph.find_connected_area(engine.player.x, engine.player.y)
 
         # Add some random rooms in accessible locations
-        for room in range(1):
-            if isinstance(maps.procgen.place_congruous_room(dungeon, engine), config.exceptions.MapGenError):
-                core.g.engine.message_log.add_message("Could not add new room...", config.colour.debug)
+        for room in range(5):
+            try:
+                maps.procgen.place_congruous_room(dungeon, engine)
+            except config.exceptions.MapGenError:
+                continue
+        # dungeon.prune_inaccessible(maps.tiles.wall)
 
         # dungeon = maps.procgen.add_rooms(dungeon, 25, 6, 10)
         # dungeon = maps.procgen.erode(dungeon, 1)

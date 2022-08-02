@@ -705,11 +705,18 @@ def place_congruous_room(dungeon: SimpleGameMap, engine: Engine) -> Optional[Non
     room_width = random.randint(5, 7)
     room_height = random.randint(5, 8)
 
+    # Remove overlapping rooms_zone to prevent rooms from being stacked
+    for x in range(len(dungeon.tiles[:, 0])):
+        for y in range(len(dungeon.tiles[0, :])):
+            if dungeon.room_zone[x, y]:
+                edges[x, y] = False
+
     # Find somewhere to start trying to place the room and trim edges so there's no OOB
     edges[0:room_width + 2, :] = False  # First rows
-    edges[dungeon.width - room_width - 2:dungeon.width, :] = False  # Last rows
+    edges[dungeon.width - room_width - 3:dungeon.width, :] = False  # Last rows
     edges[:, 0:room_width + 2] = False  # First columns
-    edges[:, dungeon.height - room_height - 2:dungeon.height] = False  # Last columns
+    edges[:, dungeon.height - room_height - 3:dungeon.height] = False  # Last columns
+    edges[engine.player.x, engine.player.y] = True
 
     tries = 0
     while True in edges:
@@ -722,64 +729,153 @@ def place_congruous_room(dungeon: SimpleGameMap, engine: Engine) -> Optional[Non
                        try_index[1] - room_width // 2 + 1:try_index[1] + room_width // 2 + 1]:
             indices_x = np.arange(try_index[0] - room_height - 1 + 2, try_index[0] + 2)
             indices_y = np.arange(try_index[1] - room_width // 2 - 1, try_index[1] + room_width // 2 + 1)
-            engine.message_log.add_message("North")
-            dungeon.tiles[indices_x[0]:indices_x[-1], indices_y[0]:indices_y[-1]] = maps.tiles.debug_floor
-            break
+            if not True in dungeon.room_zone[indices_x[0]:indices_x[-1] - 1, indices_y[0]:indices_y[-1]]:
+                break
         # East
         elif not True in edges[try_index[0] - room_width // 2:try_index[0] + room_width // 2 + 1,
                          try_index[1] + 1:try_index[1] + room_height + 1]:
             indices_x = np.arange(try_index[0] - room_width // 2, try_index[0] + room_width // 2 + 1)
             indices_y = np.arange(try_index[1] - 1, try_index[1] + room_height + 1)
-            engine.message_log.add_message("East")
-            dungeon.tiles[indices_x[0]:indices_x[-1], indices_y[0]:indices_y[-1]] = maps.tiles.debug_floor
-            break
+            if not True in dungeon.room_zone[indices_x[0]:indices_x[-1], indices_y[0]:indices_y[-1] - 1]:
+                break
         # South
         elif not True in edges[try_index[0] + 1:try_index[0] + room_height + 1,
                          try_index[1] - room_width // 2:try_index[1] + room_width // 2]:
             indices_x = np.arange(try_index[0], try_index[0] + room_height + 1)
             indices_y = np.arange(try_index[1] - room_width // 2, try_index[1] + room_width // 2 + 1)
-            engine.message_log.add_message("South")
-            dungeon.tiles[indices_x[0]:indices_x[-1], indices_y[0]:indices_y[-1]] = maps.tiles.debug_floor
-            break
-        # West
-        if not True in edges[try_index[0] - room_width // 2:try_index[0] + room_width // 2,
+            if not True in dungeon.room_zone[indices_x[0] - 1:indices_x[-1], indices_y[0]:indices_y[-1]]:
+                break
+        # # West
+        elif not True in edges[try_index[0] - room_width // 2:try_index[0] + room_width // 2,
                          try_index[1] - room_height:try_index[1]]:
             indices_x = np.arange(try_index[0] - room_width // 2 - 1, try_index[0] + room_width // 2 + 1)
             indices_y = np.arange(try_index[1] + 1 - room_height, try_index[1] + 2)
-            engine.message_log.add_message("West")
-            dungeon.tiles[indices_x[0]:indices_x[-1], indices_y[0]:indices_y[-1]] = maps.tiles.debug_floor
-            break
+            if not True in dungeon.room_zone[indices_x[0] + 1:indices_x[-1], indices_y[0]:indices_y[-1]]:
+                break
         else:
             edges[try_index[0], try_index[1]] = False
             tries += 1
             continue
 
-    # Add entire area to room zone
-    dungeon.room_zone[indices_x[0]:indices_x[-1], indices_y[0]:indices_y[-1]] = True
-
-    # Find center and add to rooms array
+    # Find center and add to rooms array, then tell dungeon where the room is
     center = (indices_x[len(indices_x) // 2], indices_y[len(indices_y) // 2])
     dungeon.rooms.append(center)
+    dungeon.room_zone[indices_x[0] - 1:indices_x[-1] + 1, indices_y[0] - 1:indices_y[-1] + 1] = True
 
-    # Fill in the outer area with walls
-    border = []
+    # Create the array of border tiles and calculate the length of the perimeter
+    n_border = []
+    e_border = []
+    s_border = []
+    w_border = []
     for i in np.arange(indices_x[0], indices_x[-1]):
-        border.append((i, indices_y[0]))
+        n_border.append((i, indices_y[0]))
     for i in np.arange(indices_x[0], indices_x[-1]):
-        border.append((i, indices_y[-1]))
+        e_border.append((i, indices_y[-1]))
     for i in np.arange(indices_y[0], indices_y[-1] + 1):
-        border.append((indices_x[-1], i))
+        s_border.append((indices_x[-1], i))
     for i in np.arange(indices_y[0], indices_y[-1]):
-        border.append((indices_x[0], i))
+        w_border.append((indices_x[0], i))
 
-    for tile in border:
+    # Find the number of bordering walkable tiles along each room edge
+    n_ext = []
+    e_ext = []
+    s_ext = []
+    w_ext = []
+    for i in np.arange(indices_x[0] + 1, indices_x[-1]):
+        n_ext.append((i, indices_y[0] - 1))
+    for i in np.arange(indices_x[0] + 2, indices_x[-1] + 1):
+        e_ext.append((i - 1, indices_y[-1] + 1))
+    for i in np.arange(indices_y[0], indices_y[-1] - 1):
+        s_ext.append((indices_x[-1] + 1, i + 1))
+    for i in np.arange(indices_y[0], indices_y[-1] - 1):
+        w_ext.append((indices_x[0] - 1, i + 1))
+
+    # Calculate number of tiles around the room which are walkable
+    n_bordering = []
+    e_bordering = []
+    s_bordering = []
+    w_bordering = []
+    total_bordering = 0
+    for ext_tile in n_ext:
+        if dungeon.tiles['walkable'][ext_tile]:
+            int_tile = (ext_tile[0], ext_tile[1] + 1)
+            n_bordering.append(int_tile)
+            total_bordering += 1
+    for ext_tile in e_ext:
+        if dungeon.tiles['walkable'][ext_tile]:
+            int_tile = (ext_tile[0], ext_tile[1] - 1)
+            e_bordering.append(int_tile)
+            total_bordering += 1
+    for ext_tile in s_ext:
         try:
-            dungeon.tiles[tile[0], tile[1]] = maps.tiles.debug_wall
+            if dungeon.tiles['walkable'][ext_tile]:
+                int_tile = (ext_tile[0] - 1, ext_tile[1])
+                s_bordering.append(int_tile)
+                total_bordering += 1
         except IndexError:
             continue
+    for ext_tile in w_ext:
+        if dungeon.tiles['walkable'][ext_tile]:
+            int_tile = (ext_tile[0] + 1, ext_tile[1])
+            w_bordering.append(int_tile)
+            total_bordering += 1
 
-    # Door creation: find the number of bordering walkable tiles along each room edge
+    # Calculate number of doors to be added based on the total amount of space which surrounds the rooms
+    if total_bordering <= 4:
+        doors = 1
+    elif total_bordering <= 8:
+        doors = 2
+    else:
+        doors = random.choice([3, 4])
 
+    selections = []
+    if n_bordering != []:
+        selections.append("n")
+    if e_bordering != []:
+        selections.append("e")
+    if s_bordering != []:
+        selections.append("s")
+    if w_bordering != []:
+        selections.append("w")
+    if n_bordering == [] and e_bordering == [] and s_bordering == [] and w_bordering == []:
+        return None
+
+    # Interior as floor
+    for x in np.arange(indices_x[0], indices_x[-1]):
+        for y in np.arange(indices_y[0], indices_y[-1]):
+            dungeon.tiles[x, y] = random.choice(maps.tiles.floor_tiles_1)
+
+    # Perimeter as walls
+    for n_tile in n_border:
+        dungeon.tiles[n_tile[0], n_tile[1]] = maps.tiles.wooden_wall
+    for e_tile in e_border:
+        dungeon.tiles[e_tile[0], e_tile[1]] = maps.tiles.wooden_wall
+    for s_tile in s_border:
+        dungeon.tiles[s_tile[0], s_tile[1]] = maps.tiles.wooden_wall
+    for w_tile in w_border:
+        dungeon.tiles[w_tile[0], w_tile[1]] = maps.tiles.wooden_wall
+
+    while doors > 0:
+        if selections == []:
+            raise MapGenError("Could not place room: No tiles available to place entry/exit")
+        selection = random.choice(selections)
+        if selection == "n":
+            selections.remove("n")
+            door_tile = random.choice(n_bordering)
+            dungeon.tiles[door_tile] = maps.tiles.debug_door_top
+        elif selection == "e":
+            selections.remove("e")
+            door_tile = random.choice(e_bordering)
+            dungeon.tiles[door_tile] = maps.tiles.debug_door_top
+        elif selection == "s":
+            selections.remove("s")
+            door_tile = random.choice(s_bordering)
+            dungeon.tiles[door_tile] = maps.tiles.debug_door_side
+        elif selection == "w":
+            selections.remove("w")
+            door_tile = random.choice(w_bordering)
+            dungeon.tiles[door_tile] = maps.tiles.debug_door_side
+        doors -= 1
 
     return None
 

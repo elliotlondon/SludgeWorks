@@ -29,6 +29,7 @@ class SimpleGameMap:
         self.tile_modifiers = np.full((width, height), fill_value=[None], order="F")
         self.rooms = []
         self.room_zone = np.full((width, height), fill_value=False, order="F")  # Areas which are rooms
+        self.doors = np.full((width, height), fill_value=False, order="F")  # Tiles which have a door at their location
         self.tunnel = np.full((width, height), fill_value=False, order="F")  # Tunnel tiles
         self.visible = np.full((width, height), fill_value=False, order="F")  # Tiles the player can currently see
         self.explored = np.full((width, height), fill_value=False, order="F")  # Tiles the player has seen before

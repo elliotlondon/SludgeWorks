@@ -48,6 +48,8 @@ def get_clean_name(tile: tile_dt) -> str:
     name = name.replace("down stairs", "Next Floor")
     name = name.replace("Hole", "Chasm")
     name = name.replace("hole", "Chasm")
+    name = name.replace("Hut Wall", "Wooden Wall")
+    name = name.replace("hut Wall", "Wooden Wall")
 
     return name
 
@@ -113,7 +115,7 @@ verdant_4 = new_tile(name="verdant_4",
 verdant_chars = [",", ".", "'", "∙"]
 verdant_tiles_1 = [verdant_1, verdant_2, verdant_3, verdant_4]
 
-# Walls
+# Walls [Cave]
 wall = new_tile(name="wall",
                 walkable=False, transparent=False,
                 dark=(ord("▓"), tcod.grey, (0, 0, 0)),
@@ -128,6 +130,14 @@ rubble = new_tile(name="rubble",
                   description=list("The instability of the SludgeWorks is obvious by the sheer quantity of "
                                    "rubble found even within the upper caves. "
                                    "Gigantic boulders embedded with unknown fossils block your path. "))
+
+# Walls [Structures]
+wooden_wall = new_tile(name="wooden_wall",
+                walkable=False, transparent=False,
+                dark=(ord("▓"), tcod.grey, (0, 0, 0)),
+                light=(ord("#"), (125, 100, 75), (0, 0, 0)),
+                description=list("A wall made of dirtied and misshapen planks of wood. Scratches and bite marks "
+                                 "litter the surface. The structure is poorly made, but at least permanent."))
 
 # Liquids
 water = new_tile(name="water",
@@ -192,5 +202,23 @@ debug_floor = new_tile(
     transparent=True,
     dark=(ord("∙"), tcod.fuchsia, (0, 0, 0)),
     light=(ord("∙"), tcod.fuchsia, (0, 0, 0)),
+    description=list("This tile is used for debugging purposes. If you see this in game, please inform the developer.")
+)
+
+debug_door_top = new_tile(
+    name="debug_door_top",
+    walkable=False,
+    transparent=False,
+    dark=(ord("─"), tcod.grey, (0, 0, 0)),
+    light=(ord("─"), (125, 75, 75), (0, 0, 0)),
+    description=list("This tile is used for debugging purposes. If you see this in game, please inform the developer.")
+)
+
+debug_door_side = new_tile(
+    name="debug_door_side",
+    walkable=False,
+    transparent=False,
+    dark=(ord("│"), tcod.grey, (0, 0, 0)),
+    light=(ord("│"), (125, 75, 75), (0, 0, 0)),
     description=list("This tile is used for debugging purposes. If you see this in game, please inform the developer.")
 )

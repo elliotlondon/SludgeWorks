@@ -298,12 +298,12 @@ def generate_debug_floor(engine: Engine):
         # dungeon = maps.procgen.erode(dungeon, 1)
 
         # Add rocks/water
-        # dungeon = maps.procgen.add_rubble(dungeon, events=7)
-        # dungeon = maps.procgen.add_hazards(dungeon, floods=5, holes=3)
-        # dungeon = maps.procgen.add_features(dungeon)
-        # prune_inaccessible(dungeon, maps.tiles.wall)
+        dungeon = maps.procgen.add_rubble(dungeon, events=7)
+        dungeon = maps.procgen.add_hazards(dungeon, floods=5, holes=3)
+        dungeon = maps.procgen.add_features(dungeon)
 
         # Populate dungeon
+        # maps.procgen.place_flora(dungeon, engine, areas=3)
         maps.procgen.place_fauna(dungeon, engine)
         maps.procgen.place_npcs(dungeon, engine)
         maps.procgen.place_items(dungeon, engine)

@@ -291,6 +291,17 @@ class MainGameEventHandler(EventHandler):
                 elif isinstance(interactables[0], parts.entity.StaticObject):
                     if interactables[0].name == "Fountain of Sludge":
                         return SludgeFountainEventHandler(interactables[0])
+                    if "Door" in interactables[0].name:
+                        # First check if anything prevents the door action from being performed
+                        blocker = core.g.engine.game_map.get_actor_at_location(interactables[0].x, interactables[0].y)
+                        if blocker:
+                            core.g.engine.message_log.add_message(f"You cannot close the door, as there is a "
+                                                                  f"{blocker.name.capitalize()} in the way.",
+                                                                  config.colour.impossible)
+                        else:
+                            action = core.actions.DoorAction(player, interactables[0],
+                                                             interactables[0].x - player.x,
+                                                             interactables[0].y - player.y)
             else:
                 raise NotImplementedError("Too may objects to interact with surrounding the player.")
 
@@ -964,7 +975,7 @@ class ConversationEventHandler(AskUserEventHandler):
 
 
 class SludgeFountainEventHandler(AskUserEventHandler):
-    """Handle space-to-interact with entities around the character."""
+    """Handle space-to-interact with a sludge fountain."""
 
     def __init__(self, interactee: parts.entity.StaticObject):
         super().__init__(),
@@ -1002,6 +1013,19 @@ class SludgeFountainEventHandler(AskUserEventHandler):
                       alignment=tcod.constants.CENTER, fg=self.interactee.colour)
         console.print(x=console.width // 2 + 6, y=y + 5, string=f"[N]: No",
                       alignment=tcod.constants.CENTER, fg=self.interactee.colour)
+
+
+class DoorEventHandler(AskUserEventHandler):
+    """Handle space-to-interact with a door object."""
+
+    def __init__(self, interactee: parts.entity.StaticObject):
+        super().__init__(),
+        self.interactee = interactee
+
+    def on_render(self, console: tcod.Console) -> MainGameEventHandler:
+        super().on_render(console)
+        core.g.engine.message_log.add_message(self.interactee.interact_message, config.colour.impossible)
+        return MainGameEventHandler()
 
 
 class SelectIndexHandler(AskUserEventHandler):
@@ -1212,6 +1236,10 @@ class LookHandler(SelectIndexHandler):
                         entity_content["footer"] = "ENEMY"
                         entity_content['footer_colour'] = tcod.red
 
+                    # Handle footer for doors
+                    if hasattr(entity, "properties"):
+                        entity_content["properties"] = entity.properties
+
                     # Look box size
                     width = console.width // 4 + 2
                     height = len(entity_content['description']) // (console.width // 4) + 8
@@ -1257,6 +1285,16 @@ class LookHandler(SelectIndexHandler):
                     console.print(x=x + 17 + str_len, y=y + height - 2, string="bloody",
                                   fg=tcod.darker_crimson, alignment=tcod.constants.RIGHT)
                     str_len += len(modifier)
+        if 'properties' in content_dict:
+            if 'Open' in content_dict['properties']:
+                console.print(x=x + width - 2, y=y + height - 1, string="Open",
+                              fg=tcod.yellow, alignment=tcod.constants.RIGHT)
+            elif 'Closed' in content_dict['properties']:
+                console.print(x=x + width - 2, y=y + height - 1, string="Closed",
+                              fg=tcod.yellow, alignment=tcod.constants.RIGHT)
+            elif 'Locked' in content_dict['properties']:
+                console.print(x=x + width - 2, y=y + height - 1, string="Locked",
+                              fg=tcod.red, alignment=tcod.constants.RIGHT)
         console.print(x=x + 1, y=y + height - 1, string=content_dict['footer'], fg=content_dict['footer_colour'],
                       alignment=tcod.constants.LEFT)
 

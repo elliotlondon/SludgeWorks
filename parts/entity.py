@@ -339,7 +339,8 @@ class StaticObject(Entity):
             colour: Tuple[int, int, int] = (255, 255, 255),
             name: str = "<Unnamed>",
             interact_message: str = "<Undefined>",
-            description: str
+            description: str,
+            properties: Optional[List]
     ):
         super().__init__(
             x=x,
@@ -352,7 +353,9 @@ class StaticObject(Entity):
             description=description
         )
 
+        self.base_colour = colour
         self.interact_message = interact_message
+        self.properties = properties
 
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):

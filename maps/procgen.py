@@ -199,7 +199,7 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
         # Add some random rooms in accessible locations
         for room in range(extra_rooms):
             if isinstance(maps.procgen.place_congruous_room(dungeon, engine), config.exceptions.MapGenError):
-                core.g.engine.message_log.add_message("Could not add new room...", config.colour.debug)
+                engine.message_log.add_message("Could not add new room...", config.colour.debug)
 
         # Add rocks/water
         dungeon = add_rubble(dungeon, events=7)
@@ -720,7 +720,8 @@ def place_congruous_room(dungeon: SimpleGameMap, engine: Engine) -> Optional[Non
 
     tries = 0
     while True in edges:
-        engine.message_log.add_message(f"Placing random rect. room. Attempt {tries + 1}")
+        if logging.DEBUG >= logging.root.level:
+            engine.message_log.add_message(f"Placing random rect. room. Attempt {tries + 1}", config.colour.debug)
         try_index = random.choice(np.argwhere(edges == True))
 
         # Check if there is an available area to place the room NESW by evaluating neighbours
@@ -855,26 +856,37 @@ def place_congruous_room(dungeon: SimpleGameMap, engine: Engine) -> Optional[Non
     for w_tile in w_border:
         dungeon.tiles[w_tile[0], w_tile[1]] = maps.tiles.wooden_wall
 
+    # Add doors as static objects with appropriate face
+    door_top = copy.deepcopy(
+        create_static_object_from_json(f"data/static_objects/core_objects.json", 'shanty_door_top'))
+    door_side = copy.deepcopy(
+        create_static_object_from_json(f"data/static_objects/core_objects.json", 'shanty_door_side'))
     while doors > 0:
         if selections == []:
-            raise MapGenError("Could not place room: No tiles available to place entry/exit")
+            if logging.DEBUG >= logging.root.level:
+                return MapGenError("Could not place room: No tiles available to place entry/exit")
+            return
         selection = random.choice(selections)
         if selection == "n":
             selections.remove("n")
             door_tile = random.choice(n_bordering)
-            dungeon.tiles[door_tile] = maps.tiles.debug_door_top
+            dungeon.tiles[door_tile] = random.choice(maps.tiles.floor_tiles_1)
+            door_top.spawn(dungeon, door_tile[0], door_tile[1])
         elif selection == "e":
             selections.remove("e")
             door_tile = random.choice(e_bordering)
-            dungeon.tiles[door_tile] = maps.tiles.debug_door_top
+            dungeon.tiles[door_tile] = random.choice(maps.tiles.floor_tiles_1)
+            door_top.spawn(dungeon, door_tile[0], door_tile[1])
         elif selection == "s":
             selections.remove("s")
             door_tile = random.choice(s_bordering)
-            dungeon.tiles[door_tile] = maps.tiles.debug_door_side
+            dungeon.tiles[door_tile] = random.choice(maps.tiles.floor_tiles_1)
+            door_side.spawn(dungeon, door_tile[0], door_tile[1])
         elif selection == "w":
             selections.remove("w")
             door_tile = random.choice(w_bordering)
-            dungeon.tiles[door_tile] = maps.tiles.debug_door_side
+            dungeon.tiles[door_tile] = random.choice(maps.tiles.floor_tiles_1)
+            door_side.spawn(dungeon, door_tile[0], door_tile[1])
         doors -= 1
 
     return None

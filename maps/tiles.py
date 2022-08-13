@@ -48,8 +48,8 @@ def get_clean_name(tile: tile_dt) -> str:
     name = name.replace("down stairs", "Next Floor")
     name = name.replace("Hole", "Chasm")
     name = name.replace("hole", "Chasm")
-    name = name.replace("Hut Wall", "Wooden Wall")
-    name = name.replace("hut Wall", "Wooden Wall")
+    name = name.replace("woodenwall", "Wooden Wall")
+    name = name.replace("Woodenwall", "Wooden Wall")
 
     return name
 

@@ -14,6 +14,7 @@ import parts.effects
 from config.exceptions import Impossible
 from core.action import Action, ItemAction
 from utils.random_utils import roll_dice
+from data.object_factory import create_static_object_from_json
 
 if TYPE_CHECKING:
     from parts.entity import Entity, Actor, Item
@@ -392,16 +393,38 @@ class MovementAction(ActionWithDirection):
         dest_x, dest_y = self.dest_xy
 
         if not core.g.engine.game_map.in_bounds(dest_x, dest_y):
-            # Destination is out of bounds.
             raise Impossible("That way is blocked.")
         if not core.g.engine.game_map.tiles["walkable"][dest_x, dest_y]:
-            # Destination is blocked by a tile.
             raise Impossible("That way is blocked.")
         if core.g.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
-            # Destination is blocked by a tile.
             raise Impossible("That way is blocked.")
 
         self.entity.move(self.dx, self.dy)
+
+
+class DoorAction(ActionWithDirection):
+    """Action for when an entity attempts to pass through a door"""
+
+    def __init__(self, entity: Actor, door: parts.entity.StaticObject, dx: int, dy: int):
+        super().__init__(entity, dx, dy)
+        self.door = door
+
+    def perform(self) -> None:
+        if "Unlocked" in self.door.properties:
+            if "Closed" in self.door.properties:
+                self.door.blocks_movement = False
+                self.door.colour = tcod.grey
+                self.door.properties.remove("Closed")
+                self.door.properties.append("Open")
+                core.g.engine.message_log.add_message("You open the door.", config.colour.use)
+            elif "Open" in self.door.properties:
+                self.door.blocks_movement = True
+                self.door.colour = self.door.base_colour
+                self.door.properties.remove("Open")
+                self.door.properties.append("Closed")
+                core.g.engine.message_log.add_message("You close the door.", config.colour.use)
+        elif "Locked" in self.door.properties:
+            core.g.engine.message_log.add_message("This door is locked.", config.colour.impossible)
 
 
 class SwapAction(ActionWithDirection):

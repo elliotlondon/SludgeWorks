@@ -203,8 +203,8 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
                     engine.message_log.add_message("Could not add new room...", config.colour.debug)
 
         # Add rocks/water
-        dungeon = add_rubble(dungeon, events=7)
-        dungeon = add_hazards(dungeon, floods=5, holes=3)
+        dungeon = add_rubble(dungeon, events=4)
+        dungeon = add_hazards(dungeon, floods=4, holes=3)
         dungeon = add_features(dungeon)
 
         # Populate dungeon

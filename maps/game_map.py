@@ -195,6 +195,10 @@ class SimpleGameMap:
         for entity in self.entities:
             if isinstance(entity, parts.entity.StaticObject):
                 accessible[entity.x, entity.y] = False
+            # Unlocked doors do not interfere with accessibility
+            if hasattr(entity, "properties"):
+                if "Door" in entity.name and not "Locked" in entity.properties:
+                    accessible[entity.x, entity.y] = True
 
         return accessible
 
@@ -258,10 +262,10 @@ class SimpleGameMap:
                     light_bg = kwargs[key]
                 elif key == "modifiers":
                     modifiers = kwargs[key]
-            if not 'hole' in self.tiles[x + coord[0], y + coord[1]][0]:
-                self.stain_tile(x + coord[0], y + coord[1],
-                                light_fg=light_fg, light_bg=light_bg,
-                                modifiers=modifiers)
+            # if not 'hole' in self.tiles[x + coord[0], y + coord[1]][0]:
+            self.stain_tile(x + coord[0], y + coord[1],
+                            light_fg=light_fg, light_bg=light_bg,
+                            modifiers=modifiers)
 
     def remove_entity_at_location(self, name: str, x: int, y: int):
         """Removes all entities corresponding to the given key from the dungeon. Used during mapgen if

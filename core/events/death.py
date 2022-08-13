@@ -31,7 +31,7 @@ class GameOverEventHandler(EventHandler):
 
         max_len = max([len(i) for i in [death_message, turns_survived]])
         width = max_len + 10
-        height = 10
+        height = 9
         x = console.width // 2 - int(width / 2)
         y = console.height // 2 - height
 
@@ -59,9 +59,7 @@ class GameOverEventHandler(EventHandler):
                       alignment=tcod.constants.LEFT, fg=tcod.white)
         console.print(x=x + 1, y=y + 6, string=f"[M]: View message log",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + 7, string=f"[S]: Save message log",
-                      alignment=tcod.constants.LEFT, fg=tcod.white)
-        console.print(x=x + 1, y=y + 9, string=f"[ESC]: Quit",
+        console.print(x=x + 1, y=y + 8, string=f"[ESC]: Quit",
                       alignment=tcod.constants.LEFT, fg=tcod.white)
 
     def ev_quit(self, event: tcod.event.Quit) -> None:
@@ -77,13 +75,6 @@ class GameOverEventHandler(EventHandler):
             return DeadHistoryViewer()
         elif event.sym == tcod.event.K_i:
             return DeadInventoryEventHandler()
-        elif event.sym == tcod.event.K_s:
-            with open('savegames/messages.txt', 'w', encoding='utf-8') as f:
-                for i in core.g.engine.message_log.messages:
-                    f.write(i.full_text)
-                    f.write('\n')
-                f.close()
-            return core.input_handlers.PopupMessage("Messages saved successfully to\n savegames/messages.txt.")
 
 
 class DeadHistoryViewer(core.input_handlers.EventHandler):

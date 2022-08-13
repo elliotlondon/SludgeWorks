@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 class Equippable:
     """Object which imparts characteristics to an Item"""
+
     def __init__(self,
                  equipment_type: EquipmentType,
                  modifiers: Optional[ItemModifier],

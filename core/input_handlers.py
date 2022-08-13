@@ -230,6 +230,10 @@ class MainGameEventHandler(EventHandler):
         elif core.g.engine.player.level.requires_level_up:
             return LevelUpEventHandler()
 
+        # Clean map of removed entities
+        core.g.engine.game_map.entities = set([x for x in core.g.engine.game_map.entities
+                                               if x not in core.g.engine.game_map.exiles])
+
         return self
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:

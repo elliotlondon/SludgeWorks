@@ -71,6 +71,7 @@ class Shove(Mutation):
             self.cooldown = 6
             return core.abilities.ShoveAction(caster, target, x, y)
 
+
 class Bite(Mutation):
     """Bite the target. Cannot be dodged but damage can be resisted. Can cause bleeding if vit check 12 fails."""
     parent: Actor

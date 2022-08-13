@@ -1,9 +1,7 @@
 """Frequently accessed globals are declared here."""
 from __future__ import annotations
 
-import numpy as np
-
-from typing import TYPE_CHECKING, Iterator, List
+from typing import TYPE_CHECKING
 
 import tcod
 

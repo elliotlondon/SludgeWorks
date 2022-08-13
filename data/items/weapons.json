@@ -42,7 +42,7 @@
         "intellect_bonus": 0,
         "armour_bonus": 0,
         "modifiers": {
-          "poison":{
+          "poison": {
             "damage": 1,
             "turns": 5,
             "difficulty": 10

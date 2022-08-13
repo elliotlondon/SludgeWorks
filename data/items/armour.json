@@ -1,42 +1,50 @@
 [
-{
+  {
     "leather_armour": {
-        "char": "]",
-        "colour": [191, 95, 0],
-        "name": "Leather Armour",
-        "equipment_type": "Torso",
-        "equipment": {
-            "damage_dice": 0,
-            "damage_sides": 0,
-            "strength_bonus": 0,
-            "dexterity_bonus": 0,
-            "vitality_bonus": 0,
-            "intellect_bonus": 0,
-            "armour_bonus": 1
-        },
-        "depth": 1,
-        "rarity": 1,
-        "description": "A durable pocketed leather jacket from the surface."
+      "char": "]",
+      "colour": [
+        191,
+        95,
+        0
+      ],
+      "name": "Leather Armour",
+      "equipment_type": "Torso",
+      "equipment": {
+        "damage_dice": 0,
+        "damage_sides": 0,
+        "strength_bonus": 0,
+        "dexterity_bonus": 0,
+        "vitality_bonus": 0,
+        "intellect_bonus": 0,
+        "armour_bonus": 1
+      },
+      "depth": 1,
+      "rarity": 1,
+      "description": "A durable pocketed leather jacket from the surface."
     }
-},
-{
+  },
+  {
     "cuirass": {
-        "char": "]",
-        "colour": [203, 203, 203],
-        "name": "Steel Cuirass",
-        "equipment_type": "Torso",
-        "equipment": {
-            "damage_dice": 0,
-            "damage_sides": 0,
-            "strength_bonus": 0,
-            "dexterity_bonus": 0,
-            "vitality_bonus": 0,
-            "intellect_bonus": 0,
-            "armour_bonus": 3
-        },
-        "depth": 3,
-        "rarity": 3,
-        "description": "A thick steel platebody emblazoned with silver filigree. It feels unnaturally light."
+      "char": "]",
+      "colour": [
+        203,
+        203,
+        203
+      ],
+      "name": "Steel Cuirass",
+      "equipment_type": "Torso",
+      "equipment": {
+        "damage_dice": 0,
+        "damage_sides": 0,
+        "strength_bonus": 0,
+        "dexterity_bonus": 0,
+        "vitality_bonus": 0,
+        "intellect_bonus": 0,
+        "armour_bonus": 3
+      },
+      "depth": 3,
+      "rarity": 3,
+      "description": "A thick steel platebody emblazoned with silver filigree. It feels unnaturally light."
     }
-}
+  }
 ]

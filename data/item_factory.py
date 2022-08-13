@@ -1,14 +1,13 @@
 import json
-
 from typing import List
 
 import parts.consumable
+import parts.effects
 import parts.equippable
 from config.exceptions import DataLoadError
 from parts.entity import Item
 from parts.equipment_types import EquipmentType
 from parts.equippable import Equippable
-import parts.effects
 
 
 def create_item_from_json(path: str, request: str) -> Item:

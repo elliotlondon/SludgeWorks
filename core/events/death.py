@@ -1,9 +1,10 @@
+import os
 from typing import Optional
 
-import os
-import config.inputs
 import tcod
+
 import config.exceptions
+import config.inputs
 import core.g
 from core.input_handlers import EventHandler, BaseEventHandler
 

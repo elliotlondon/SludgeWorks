@@ -9,7 +9,6 @@ from typing import Tuple, Iterator, List, TYPE_CHECKING, Optional
 import numpy as np
 
 import config.colour
-import core.g
 import maps.tiles
 import parts.entity
 from config.exceptions import MapGenError, FatalMapGenError
@@ -309,7 +308,7 @@ def place_fauna(dungeon: SimpleGameMap, engine: Engine) -> None:
                                                      number_of_monsters)
     for i in range(len(monsters)):
         # Get the indices of tiles which are walkable
-        x, y = dungeon.get_random_walkable_tile()
+        x, y = dungeon.get_random_unoccupied_nonfov_tile()
 
         # Find Euclidean distance between monster spawn and player
         player_x = int(dungeon.engine.player.x)
@@ -449,10 +448,12 @@ def add_caves(dungeon: SimpleGameMap, smoothing: int, p: int) -> SimpleGameMap:
                         touching_empty_space += 1
                 if touching_empty_space >= 5 and not dungeon.tunnel[x, y]:
                     dungeon.tiles[x, y] = maps.tiles.wall
+                    dungeon.remove_entity_at_location('Door', x, y)
                 elif touching_empty_space <= 2:
                     dungeon.tiles[x, y] = random.choice(maps.tiles.floor_tiles_1)
                 if x == 0 or x == map_width - 1 or y == 0 or y == map_height - 1:
                     dungeon.tiles[x, y] = maps.tiles.wall
+                    dungeon.remove_entity_at_location('Door', x, y)
 
     return dungeon
 
@@ -478,6 +479,7 @@ def add_rubble(dungeon: SimpleGameMap, events: int) -> SimpleGameMap:
             for placement in range(pile_size):
                 try:
                     dungeon.tiles[random.choice(x_arr), random.choice(y_arr)] = maps.tiles.rubble
+                    dungeon.remove_entity_at_location('Door', x, y)
                 except IndexError:
                     continue
 

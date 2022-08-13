@@ -267,7 +267,8 @@ class SimpleGameMap:
         something was placed on a tile which is no longer valid."""
         for entity in self.entities:
             if entity.x == x and entity.y == y and name in entity.name:
-                self.entities.remove(entity)
+                self.exiles.append(entity)
+
 
 # TODO: Add saved gamemaps to gameworld
 class GameWorld:

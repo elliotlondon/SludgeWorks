@@ -19,7 +19,6 @@ from data.item_factory import create_item_from_json
 from data.monster_factory import create_monster_from_json
 from maps.game_map import GameWorld
 
-
 save_location = Path("savegames/savegame.sav")
 
 
@@ -173,6 +172,7 @@ class MainMenuPopupMessage(core.input_handlers.BaseEventHandler):
 
 class SaveExistsEventHandler(core.input_handlers.BaseEventHandler):
     """Check to see if a saved game already exists. If so, return a popup confirming whether to proceed."""
+
     def __init__(self, parent_handler: core.input_handlers.BaseEventHandler):
         self.parent = parent_handler
 
@@ -215,4 +215,3 @@ class SaveExistsEventHandler(core.input_handlers.BaseEventHandler):
                       alignment=tcod.constants.CENTER, fg=tcod.white)
         console.print(x=console.width // 2 + 6, y=y + 7, string=f"[N]: No",
                       alignment=tcod.constants.CENTER, fg=tcod.white)
-

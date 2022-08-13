@@ -133,11 +133,11 @@ rubble = new_tile(name="rubble",
 
 # Walls [Structures]
 wooden_wall = new_tile(name="wooden_wall",
-                walkable=False, transparent=False,
-                dark=(ord("▓"), tcod.grey, (0, 0, 0)),
-                light=(ord("#"), (125, 100, 75), (0, 0, 0)),
-                description=list("A wall made of dirtied and misshapen planks of wood. Scratches and bite marks "
-                                 "litter the surface. The structure is poorly made, but at least permanent."))
+                       walkable=False, transparent=False,
+                       dark=(ord("#"), tcod.grey, (0, 0, 0)),
+                       light=(ord("#"), (125, 100, 75), (0, 0, 0)),
+                       description=list("A wall made of dirtied and misshapen planks of wood. Scratches and bite marks "
+                                        "litter the surface. The structure is poorly made, but at least permanent."))
 
 # Liquids
 water = new_tile(name="water",

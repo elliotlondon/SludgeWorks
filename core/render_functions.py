@@ -69,6 +69,7 @@ def get_names_at_location(x: int, y: int, game_map: SimpleGameMap) -> str:
 
     return names.capitalize()
 
+
 def render_all(con, panel, player, entities, game_map, message_log, hp_bar, xp_bar, fov_map, root_width, root_height,
                game_window_width, game_window_height, panel_width, panel_height, stat_bar_width, stat_bar_height,
                fx_panel_width, fx_panel_height, camera_width, camera_height):

@@ -112,7 +112,6 @@ class Equipment(BaseComponent):
                         active_modifiers.append(modifier)
         return active_modifiers
 
-
     def item_is_equipped(self, item: Item) -> bool:
         return self.main_hand == item or self.off_hand == item or \
                self.head == item or self.torso == item or self.legs == item or self.feet == item or \

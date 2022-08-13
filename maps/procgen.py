@@ -478,7 +478,10 @@ def add_rubble(dungeon: SimpleGameMap, events: int) -> SimpleGameMap:
 
             for placement in range(pile_size):
                 try:
-                    dungeon.tiles[random.choice(x_arr), random.choice(y_arr)] = maps.tiles.rubble
+                    x = random.choice(x_arr)
+                    y = random.choice(y_arr)
+                    dungeon.tiles[x, y] = maps.tiles.rubble
+                    dungeon.tiles[x, y]['walkable'] = False
                     dungeon.remove_entity_at_location('Door', x, y)
                 except IndexError:
                     continue

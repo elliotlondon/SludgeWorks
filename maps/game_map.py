@@ -258,9 +258,10 @@ class SimpleGameMap:
                     light_bg = kwargs[key]
                 elif key == "modifiers":
                     modifiers = kwargs[key]
-            self.stain_tile(x + coord[0], y + coord[1],
-                            light_fg=light_fg, light_bg=light_bg,
-                            modifiers=modifiers)
+            if not 'hole' in self.tiles[x + coord[0], y + coord[1]][0]:
+                self.stain_tile(x + coord[0], y + coord[1],
+                                light_fg=light_fg, light_bg=light_bg,
+                                modifiers=modifiers)
 
     def remove_entity_at_location(self, name: str, x: int, y: int):
         """Removes all entities corresponding to the given key from the dungeon. Used during mapgen if

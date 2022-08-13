@@ -182,8 +182,9 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
 
         # If too few accessible tiles, retry
         if len(dungeon.accessible.nonzero()[0]) < 80 * 43 / 4:
-            engine.message_log.add_message(f"Too few accessible tiles ({len(dungeon.accessible.nonzero()[0])}).",
-                                           config.colour.debug)
+            if logging.DEBUG >= logging.root.level:
+                engine.message_log.add_message(f"Too few accessible tiles ({len(dungeon.accessible.nonzero()[0])}).",
+                                               config.colour.debug)
             tries += 1
             continue
         dungeon.prune_inaccessible(maps.tiles.wall)
@@ -199,7 +200,8 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
         # Add some random rooms in accessible locations
         for room in range(extra_rooms):
             if isinstance(maps.procgen.place_congruous_room(dungeon, engine), config.exceptions.MapGenError):
-                engine.message_log.add_message("Could not add new room...", config.colour.debug)
+                if logging.DEBUG >= logging.root.level:
+                    engine.message_log.add_message("Could not add new room...", config.colour.debug)
 
         # Add rocks/water
         dungeon = add_rubble(dungeon, events=7)
@@ -264,7 +266,8 @@ def place_flora(dungeon: SimpleGameMap, engine: Engine, areas: int) -> None:
             for y in y_arr:
                 if random.randint(0, 100) > p:
                     # Select a few random locations to become verdant
-                    if not dungeon.tiles[x, y]['name'] == 'hole' and not dungeon.tiles[x, y]['name'] == 'water':
+                    if not 'hole' in dungeon.tiles[x, y]['name'] and not 'water' in dungeon.tiles[x, y]['name'] \
+                            and not dungeon.room_zone[x, y]:
                         dungeon.tiles[x, y] = random.choice(maps.tiles.verdant_tiles_1)
                         verdant_array.append([x, y])
 
@@ -540,10 +543,12 @@ def erode(dungeon: SimpleGameMap, smoothing: int) -> SimpleGameMap:
                         touching_empty_space += 1
                 if touching_empty_space >= 5 and not dungeon.tunnel[x, y]:
                     dungeon.tiles[x][y] = maps.tiles.wall
+                    dungeon.remove_entity_at_location('Door', x, y)
                 elif touching_empty_space <= 3:
                     dungeon.tiles[x][y] = random.choice(maps.tiles.floor_tiles_1)
                 if x == 0 or x == dungeon.width - 1 or y == 0 or y == dungeon.height - 1:
                     dungeon.tiles[x][y] = maps.tiles.wall
+                    dungeon.remove_entity_at_location('Door', x, y)
 
     return dungeon
 
@@ -561,6 +566,7 @@ def spill_liquid(dungeon: SimpleGameMap, smoothing: int) -> SimpleGameMap:
                         touching_liquid += 1
                 if touching_liquid >= 4 and not dungeon.tunnel[x, y]:
                     dungeon.tiles[x][y] = maps.tiles.water
+                    dungeon.remove_entity_at_location('Door', x, y)
 
     return dungeon
 
@@ -578,6 +584,7 @@ def add_hazards(dungeon: SimpleGameMap, floods: int, holes: int) -> SimpleGameMa
 
         # Create first water tile
         dungeon.tiles[start_x, start_y] = maps.tiles.water
+        dungeon.remove_entity_at_location('Door', start_x, start_y)
 
         # Decide spill size
         spill_size = random.randint(4, 16)
@@ -590,6 +597,7 @@ def add_hazards(dungeon: SimpleGameMap, floods: int, holes: int) -> SimpleGameMa
             new_y += random.randint(-1, 1)
             try:
                 dungeon.tiles[new_x, new_y] = maps.tiles.water
+                dungeon.remove_entity_at_location('Door', new_x, new_y)
             except IndexError:
                 pass
             j += 1
@@ -616,6 +624,7 @@ def add_hazards(dungeon: SimpleGameMap, floods: int, holes: int) -> SimpleGameMa
                     hole_x = random.choice(x_arr)
                     hole_y = random.choice(y_arr)
                     dungeon.tiles[hole_x, hole_y] = maps.tiles.hole
+                    dungeon.remove_entity_at_location('Door', hole_x, hole_y)
                 except IndexError:
                     continue
 
@@ -846,14 +855,23 @@ def place_congruous_room(dungeon: SimpleGameMap, engine: Engine) -> Optional[Non
         for y in np.arange(indices_y[0], indices_y[-1]):
             dungeon.tiles[x, y] = random.choice(maps.tiles.floor_tiles_1)
 
-    # Perimeter as walls
+    # Perimeter as walls. Invalid if the wall would be placed at the player spawn location
+    player_xy = (engine.player.x, engine.player.y)
     for n_tile in n_border:
+        if player_xy == n_tile:
+            return None
         dungeon.tiles[n_tile[0], n_tile[1]] = maps.tiles.wooden_wall
     for e_tile in e_border:
+        if player_xy == e_tile:
+            return None
         dungeon.tiles[e_tile[0], e_tile[1]] = maps.tiles.wooden_wall
     for s_tile in s_border:
+        if player_xy == s_tile:
+            return None
         dungeon.tiles[s_tile[0], s_tile[1]] = maps.tiles.wooden_wall
     for w_tile in w_border:
+        if player_xy == w_tile:
+            return None
         dungeon.tiles[w_tile[0], w_tile[1]] = maps.tiles.wooden_wall
 
     # Add doors as static objects with appropriate face

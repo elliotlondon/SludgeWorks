@@ -52,6 +52,15 @@ class Engine:
 
     def update_fov(self) -> None:
         """Recompute the visible area based on the players point of view."""
+        # First handle open/closed door changing fov algo
+        for entity in self.game_map.entities:
+            if 'Door' in entity.name:
+                if 'Open' in entity.properties:
+                    self.game_map.tiles[entity.x, entity.y]['transparent'] = True
+                elif 'Closed' in entity.properties:
+                    self.game_map.tiles[entity.x, entity.y]['transparent'] = False
+
+        # Derive all other fov from tile properties
         self.game_map.visible[:] = compute_fov(
             self.game_map.tiles["transparent"],
             (self.player.x, self.player.y),

@@ -303,7 +303,7 @@ def generate_debug_floor(engine: Engine):
         dungeon = maps.procgen.add_features(dungeon)
 
         # Populate dungeon
-        # maps.procgen.place_flora(dungeon, engine, areas=3)
+        maps.procgen.place_flora(dungeon, engine, areas=3)
         maps.procgen.place_fauna(dungeon, engine)
         maps.procgen.place_npcs(dungeon, engine)
         maps.procgen.place_items(dungeon, engine)

@@ -262,6 +262,12 @@ class SimpleGameMap:
                             light_fg=light_fg, light_bg=light_bg,
                             modifiers=modifiers)
 
+    def remove_entity_at_location(self, name: str, x: int, y: int):
+        """Removes all entities corresponding to the given key from the dungeon. Used during mapgen if
+        something was placed on a tile which is no longer valid."""
+        for entity in self.entities:
+            if entity.x == x and entity.y == y and name in entity.name:
+                self.entities.remove(entity)
 
 # TODO: Add saved gamemaps to gameworld
 class GameWorld:

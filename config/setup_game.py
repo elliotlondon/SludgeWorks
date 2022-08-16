@@ -75,7 +75,7 @@ def save_game(path: Path) -> None:
     if not hasattr(core.g, "engine"):
         return  # If called before a new game is started then g.engine is not assigned.
     path.write_bytes(pickle.dumps(core.g.engine))
-    
+
 
 def load_game(path: Path) -> Engine:
     """Load an Engine instance from a file."""

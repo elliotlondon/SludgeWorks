@@ -16,7 +16,6 @@ import parts.inventory
 from config.exceptions import Impossible
 from core.actions import Action
 from core.render_functions import RenderOrder
-from core.rendering import render_map, render_ui
 from maps.tiles import get_clean_name
 from parts.ai import NPC
 from parts.entity import Actor
@@ -86,8 +85,7 @@ class EventHandler(BaseEventHandler):
             core.g.engine.mouse_location = event.tile.x, event.tile.y
 
     def on_render(self, console: tcod.Console) -> None:
-        render_map(console, core.g.engine.game_map)
-        render_ui(console, core.g.engine)
+        core.g.engine.render()
 
 
 class PopupMessage(EventHandler):
@@ -148,8 +146,7 @@ class ExploreEventHandler(EventHandler):
             core.g.engine.handle_enemy_turns()
             core.g.engine.update_fov()
             # Render all
-            render_ui(core.g.console, core.g.engine)
-            render_map(core.g.console, core.g.engine.game_map)
+            core.g.engine.render()
             core.g.context.present(core.g.console)
 
         return MainGameEventHandler()
@@ -189,8 +186,7 @@ class TakeStairsEventHandler(EventHandler):
             core.g.engine.handle_enemy_turns()
             core.g.engine.update_fov()
             # Render all
-            render_ui(core.g.console, core.g.engine)
-            render_map(core.g.console, core.g.engine.game_map)
+            core.g.engine.render()
             core.g.context.present(core.g.console)
 
         return MainGameEventHandler()

@@ -28,6 +28,7 @@ def new_game() -> Engine:
     engine = Engine(player=player)
 
     # Settings for the first floor go here
+    # map_width=80, map_height=43
     engine.game_world = GameWorld(
         max_rooms=25,
         room_min_size=6,

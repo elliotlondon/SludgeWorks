@@ -5,6 +5,9 @@ savegames/messages.txt
 # Mapgen stuff
 maps/*.sav
 
+# Profiling
+profiler.py
+
 # Python optimized files
 *.pyo
 

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import copy
-import lzma
 import pickle
 import traceback
 from pathlib import Path
@@ -75,13 +74,12 @@ def save_game(path: Path) -> None:
     """If an engine is active then save it."""
     if not hasattr(core.g, "engine"):
         return  # If called before a new game is started then g.engine is not assigned.
-    path.write_bytes(lzma.compress(pickle.dumps(core.g.engine)))
-    print("Game saved.")
-
+    path.write_bytes(pickle.dumps(core.g.engine))
+    
 
 def load_game(path: Path) -> Engine:
     """Load an Engine instance from a file."""
-    engine = pickle.loads(lzma.decompress(path.read_bytes()))
+    engine = pickle.loads(path.read_bytes())
     assert isinstance(engine, Engine)
     core.g.engine = engine
     return engine

@@ -54,9 +54,6 @@ def get_clean_name(tile: tile_dt) -> str:
     return name
 
 
-# SHROUD represents unexplored, unseen tiles
-SHROUD = np.array((ord(" "), (255, 255, 255), (0, 0, 0)), dtype=graphic_dt)
-
 # Floors
 dirt_1 = new_tile(name="dirt_1",
                   walkable=True, transparent=True,

@@ -33,8 +33,8 @@ def new_game() -> Engine:
         max_rooms=25,
         room_min_size=6,
         room_max_size=10,
-        map_width=80,
-        map_height=43,
+        map_width=100,
+        map_height=60,
         engine=engine
     )
     engine.game_world.generate_floor()

@@ -85,7 +85,7 @@ class EventHandler(BaseEventHandler):
             core.g.engine.mouse_location = event.tile.x, event.tile.y
 
     def on_render(self, console: tcod.Console) -> None:
-        core.g.engine.render()
+        core.g.engine.game_map.render()
 
 
 class PopupMessage(EventHandler):
@@ -144,9 +144,9 @@ class ExploreEventHandler(EventHandler):
                 return InterruptHandler()
             # Handle enemy turns
             core.g.engine.handle_enemy_turns()
-            core.g.engine.update_fov()
             # Render all
-            core.g.engine.render()
+            core.g.engine.game_map.render()
+            core.g.engine.update_fov()
             core.g.context.present(core.g.console)
 
         return MainGameEventHandler()
@@ -184,9 +184,9 @@ class TakeStairsEventHandler(EventHandler):
                 return InterruptHandler()
             # Handle enemy turns
             core.g.engine.handle_enemy_turns()
-            core.g.engine.update_fov()
             # Render all
-            core.g.engine.render()
+            core.g.engine.game_map.render()
+            core.g.engine.update_fov()
             core.g.context.present(core.g.console)
 
         return MainGameEventHandler()

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import random
-from typing import Iterable, Iterator, Optional, TYPE_CHECKING, Tuple, Dict, List
+from typing import Iterable, Iterator, Optional, TYPE_CHECKING, Tuple, Dict, List, NamedTuple
 
 import numpy as np
 
+import config.colour
+import core.render_functions
 import parts.entity
 from maps import tiles
 from parts.ai import PassiveStationary, NPC
@@ -19,6 +21,8 @@ import maps.tiles
 
 
 class SimpleGameMap:
+    SHROUD = np.array((ord(" "), (255, 255, 255), (0, 0, 0)), dtype=maps.tiles.graphic_dt)
+
     def __init__(
             self, engine: Engine, width: int, height: int, entities: Iterable[Entity] = ()):
         self.engine = engine
@@ -35,11 +39,16 @@ class SimpleGameMap:
         self.explored = np.full((width, height), fill_value=False, order="F")  # Tiles the player has seen before
         self.accessible = np.full((width, height), fill_value=False, order="F")  # Tiles the player can access by foot
 
-        self.downstairs_location = (0, 0)
+        self.camera_xy = (0, 0)  # Camera center position.
+        self.downstairs_location = (0, 0)  # Location of the stairs leading to the exit
 
     @property
     def gamemap(self) -> SimpleGameMap:
         return self
+
+    @property
+    def camera(self) -> Camera:
+        return Camera(*self.camera_xy)
 
     @property
     def actors(self) -> Iterator[parts.entity.Actor]:
@@ -274,6 +283,78 @@ class SimpleGameMap:
             if entity.x == x and entity.y == y and name in entity.name:
                 self.exiles.append(entity)
 
+    def render(self) -> None:
+        """Render everything on the screen when called"""
+        from core.g import console
+        self.camera_xy = (core.g.engine.player.x, core.g.engine.player.y)
+
+        # First render the game map
+        screen_shape = core.g.console.width, core.g.console.height - 7
+        cam_x, cam_y = self.camera.get_left_top_pos(screen_shape)
+
+        # Get the screen and world view slices.
+        screen_view, world_view = self.camera.get_views(screen_shape,
+                                                        (self.width, self.height),
+                                                        (cam_x, cam_y))
+
+        # Draw the console based on visible or explored areas.
+        console.tiles_rgb[:] = self.SHROUD
+        console.tiles_rgb[screen_view] = np.select(
+            (self.visible[world_view], self.explored[world_view]),
+            (self.tiles["light"][world_view], self.tiles["dark"][world_view]),
+            self.SHROUD
+        )
+
+        # Draw entities
+        for entity in sorted(self.entities, key=lambda x: x.render_order.value):
+            entity_x, entity_y = entity.x - cam_x, entity.y - cam_y
+            if not (0 <= entity_x < console.width and 0 <= entity_y < console.height):
+                continue
+            if not self.visible[entity.x, entity.y]:
+                continue
+            console.tiles_rgb[["ch", "fg"]][entity_x, entity_y] = ord(entity.char), entity.colour
+
+        # Now render the ui components
+        core.g.engine.message_log.render(console=console, x=21, y=45, width=55, height=5)
+
+        # Render hp bar
+        core.render_functions.render_bar(
+            console=console,
+            current_value=core.g.engine.player.fighter.hp,
+            max_value=core.g.engine.player.fighter.max_hp,
+            x=1,
+            y=core.g.screen_height - 5,
+            bg_empty=config.colour.hp_bar_empty,
+            bg_full=config.colour.hp_bar_filled,
+            text=f"HP: {core.g.engine.player.fighter.hp}/{core.g.engine.player.fighter.max_hp}",
+            total_width=20,
+        )
+
+        # Render xp bar
+        core.render_functions.render_bar(
+            console=console,
+            current_value=core.g.engine.player.level.current_xp,
+            max_value=core.g.engine.player.level.experience_to_next_level,
+            x=1,
+            y=core.g.screen_height - 4,
+            bg_empty=config.colour.xp_bar_empty,
+            bg_full=config.colour.xp_bar_filled,
+            text=f"XP: {core.g.engine.player.level.current_xp}/{core.g.engine.player.level.experience_to_next_level}",
+            total_width=20,
+        )
+
+        core.render_functions.render_dungeon_level(
+            console=console,
+            dungeon_level=core.g.engine.game_world.current_floor,
+            location=(0, core.g.screen_height - 3),
+        )
+
+        core.render_functions.render_turn_number(
+            console=console,
+            turn_number=core.g.engine.turn_number,
+            location=(0, core.g.screen_height - 2)
+        )
+
 
 # TODO: Add saved gamemaps to gameworld
 class GameWorld:
@@ -393,36 +474,6 @@ class GameWorld:
         self.floors[f'level_{self.current_floor}'] = new_floor
 
 
-# class GameMap:
-#     dark_wall = tcod.dark_grey
-#     light_wall = tcod.Color(150, 100, 50)
-#     dark_ground = tcod.black
-#     light_ground = tcod.dark_grey
-#     floor_chars = [' ', '.', ',', '`']
-#
-#     def __init__(self, current_biome, width: int, height: int, max_room_size=10, min_room_size=6, max_rooms=25,
-#                  dungeon_level=1):
-#         self.current_biome = current_biome
-#         self.width, self.height = width, height
-#         self.min_room_size, self.max_room_size, max_rooms = min_room_size, max_room_size, max_rooms
-#         self.tiles = self.initialize_tiles()
-#         self.dungeon_level = dungeon_level
-#
-#     def __iter__(self):
-#         for xi in range(self.width):
-#             for yi in range(self.height):
-#                 yield xi, yi, self.tiles[xi][yi]
-#
-#     def initialize_tiles(self):
-#         tiles = [[Tile(True) for y in range(self.height)] for x in range(self.width)]
-#         return tiles
-#
-#     def place_entities(self, map_width, map_height, entities):
-#         room = Rect(0, 0, map_width, map_height)  # Room is the entire dungeon
-#         max_monsters = from_dungeon_level([[50, 1], [75, 2], [85, 4], [100, 6]], self.dungeon_level)
-#         max_plants = from_dungeon_level([[25, 1], [35, 3], [50, 4], [35, 6]], self.dungeon_level)
-#         max_items = from_dungeon_level([[20, 1], [25, 3], [30, 4]], self.dungeon_level)
-
 # # Item dictionary
 # item_chances = {
 #     'healing_potion': 35,
@@ -445,12 +496,6 @@ class GameWorld:
 #     'fireball_scroll': from_dungeon_level([[5, 4], [10, 6]], self.dungeon_level),
 #     'confusion_scroll': from_dungeon_level([[5, 0], [10, 4]], self.dungeon_level)
 # }
-#
-# def returncoordinatesinmap(self, coord_x, coord_y):
-#     if coord_x >= 0 and coord_x < self.width:
-#         if coord_y >= 0 and coord_y < self.height:
-#             return True
-#         return False
 #
 # @staticmethod
 # def variable_width(previous_width):
@@ -507,59 +552,6 @@ class GameWorld:
 #     # Heal on change of floors?
 #     # player.fighter.heal(player.fighter.max_hp // 2)
 #     return entities
-#
-# def make_map(self, player, entities):
-#     # Generate each floor's map by calling the appropriate chamber creation function.
-#     x = uniform(0, 1)
-#     if self.dungeon_level == 1:
-#         self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
-#         self.erode(1)
-#         return
-#     if self.current_biome == 'near_surface':
-#         if x >= 0.25:
-#             self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
-#             self.erode(1)
-#         elif x >= 0.5:
-#             self.current_biome = 'ice_caves'
-#             self.light_wall = tcod.white
-#             self.floor_chars = ['~', ' ', ',', '`', ' ']
-#             self.caves_chamber(45, 1)
-#             self.erode(1)
-#             self.rooms_chamber(16, 8, 75, player, entities)
-#             self.erode(1)
-#         else:
-#             self.current_biome = 'chasms'
-#             self.light_wall = tcod.dark_grey
-#             self.floor_chars = [' ', '.', ',', '`']
-#             self.rooms_chamber(8, 4, 50, player, entities)
-#             self.caves_chamber(60, 2)
-#             self.erode(1)
-#     elif self.current_biome == 'ice_caves':
-#         if x >= 0.8:
-#             self.current_biome = 'near_surface'
-#             self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
-#             self.erode(1)
-#         elif 0.8 > x >= 0.2:
-#             self.caves_chamber(45, 1)
-#             self.erode(1)
-#             self.rooms_chamber(16, 8, 75, player, entities)
-#             self.erode(1)
-#         else:
-#             self.current_biome = 'chasms'
-#             self.light_ground = tcod.dark_grey
-#             self.floor_chars = [' ', '.', ',', '`']
-#             self.rooms_chamber(8, 4, 50, player, entities)
-#             self.caves_chamber(60, 2)
-#             self.erode(1)
-#     elif self.current_biome == 'chasms':
-#         if x >= 0.75:
-#             self.current_biome = 'near_surface'
-#             self.rooms_chamber(self.max_room_size, self.min_room_size, self.max_rooms, player, entities)
-#             self.erode(1)
-#         else:
-#             self.rooms_chamber(8, 4, 50, player, entities)
-#             self.caves_chamber(60, 2)
-#             self.erode(1)
 
 
 class Tile:
@@ -591,3 +583,64 @@ class Rect:
         # returns true if this rectangle intersects with another one
         return (self.x1 <= other.x2 and self.x2 >= other.x1 and
                 self.y1 <= other.y2 and self.y2 >= other.y1)
+
+
+class Camera(NamedTuple):
+    """An object for tracking the camera position and for screen/world conversions.
+    `x` and `y` are the camera center position."""
+    x: int
+    y: int
+
+    def get_left_top_pos(self, screen_shape: Tuple[int, int]) -> Tuple[int, int]:
+        """Return the (left, top) position of the camera for a screen of this size."""
+        return self.x - screen_shape[0] // 2, self.y - screen_shape[1] // 2
+
+    def _get_view_slice(self, screen_width: int, world_width: int, anchor: int) -> slice:
+        """Return 1D (screen_view, world_view) slices.
+
+        Letterboxing is added to fit the views to the screen.
+        Out-of-bounds slices are zero width and will result in zero length arrays when used.
+
+        Args:
+            screen_width: The width of the screen shape.
+            world_width: The width of the world shape.
+            anchor: The world point to place at screen position zero.
+        """
+        # Moving the anchor past the left of the world will push the screen to the right.
+        # This adds the leftmost letterbox to the screen.
+        screen_left = max(0, -anchor)
+        # The anchor moving past the left of the world will slice into the world from the left.
+        # This keeps the world view in sync with the screen and the leftmost letterbox.
+        world_left = max(0, anchor)
+        # The view width is clamped to the smallest possible size between the screen and world.
+        # This adds the rightmost letterbox to the screen.
+        # The screen and world can be out-of-bounds of each other, causing a width of zero.
+        view_width = max(0, min(screen_width - screen_left, world_width - world_left))
+        screen_view = slice(screen_left, screen_left + view_width)
+        world_view = slice(world_left, world_left + view_width)
+        return screen_view, world_view
+
+    def get_views(self, screen_shape: tuple[int, int], world_shape: tuple[int, int], anchor: tuple[int, int]
+                  ) -> tuple[tuple[slice, slice], tuple[slice, slice]]:
+        """Return (screen_view, world_view) as 2D slices for use with NumPy.
+
+        These views are used to slice their respective arrays.
+        `anchor` should be (i, j) or (x, y) depending on the order of the shapes.
+        Letterboxing is added to the views to make them fit.
+        Out-of-bounds views are zero width.
+
+        Args:
+            screen_shape: The shape of the screen array.
+            world_shape: The shape of the world array.
+            anchor: The world point to place at (0, 0) on the screen.
+
+        Example::
+            camera: tuple[int, int]  # (y, x) by default, (x, y) if arrays are order="F".
+            screen: NDArray[Any]
+            world: NDArray[Any]
+            screen_view, world_view = get_views(camera, screen.shape, world.shape)
+            screen[screen_view] = world[world_view]
+        """
+        i_slice = self._get_view_slice(screen_shape[0], world_shape[0], anchor[0])
+        j_slice = self._get_view_slice(screen_shape[1], world_shape[1], anchor[1])
+        return (i_slice[0], j_slice[0]), (i_slice[1], j_slice[1])

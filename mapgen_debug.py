@@ -96,6 +96,11 @@ class MapGenMainMenu(core.input_handlers.BaseEventHandler):
 
 
 class MapGenEventHandler(core.input_handlers.EventHandler):
+
+    def __init__(self):
+        super(MapGenEventHandler, self).__init__()
+        self.position = (core.g.screen_width // 2, core.g.screen_height // 2)
+
     def handle_events(self, event: tcod.event.Event) -> core.input_handlers.BaseEventHandler:
         """Handle an event, perform any actions, then return the next active event handler."""
         action_or_state = self.dispatch(event)
@@ -118,7 +123,20 @@ class MapGenEventHandler(core.input_handlers.EventHandler):
             return self
         elif key == tcod.event.K_m:
             return MapGenHistoryViewer()
-
+        elif key == tcod.event.K_c:
+            core.g.engine.player.x, core.g.engine.player.y = self.position
+        elif key in config.inputs.MOVE_KEYS:
+            modifier = 1  # Holding modifier keys will speed up key movement.
+            if event.mod & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT):
+                modifier *= 5
+            if event.mod & (tcod.event.KMOD_LCTRL | tcod.event.KMOD_RCTRL):
+                modifier *= 10
+            if event.mod & (tcod.event.KMOD_LALT | tcod.event.KMOD_RALT):
+                modifier *= 20
+            dx, dy = config.inputs.MOVE_KEYS[key]
+            dx *= modifier
+            dy *= modifier
+            core.g.engine.player.move(dx, dy)
         return action
 
 

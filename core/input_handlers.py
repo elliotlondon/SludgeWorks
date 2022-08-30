@@ -563,7 +563,8 @@ class CharacterScreenEventHandler(AskUserEventHandler):
             height=height,
             title="",
             clear=True,
-            fg=tcod.white
+            fg=tcod.white,
+            bg=tcod.black
         )
         console.print(x=console.width // 2, y=y, string="┤Character Information├", alignment=tcod.CENTER, fg=tcod.white)
 
@@ -1034,8 +1035,9 @@ class SelectIndexHandler(AskUserEventHandler):
     def __init__(self):
         """Sets the cursor to the player when this handler is constructed."""
         super().__init__()
-        player = core.g.engine.player
-        core.g.engine.mouse_location = player.x, player.y
+        screen_shape = core.g.console.width, core.g.console.height - 7
+        cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
+        core.g.engine.mouse_location = (core.g.engine.player.x - cam_x, core.g.engine.player.y - cam_y)
 
     def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
         """Handle an event, perform any actions, then return the next active event handler."""
@@ -1090,10 +1092,14 @@ class SelectIndexHandler(AskUserEventHandler):
             # Clamp the cursor index to the map size.
             x = max(0, min(x, core.g.engine.game_map.width - 1))
             y = max(0, min(y, core.g.engine.game_map.height - 1))
+            # Correct for camera position
             core.g.engine.mouse_location = x, y
             return None
         elif key in config.inputs.CONFIRM_KEYS:
-            return self.on_index_selected(*core.g.engine.mouse_location)
+            screen_shape = core.g.console.width, core.g.console.height - 7
+            cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
+            return self.on_index_selected(core.g.engine.mouse_location[0] + cam_x,
+                                          core.g.engine.mouse_location[1] + cam_y)
         return super().ev_keydown(event)
 
     def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[ActionOrHandler]:
@@ -1141,12 +1147,13 @@ class LookHandler(SelectIndexHandler):
     its occupants."""
 
     def __init__(self):
-        """Additionally keep track of items to render in tile stack."""
+        """Sets the cursor to the player when this handler is constructed."""
         super().__init__()
-        self.stack: List = []
         screen_shape = core.g.console.width, core.g.console.height - 7
         cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
         core.g.engine.mouse_location = (core.g.engine.player.x - cam_x, core.g.engine.player.y - cam_y)
+        # Additionally keep track of items to render in tile stack.
+        self.stack: List = []
 
     @staticmethod
     def wrap(string: str, width: int) -> Iterable[str]:
@@ -1160,7 +1167,7 @@ class LookHandler(SelectIndexHandler):
         x, y = core.g.engine.mouse_location
         console.tiles_rgb["bg"][x, y] = config.colour.white
         console.tiles_rgb["fg"][x, y] = config.colour.black
-        
+
         # Fix camera coords
         screen_shape = core.g.console.width, core.g.console.height - 7
         cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
@@ -1172,6 +1179,10 @@ class LookHandler(SelectIndexHandler):
         y_pos: y index of selected tile
         """
         self.stack = []
+
+        # Get camera coords
+        screen_shape = core.g.console.width, core.g.console.height - 7
+        cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
 
         # Get necessary info at the specified tile
         tile = core.g.engine.game_map.get_tile_at_explored_location(x_pos, y_pos)
@@ -1197,17 +1208,17 @@ class LookHandler(SelectIndexHandler):
             height = len(tile_content['description']) // (console.width // 4) + 8
 
             # Calculate whether the box should be rendered above or below the selected tile
-            if x_pos >= console.width // 2:
-                box_x = x_pos - width - 2
+            if x_pos >= core.g.engine.player.x:
+                box_x = x_pos - width - 1
             else:
-                box_x = x_pos + 2
-            if y_pos >= console.height // 2:
-                box_y = y_pos - height - 2
+                box_x = x_pos + 1
+            if y_pos >= core.g.engine.player.y:
+                box_y = y_pos - height - 1
             else:
-                box_y = y_pos + 2
+                box_y = y_pos + 1
 
             # First draw a box for the tile
-            self.stack.append(self.draw_look_box(tile_content, box_x, box_y, width, height, console))
+            self.stack.append(self.draw_look_box(tile_content, box_x - cam_x, box_y - cam_y, width, height, console))
 
             # Now make a box for each entity at the location. Only consider visible entities
             entities = core.g.engine.game_map.get_all_visible_entities(x_pos, y_pos)
@@ -1252,7 +1263,8 @@ class LookHandler(SelectIndexHandler):
                     # Scale width in case of long item names
                     if len(entity_content['name']) > width:
                         width = len(entity_content['name']) + 4
-                    self.stack.append(self.draw_look_box(entity_content, box_x + i, box_y + i, width, height, console))
+                    self.stack.append(self.draw_look_box(entity_content, box_x - cam_x + i, box_y - cam_y + i,
+                                                         width, height, console))
                     i += 1
 
     def draw_look_box(self, content_dict: dict, x: int, y: int, width: int, height: int, console: tcod.Console) -> None:
@@ -1315,6 +1327,9 @@ class SingleRangedAttackHandler(SelectIndexHandler):
     def __init__(self, callback: Callable[[Tuple[int, int]], Optional[Action]]):
         super().__init__()
         self.callback = callback
+        screen_shape = core.g.console.width, core.g.console.height - 7
+        cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
+        core.g.engine.mouse_location = (core.g.engine.player.x - cam_x, core.g.engine.player.y - cam_y)
 
     def on_index_selected(self, x: int, y: int) -> Optional[Action]:
         return self.callback((x, y))
@@ -1325,9 +1340,11 @@ class AreaRangedAttackHandler(SelectIndexHandler):
 
     def __init__(self, radius: int, callback: Callable[[Tuple[int, int]], Optional[Action]]):
         super().__init__()
-
         self.radius = radius
         self.callback = callback
+        screen_shape = core.g.console.width, core.g.console.height - 7
+        cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
+        core.g.engine.mouse_location = (core.g.engine.player.x - cam_x, core.g.engine.player.y - cam_y)
 
     def on_render(self, console: tcod.Console) -> None:
         """Highlight the tile under the cursor."""
@@ -1356,6 +1373,9 @@ class TeleotherEventHandler(SelectIndexHandler):
     def __init__(self, callback: Callable[[Tuple[int, int]], Optional[Action]]):
         super().__init__()
         self.callback = callback
+        screen_shape = core.g.console.width, core.g.console.height - 7
+        cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
+        core.g.engine.mouse_location = (core.g.engine.player.x - cam_x, core.g.engine.player.y - cam_y)
 
     def on_index_selected(self, x: int, y: int) -> Optional[Action]:
         return self.callback((x, y))

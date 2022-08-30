@@ -62,7 +62,7 @@ def new_game() -> Engine:
     player.inventory.items.extend([medkit, medkit])
 
     # # Debug stuff
-    # twig = copy.deepcopy(maps.item_factory.teleother_twig)
+    # twig = copy.deepcopy(create_item_from_json('data/items/twigs.json', 'confusing_twig'))
     # twig.parent = player.inventory
     # player.inventory.items.append(twig)
 

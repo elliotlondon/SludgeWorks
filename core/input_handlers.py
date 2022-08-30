@@ -1144,6 +1144,9 @@ class LookHandler(SelectIndexHandler):
         """Additionally keep track of items to render in tile stack."""
         super().__init__()
         self.stack: List = []
+        screen_shape = core.g.console.width, core.g.console.height - 7
+        cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
+        core.g.engine.mouse_location = (core.g.engine.player.x - cam_x, core.g.engine.player.y - cam_y)
 
     @staticmethod
     def wrap(string: str, width: int) -> Iterable[str]:
@@ -1157,8 +1160,11 @@ class LookHandler(SelectIndexHandler):
         x, y = core.g.engine.mouse_location
         console.tiles_rgb["bg"][x, y] = config.colour.white
         console.tiles_rgb["fg"][x, y] = config.colour.black
-
-        self.create_look_box(x, y, console)
+        
+        # Fix camera coords
+        screen_shape = core.g.console.width, core.g.console.height - 7
+        cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
+        self.create_look_box(x + cam_x, y + cam_y, console)
 
     def create_look_box(self, x_pos: int, y_pos: int, console: tcod.Console) -> None:
         """Render the parent and dim the result, then print the message on top.

@@ -139,7 +139,6 @@ def render_all(con, panel, player, entities, game_map, message_log, hp_bar, xp_b
     tcod.console_blit(panel, 0, 0, panel_width, panel_height, con, 0, root_height - panel_height)
 
 
-# TODO: Implement movable screen depending upon map size
 def move_camera(player, game_map, game_window_width, game_window_height):
     if player.x < int(game_window_width / 2):
         camera_x = 0

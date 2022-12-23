@@ -5,6 +5,7 @@ from typing import Iterable, Iterator, Optional, TYPE_CHECKING, Tuple, Dict, Lis
 
 import numpy as np
 
+from config.exceptions import DataLoadError
 import config.colour
 import core.render_functions
 import parts.entity
@@ -155,7 +156,7 @@ class SimpleGameMap:
 
         return (x, y)
 
-    def get_random_unoccupied_nonfov_tile(self) -> Tuple[int, int]:
+    def get_random_walkable_nonfov_tile(self) -> Tuple[int, int]:
         """Return the coordinates of a random walkable tile within the current floor."""
         walkable = np.logical_and(self.tiles['walkable'], self.tiles['name'] != 'hole')
         unoccupied = np.nonzero(np.logical_xor(walkable, self.get_occupied()))
@@ -312,7 +313,10 @@ class SimpleGameMap:
                 continue
             if not self.visible[entity.x, entity.y]:
                 continue
-            console.tiles_rgb[["ch", "fg"]][entity_x, entity_y] = ord(entity.char), entity.colour
+            try:
+                console.tiles_rgb[["ch", "fg"]][entity_x, entity_y] = ord(entity.char), entity.colour
+            except TypeError:
+                raise DataLoadError(f"Fatal error diplaying entity {entity.name}, #{entity}")
 
         # Now render the ui components
         core.g.engine.message_log.render(console=console, x=21, y=45, width=55, height=5)

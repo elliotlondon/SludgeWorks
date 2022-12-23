@@ -164,31 +164,6 @@ class NPC(BaseAI):
         return core.actions.WaitAction(self.entity).perform()
 
 
-class BrainRaker(HostileEnemy):
-    """Enemy variation where on every hit a random variation of explored, non-FOV tiles are purged from memory."""
-
-    def perform(self) -> None:
-        target = core.g.engine.player
-        dx = target.x - self.entity.x
-        dy = target.y - self.entity.y
-        distance = max(abs(dx), abs(dy))  # Chebyshev distance.
-
-        if core.g.engine.game_map.visible[self.entity.x, self.entity.y]:
-            if distance <= 1:
-                return core.actions.BrainRakerAction(self.entity, dx, dy).perform()
-
-            self.path = self.get_path_to(target.x, target.y)
-
-        if self.path:
-            if not self.path_isvalid(self.path):
-                self.path = None
-            else:
-                dest_x, dest_y = self.path.pop(0)
-                return core.actions.MovementAction(
-                    self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
-                ).perform()
-
-
 class ConfusedEnemy(BaseAI):
     """
     A confused enemy will stumble around aimlessly for a given number of turns, then revert to its previous AI.

@@ -85,30 +85,22 @@ verdant_1 = new_tile(name="verdant_1",
                      walkable=True, transparent=True,
                      dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
                      light=(ord(","), tcod.green, (0, 0, 0)),
-                     description=list("Unusual tufted grass, fractal succulents and dainty flowers have sprouted here, "
-                                      "abandoning photosynthesis in lieu of the sustaining properties of "
-                                      "the mud they spring from."))
+                     description=list("Unusual tufted grass, fractal succulents and dainty flowers have sprouted here. "))
 verdant_2 = new_tile(name="verdant_2",
                      walkable=True, transparent=True,
                      dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
                      light=(ord("∙"), tcod.light_green, (0, 0, 0)),
-                     description=list("Unusual tufted grass, fractal succulents and dainty flowers have sprouted here, "
-                                      "abandoning photosynthesis in lieu of the sustaining properties of "
-                                      "the mud they spring from."))
+                     description=list("Unusual tufted grass, fractal succulents and dainty flowers have sprouted here. "))
 verdant_3 = new_tile(name="verdant_3",
                      walkable=True, transparent=True,
                      dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
                      light=(ord("'"), tcod.dark_green, (0, 0, 0)),
-                     description=list("Unusual tufted grass, fractal succulents and dainty flowers have sprouted here, "
-                                      "abandoning photosynthesis in lieu of the sustaining properties of "
-                                      "the mud they spring from."))
+                     description=list("Unusual tufted grass, fractal succulents and dainty flowers have sprouted here. "))
 verdant_4 = new_tile(name="verdant_4",
                      walkable=True, transparent=True,
                      dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
                      light=(ord("∙"), tcod.dark_green, (0, 0, 0)),
-                     description=list("Unusual tufted grass, fractal succulents and dainty flowers have sprouted here, "
-                                      "abandoning photosynthesis in lieu of the sustaining properties of "
-                                      "the mud they spring from."))
+                     description=list("Unusual tufted grass, fractal succulents and dainty flowers have sprouted here. "))
 verdant_chars = [",", ".", "'", "∙"]
 verdant_tiles_1 = [verdant_1, verdant_2, verdant_3, verdant_4]
 
@@ -124,9 +116,7 @@ rubble = new_tile(name="rubble",
                   walkable=False, transparent=True,
                   dark=(ord("▲"), tcod.grey, (0, 0, 0)),
                   light=(ord("▲"), (150, 100, 50), (0, 0, 0)),
-                  description=list("The instability of the SludgeWorks is obvious by the sheer quantity of "
-                                   "rubble found even within the upper caves. "
-                                   "Gigantic boulders embedded with unknown fossils block your path. "))
+                  description=list("Gigantic boulders embedded with unknown fossils block your path. "))
 
 # Walls [Structures]
 wooden_wall = new_tile(name="wooden_wall",
@@ -134,7 +124,8 @@ wooden_wall = new_tile(name="wooden_wall",
                        dark=(ord("#"), tcod.grey, (0, 0, 0)),
                        light=(ord("#"), (125, 100, 75), (0, 0, 0)),
                        description=list("A wall made of dirtied and misshapen planks of wood. Scratches and bite marks "
-                                        "litter the surface. The structure is poorly made, but at least permanent."))
+                                        "litter the surface. The structure is poorly made, but has clearly survived "
+                                        "for some time."))
 
 # Liquids
 water = new_tile(name="water",
@@ -148,7 +139,7 @@ blood = new_tile(name="blood",
                  walkable=False, transparent=True,
                  dark=(ord("≈"), tcod.grey, (0, 0, 0)),
                  light=(ord("≈"), tcod.crimson, (0, 0, 0)),
-                 description=list("You have never seen this much blood in one place before. A thin coagulated layer "
+                 description=list("The quantity of blood here is sickening. A thin coagulated layer "
                                   "sits on the surface, but the liquid flows enough to never fully solidify. The stench "
                                   "is cloying and revolting."))
 
@@ -160,8 +151,7 @@ down_stairs = new_tile(
     dark=(ord(">"), (255, 255, 255), (0, 0, 0)),
     light=(ord(">"), (255, 255, 255), (0, 0, 0)),
     description=list("A huge, roughly circular hole in the ground stands here, well-lit by luminous greenery. "
-                     "Air from the surface rushes towards the rift, carried to another unknown cavern. "
-                     "You feel an impulse to continue down this route. ")
+                     "Air from the surface rushes towards the rift, carried to another unknown cavern. ")
 )
 hole = new_tile(
     name="hole",
@@ -170,8 +160,8 @@ hole = new_tile(
     dark=(ord("░"), (0, 0, 0), (36, 36, 36)),
     light=(ord("░"), (0, 0, 0), (36, 36, 36)),
     description=list("This area of the cave has recently collapsed, leaving a gigantic void, with the cave floor "
-                     "serving as a cliff edge. You could jump down here, but you're certain that you would hurt "
-                     "yourself on jagged cliff edge as you descend.")
+                     "serving as a cliff edge. You could descend here, but you're certain that you would hurt "
+                     "yourself on jagged cliff edge.")
 )
 waterfall = new_tile(
     name="waterfall",

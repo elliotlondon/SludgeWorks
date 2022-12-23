@@ -308,7 +308,7 @@ def place_fauna(dungeon: SimpleGameMap, engine: Engine) -> None:
                                                      number_of_monsters)
     for i in range(len(monsters)):
         # Get the indices of tiles which are walkable
-        x, y = dungeon.get_random_unoccupied_nonfov_tile()
+        x, y = dungeon.get_random_walkable_nonfov_tile()
 
         # Find Euclidean distance between monster spawn and player
         player_x = int(dungeon.engine.player.x)
@@ -322,6 +322,7 @@ def place_fauna(dungeon: SimpleGameMap, engine: Engine) -> None:
         # Spawn in free, non-blocked location
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
             monster = copy.deepcopy(create_monster_from_json(f"data/monsters/{monster_types[i]}.json", monsters[i]))
+            # Randomised effects go here
             if monster.name == "Risen Sacrifice":
                 monster.fighter.hp = random.randint(4, 8)
             monster.spawn(dungeon, x, y)
@@ -357,7 +358,7 @@ def place_static_objects(dungeon: SimpleGameMap, engine: Engine) -> None:
     static_objects = get_static_objects_at_random(engine, 'data/static_objects/spawn_table_objects.json', current_floor)
 
     # For now simply spawn one sludge fountain per floor
-    x, y = dungeon.get_random_unoccupied_nonfov_tile()
+    x, y = dungeon.get_random_walkable_nonfov_tile()
 
     static_object = copy.deepcopy(
         create_static_object_from_json(f"data/static_objects/core_objects.json", 'sludge_fountain'))

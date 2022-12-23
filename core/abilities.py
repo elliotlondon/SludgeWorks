@@ -1,5 +1,6 @@
 from typing import Optional
 
+import random
 import numpy as np
 
 import config.colour
@@ -72,13 +73,13 @@ class ShoveAction(AbilityAction):
             # Calculate if push lands successfully
             attack_roll = roll_dice(1, 20) + self.caster.fighter.strength_modifier
             defend_roll = roll_dice(1, 20) + self.target.fighter.strength_modifier
-            # if attack_roll > defend_roll:
-            core.g.engine.message_log.add_message(f"You push the {self.target.name} and it stumbles backwards!",
-                                                  config.colour.ability_used)
-            return core.actions.BumpAction(self.target, dx, dy).perform()
-            # else:
-            # core.g.engine.message_log.add_message(f"The {self.target.name} resists your shove!",
-            #                                       config.colour.enemy_evade)
+            if attack_roll > defend_roll:
+                core.g.engine.message_log.add_message(f"You push the {self.target.name} and it stumbles backwards!",
+                                                      config.colour.ability_used)
+                return core.actions.BumpAction(self.target, dx, dy).perform()
+            else:
+                core.g.engine.message_log.add_message(f"The {self.target.name} resists your shove!",
+                                                      config.colour.enemy_evade)
 
         core.g.engine.message_log.add_message("This action would have no effect.", config.colour.impossible)
         return None
@@ -197,5 +198,126 @@ class BiteAction(AbilityAction):
             else:
                 core.g.engine.message_log.add_message(f'The {attacker.name} bites the {defender.name}'
                                                       f'but does no damage.', config.colour.enemy_evade)
+
+        return None
+
+
+class MemoryWipeAction(AbilityAction):
+    """Attack an enemy, dealing 2d3 and randomly wiping known tiles if a will 14 roll fails."""
+
+    def __init__(self, caster: Actor, target: Actor, x: int, y: int):
+        super().__init__(
+            entity=caster,
+            target=target,
+            x=x,
+            y=y,
+        )
+
+    def perform(self) -> Optional[Exception]:
+        attacker = self.caster
+        defender = self.target
+
+        crit_chance = 0.10  # Critical hit chance in %
+        max_crit_chance = 0.33  # Define max chance to stop overflows!
+
+        # Roll to see if hit. Mental attack so rolls off INT
+        attack_roll = roll_dice(1, 20) + attacker.fighter.dexterity_modifier
+        if defender.fighter.dodges:
+            dodge_roll = roll_dice(1, 20) + defender.fighter.intellect_modifier
+        else:
+            dodge_roll = 0
+
+        damage = None
+        crit = False
+        if attack_roll > dodge_roll:  # Attack hits
+            # Calculate strength-weighted damage roll. Ignores armour as mental attack
+            damage_roll = attacker.fighter.damage + attacker.fighter.strength_modifier
+
+            # Calculate mental armour
+            defence_roll = roll_dice(1, defender.fighter.intellect_modifier)
+
+            # Check if entity penetrates target's armour
+            penetration_int = abs(damage_roll - defence_roll)
+            if (damage_roll - defence_roll) > 0:
+                # Calculate modified (positive) crit chance
+                while penetration_int > 0 and crit_chance <= max_crit_chance:
+                    crit_chance += 0.01
+                    penetration_int -= 1
+                # Check if crit
+                if roll_dice(1, np.floor(1 / crit_chance)) == np.floor(1 / crit_chance):
+                    crit = True
+                    # For mindrakers crits do not do double damage, they do small extra damage and an effect
+                    damage = attacker.fighter.damage + 2 - defence_roll
+                else:
+                    damage = attacker.fighter.damage - defence_roll
+
+            # Crits can penetrate otherwise impervious armour!
+            elif (damage_roll - defence_roll) <= 0:
+                # Calculate modified (negative) crit chance
+                while penetration_int > 0 and crit_chance > 0:
+                    crit_chance -= 0.01
+                    penetration_int -= 1
+                # Check if crit
+                if crit_chance <= 0:
+                    damage = 0
+                else:
+                    if roll_dice(1, np.floor(1 / crit_chance)) == np.floor(1 / crit_chance):
+                        crit = True
+                        damage = attacker.fighter.crit_damage - defence_roll
+                    else:
+                        damage = 0
+
+            # Ability used notification
+            if not attacker.name == "Player":
+                core.g.engine.message_log.add_message(f'The {attacker.name} lunges at the skull!',
+                                                      config.colour.ability_used)
+
+            # Check for damage and display chat messages
+            if damage > 0:
+                if crit:
+                    if defender.name.capitalize() == 'Player':
+                        core.g.engine.message_log.add_message(f'The {attacker.name} crits you for '
+                                                              f'{str(damage)} damage!', config.colour.enemy_crit)
+                        core.g.engine.message_log.add_message(f'* Your brain hurts and you feel nauseous! Augh! *',
+                                                              config.colour.red)
+                    else:
+                        core.g.engine.message_log.add_message(f'The {attacker.name} crits the {defender.name}'
+                                                              f'{str(damage)} damage!', config.colour.enemy_crit)
+                else:
+                    if defender.name.capitalize() == 'Player':
+                        core.g.engine.message_log.add_message(f'The {attacker.name} attacks you for '
+                                                              f'{str(damage)} damage.', config.colour.enemy_atk)
+                        core.g.engine.message_log.add_message(f'* Your brain hurts and you feel nauseous! Augh! *',
+                                                              config.colour.red)
+                    else:
+                        core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                                                              f'{str(damage)} damage.', config.colour.enemy_atk)
+                defender.fighter.hp -= damage
+            else:
+                if defender.name.capitalize() == 'Player':
+                    core.g.engine.message_log.add_message(f'The {attacker.name} attacks you '
+                                                          f'but does no damage!', config.colour.player_evade)
+                else:
+                    core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                                                          f'but does no damage.', config.colour.enemy_evade)
+
+            # Remove random tiles from explored tiles!
+            explored_nonfov = np.logical_xor(self.entity.gamemap.explored, self.entity.gamemap.visible)
+            num_explored = np.count_nonzero(explored_nonfov)
+
+            if not num_explored <= len(self.entity.gamemap.visible):
+                to_remove = round(num_explored / 4)
+                while to_remove > 0:
+                    x = random.choice(np.where(explored_nonfov == True)[0])
+                    y = random.choice(np.where(explored_nonfov == True)[1])
+                    self.entity.gamemap.explored[x, y] = False
+                    to_remove -= 1
+        else:
+            if defender.name.capitalize() == 'Player':
+                core.g.engine.message_log.add_message(f'You evade the {attacker.name.capitalize()}\'s attack.',
+                                                      config.colour.player_evade)
+            else:
+                core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                                                      f'but the attack is evaded.', config.colour.enemy_evade)
 
         return None

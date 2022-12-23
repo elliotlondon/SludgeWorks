@@ -10,7 +10,7 @@ from parts.level import Level
 
 
 def create_monster_from_json(path: str, request: str) -> Actor:
-    f = open(path)
+    f = open(path, encoding='utf-8')
     monster_dict = json.load(f)
 
     for i in range(len(monster_dict)):
@@ -92,6 +92,8 @@ def create_monster(data: dict) -> Actor:
                                                    data['abilities']['Bite']['turns'],
                                                    data['abilities']['Bite']['difficulty'],
                                                    data['abilities']['Bite']['cooldown'])
+            elif ability == "MemoryWipe":
+                ability_obj = parts.mutations.MemoryWipe(data['abilities']['MemoryWipe']['cooldown'])
             monster.abilities.append(ability_obj)
     if 'mutations' in data:
         monster.mutations = []

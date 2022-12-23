@@ -41,12 +41,12 @@
       "char": "ß",
       "colour": [0, 95, 151],
       "name": "Brainraker",
-      "ai_cls": "BrainRaker",
+      "ai_cls": "HostileEnemy",
       "equipment": "equipment",
       "fighter": {
         "hp": 28,
         "max_hp": 28,
-        "damage_dice": 2,
+        "damage_dice": 1,
         "damage_sides": 6,
         "strength": 8,
         "dexterity": 8,
@@ -70,7 +70,12 @@
         "level_up_base": 0,
         "xp_given": 400
       },
-      "description": "A terrifying bipedal creature with a blue scaled hide and webbed hands. With every breath it exhales a shining mist of particles, covering its glyphed robe with miniscule crystals."
+      "description": "A terrifying bipedal creature with a blue scaled hide and webbed hands. With every breath it exhales a shining mist of particles, covering its glyphed robe with miniscule crystals.",
+      "abilities": {
+         "MemoryWipe": {
+           "cooldown": 3
+        }
+      }
     }
   }
 ]

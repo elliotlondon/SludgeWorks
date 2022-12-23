@@ -99,3 +99,30 @@ class Bite(Mutation):
         else:
             self.cooldown = self.cooldown_max
             return core.abilities.BiteAction(caster, target, x, y, self.damage, self.turns, self.difficulty)
+
+
+class MemoryWipe(Mutation):
+    """Attack the target with a memory wiping mental attack."""
+    parent: Actor
+
+    def __init__(self, cooldown: int):
+        super().__init__(
+            name="Shove",
+            description="Savagely attack the mind of a neaby creature, performing a mental attack and "
+                        "wiping memories on crit.",
+            req_target=True,
+            continuous=False,
+            cooldown=5,
+            range=1
+        )
+        self.action = core.abilities.MemoryWipeAction
+        self.cooldown_max = cooldown
+
+    def activate(self, caster: Actor, target: Actor, x: int, y: int) -> \
+            Optional[core.abilities.MemoryWipeAction]:
+        if self.cooldown > 0 and self.parent.name == "Player":
+            core.g.engine.message_log.add_message("You cannot perform this ability yet.", config.colour.impossible)
+            return None
+        else:
+            self.cooldown = self.cooldown_max
+            return core.abilities.MemoryWipeAction(caster, target, x, y)

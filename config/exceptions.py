@@ -7,6 +7,10 @@ class MapGenError(Exception):
     """Exception raised when something fails during map generation"""
 
 
+class QuestError(Exception):
+    """Exception raised when something went wrong during quest internals"""
+
+
 class FatalMapGenError(SystemExit):
     """Exception raised when something fails catastrophically during map generation"""
 

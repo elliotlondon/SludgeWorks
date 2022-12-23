@@ -9,6 +9,7 @@ import core.input_handlers
 import core.render_functions
 from config.exceptions import Impossible
 from gui.message_log import MessageLog
+from core.quests import QuestTracker
 
 if TYPE_CHECKING:
     from parts.entity import Actor
@@ -26,6 +27,7 @@ class Engine:
         self.player = player
         self.last_actor: Actor
         self.convos: dict[str, core.input_handlers.ConversationEventHandler] = {}
+        self.quests = QuestTracker()
 
     def handle_enemy_turns(self) -> None:
         # When enemy turn starts, first tick all player abilities/mutations

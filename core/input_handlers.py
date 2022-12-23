@@ -13,7 +13,7 @@ import core.action
 import core.actions
 import core.g
 import parts.inventory
-from config.exceptions import Impossible
+from config.exceptions import Impossible, DataLoadError
 from core.actions import Action
 from core.render_functions import RenderOrder
 from maps.tiles import get_clean_name
@@ -865,7 +865,7 @@ class ConversationEventHandler(AskUserEventHandler):
         self.new_screen: int
         self.leave = True
         self.leave_str = "Goodbye."
-        self.convo_json = self.get_convo_from_json(self.interactee.name.lower())
+        self.convo_json = self.get_convo_from_json()
         self.speech = []
         self.replies = []
 
@@ -875,11 +875,27 @@ class ConversationEventHandler(AskUserEventHandler):
         for line in string.splitlines():
             yield from textwrap.wrap(line, width, expand_tabs=True)
 
-    def get_convo_from_json(self, convo: str) -> dict:
+    def get_convo_from_json(self) -> dict:
         """Load a conversation json file for a specified character."""
-        path = Path(f"data/convos/{convo}.json")
-        f = open(path, 'r', encoding='utf-8')
-        return load(f)
+
+        # First, check if the interactee provides context-dependent conversations
+        convos = 0
+        for fname in Path(f"data/convos").glob("*.json"):
+            if self.interactee.name.lower() in fname.stem:
+                convos += 1
+        if convos == 0:
+            raise DataLoadError(f"Conversation could not be loaded for entity {self.interactee.name}, "
+                                f"{self.interactee}")
+        elif convos == 1:
+            path = Path(f"data/convos/{self.interactee.name.lower()}_0.json")
+            f = open(path, 'r', encoding='utf-8')
+            return load(f)
+        else:
+            # If more than 1 convo, turn to the engine to work out which one should be loaded.
+            step = core.g.engine.quests.get_current_convo(self.interactee.name.lower())
+            path = Path(f"data/convos/{self.interactee.name.lower()}_{step}.json")
+            f = open(path, 'r', encoding='utf-8')
+            return load(f)
 
     def init_convo(self, index: str):
         """Logic to set up the conversation with the player on first interaction."""
@@ -906,14 +922,23 @@ class ConversationEventHandler(AskUserEventHandler):
                     self.speech = self.convo_json[f"{self.current_screen}"]['speech']
                     replies = []
                     for i in self.convo_json[f"{self.current_screen}"]:
-                        if i != "speech":
+                        # Process speech
+                        if i != "speech" and i != "tag":
                             replies.append(self.convo_json[f"{self.current_screen}"][f'{i}'])
+                        # Process tagging
+                        elif i == "tag":
+                            if "start:" in self.convo_json[f"{self.current_screen}"]['tag']:
+                                # Set up everything for starting a new quest
+                                core.g.engine.quests.start_quest(
+                                    self.convo_json[f"{self.current_screen}"]['tag'].replace("start:", ""))
+                                return PopupMessage(f"Quest started: "
+                                            f"{core.g.engine.quests.get_quest_step_name(self.interactee.name.lower())}")
                     self.replies = replies
                     break
             return self
         elif key == tcod.event.K_ESCAPE or index == self.len_replies:
             # Make it so that the next interaction returns the generic interaction
-            self.init_convo("-1")
+            self.init_convo("0")
 
             # Save to engine on exit
             core.g.engine.convos[self.interactee.name] = self

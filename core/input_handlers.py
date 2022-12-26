@@ -267,6 +267,8 @@ class MainGameEventHandler(EventHandler):
             return InventoryActivateHandler()
         elif key == tcod.event.K_d:
             return InventoryDropHandler()
+        elif key == tcod.event.K_q:
+            return QuestScreenHandler()
 
         # Continuous actions
         if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT) \
@@ -283,11 +285,7 @@ class MainGameEventHandler(EventHandler):
             elif len(interactables) == 1:
                 # Decide which interaction to return, depending upon context.
                 if isinstance(interactables[0].ai, parts.ai.NPC):
-                    # Check if convo has been started before in engine, if not, start a new one
-                    if interactables[0].name in core.g.engine.convos:
-                        return core.g.engine.convos[interactables[0].name]
-                    else:
-                        return ConversationEventHandler(interactables[0])
+                    return ConversationEventHandler(interactables[0])
                 elif isinstance(interactables[0], parts.entity.StaticObject):
                     if interactables[0].name == "Fountain of Sludge":
                         return SludgeFountainEventHandler(interactables[0])
@@ -682,6 +680,56 @@ class AbilityScreenEventHandler(AskUserEventHandler):
         return super().ev_keydown(event)
 
 
+class QuestScreenHandler(AskUserEventHandler):
+    """Handler for the screen which shows all user abilities. If ability is selected, provide a prompt
+    to use it."""
+
+    def __init__(self):
+        super(QuestScreenHandler, self).__init__()
+        self.quests = []
+
+    @staticmethod
+    def wrap(string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():
+            yield from textwrap.wrap(line, width, expand_tabs=True)
+
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)
+        width = 40
+        height = 24
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - int(height / 2)
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title="",
+            clear=True,
+            fg=tcod.white
+        )
+        console.print(x=console.width // 2, y=y, string="┤Quests├", alignment=tcod.CENTER, fg=tcod.white)
+
+        y_offset = 0
+        if len(core.g.engine.quests.active_quests) == 0:
+            console.print(x=x + 1, y=y + 2, string=f"You have no active quests.")
+        else:
+            for quest in core.g.engine.quests.active_quests:
+                current_step = quest
+                self.quests.append(quest)
+
+                # Print quest name and description
+                fg_colour = tcod.white
+                console.print(x=x + 1, y=y + y_offset + 2,
+                              string=f"[{core.g.engine.quests.get_quest_step_name(quest.name)}]", fg=fg_colour)
+                for line in self.wrap(core.g.engine.quests.get_quest_step_description(quest.name), width - 4):
+                    console.print(x=x + 3, y=y + y_offset + 3, string=f"{line}", fg=fg_colour)
+                    y_offset += 1
+                y_offset += 1
+
+
 class LevelUpEventHandler(AskUserEventHandler):
     """Handler for when the trigger to level up the user is activated."""
 
@@ -925,23 +973,21 @@ class ConversationEventHandler(AskUserEventHandler):
                         # Process speech
                         if i != "speech" and i != "tag":
                             replies.append(self.convo_json[f"{self.current_screen}"][f'{i}'])
-                        # Process tagging
-                        elif i == "tag":
-                            if "start:" in self.convo_json[f"{self.current_screen}"]['tag']:
-                                # Set up everything for starting a new quest
-                                core.g.engine.quests.start_quest(
-                                    self.convo_json[f"{self.current_screen}"]['tag'].replace("start:", ""))
-                                return PopupMessage(f"Quest started: "
-                                            f"{core.g.engine.quests.get_quest_step_name(self.interactee.name.lower())}")
                     self.replies = replies
+                    # Process tagging
+                    if "tag" in self.convo_json[f"{self.current_screen}"]:
+                        if "start:" in self.convo_json[f"{self.current_screen}"]['tag']:
+                            # Set up everything for starting a new quest
+                            core.g.engine.quests.start_quest(
+                                self.convo_json[f"{self.current_screen}"]['tag'].replace("start:", ""))
+                            return PopupMessage(f"Quest started: "
+                                        f"{core.g.engine.quests.get_quest_step_name(self.interactee.name.lower())}!")
                     break
             return self
         elif key == tcod.event.K_ESCAPE or index == self.len_replies:
             # Make it so that the next interaction returns the generic interaction
             self.init_convo("0")
 
-            # Save to engine on exit
-            core.g.engine.convos[self.interactee.name] = self
             return MainGameEventHandler()
 
     def on_render(self, console: tcod.Console) -> None:

@@ -26,7 +26,6 @@ class Engine:
         self.mouse_location = (0, 0)
         self.player = player
         self.last_actor: Actor
-        self.convos: dict[str, core.input_handlers.ConversationEventHandler] = {}
         self.quests = QuestTracker()
 
     def handle_enemy_turns(self) -> None:

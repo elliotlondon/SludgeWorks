@@ -35,6 +35,11 @@ class QuestTracker():
             if questline in quest.name:
                 return quest.get_step_name(quest.step)
 
+    def get_quest_step_description(self, questline):
+        for quest in self.active_quests:
+            if questline in quest.name:
+                return quest.get_step_description(quest.step)
+
     def start_quest(self, questline: str):
         # Check that the quest hasn't already been started.
         if len(self.active_quests) != 0:
@@ -44,34 +49,29 @@ class QuestTracker():
 
         # Start the quest.
         if questline.lower() == "gilbertquest":
-            quest = GilbertQuest
-            quest.name = 'gilbertquest'
-            quest.step = 0
-            self.active_quests.append(GilbertQuest)
+            self.active_quests.append(GilbertQuest())
             self.active_convos.get('gilbert')['step'] = 1
 
-        # Give the player a notication that the quest has been started.
 
-        # Add the quest to the quest journal
-
-    # def advance_quest(self):
-    #
-    # def fail_quest(self):
-    #
-    # def finish_quest(self):
-    #
-    # def give_rewards(self):
+class Quest():
+    def __init__(self,
+                 name: str = '<Undefined>',
+                 step: int = 0):
+        self.name = name
+        self.step = step
 
 
-class GilbertQuest():
+class GilbertQuest(Quest):
     """Questline started by meeting Gilbert."""
     # Step 1: Bring moirehide
     # Step 2: Meet at the Liminus
     # Step 3: Meet the administrator
 
-    def start_quest(self):
-        self.name = "gilbertquest"
-        self.step = 0
+    def __init__(self):
+        super().__init__(
+            name='gilbertquest',
+            step=0
+        )
 
     @staticmethod
     def get_step_name(step):
@@ -79,6 +79,15 @@ class GilbertQuest():
             return "Gilbert's Boots"
         elif step == 1:
             return "Accessing the Liminus"
+
+    @staticmethod
+    def get_step_description(step):
+        if step == 0:
+            return "Gilbert has asked me to kill a Moire Beast and collect its hide in exchange for a pair of" \
+                   "leather boots."
+        elif step == 1:
+            return "Gilbert spoke about a safe place called 'The Liminus' which can be reached by continuing down these" \
+                   "caverns. He says he can help me further if I meet him there."
 
     def complete_step(self):
         # if core.g.engine.player.inventory.items

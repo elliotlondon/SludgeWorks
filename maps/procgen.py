@@ -9,6 +9,7 @@ from typing import Tuple, Iterator, List, TYPE_CHECKING, Optional
 import numpy as np
 
 import config.colour
+import core.g
 import maps.tiles
 import parts.entity
 from config.exceptions import MapGenError, FatalMapGenError
@@ -204,7 +205,7 @@ def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map
 
         # Add rocks/water
         dungeon = add_rubble(dungeon, events=4)
-        dungeon = add_hazards(dungeon, floods=4, holes=3)
+        dungeon = add_hazards(dungeon, engine, floods=4, holes=3)
         dungeon = add_features(dungeon)
 
         # Populate dungeon
@@ -577,7 +578,7 @@ def spill_liquid(dungeon: SimpleGameMap, smoothing: int) -> SimpleGameMap:
     return dungeon
 
 
-def add_hazards(dungeon: SimpleGameMap, floods: int, holes: int) -> SimpleGameMap:
+def add_hazards(dungeon: SimpleGameMap, engine: Engine, floods: int, holes: int) -> SimpleGameMap:
     """
     Add hazards such as liquids to the map
     """
@@ -587,6 +588,8 @@ def add_hazards(dungeon: SimpleGameMap, floods: int, holes: int) -> SimpleGameMa
     while i <= floods:
         # Random walkable tile
         start_x, start_y = dungeon.get_random_walkable_nontunnel_tile()
+        if start_x == engine.player.x and start_y == engine.player.y:
+            continue
 
         # Create first water tile
         dungeon.tiles[start_x, start_y] = maps.tiles.water
@@ -601,6 +604,8 @@ def add_hazards(dungeon: SimpleGameMap, floods: int, holes: int) -> SimpleGameMa
             # Spill to a tile next to initial tile
             new_x += random.randint(-1, 1)
             new_y += random.randint(-1, 1)
+            if new_x == engine.player.x and new_y == engine.player.y:
+                continue
             try:
                 dungeon.tiles[new_x, new_y] = maps.tiles.water
                 dungeon.remove_entity_at_location('Door', new_x, new_y)

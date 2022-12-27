@@ -4,6 +4,7 @@ savegames/messages.txt
 
 # Mapgen stuff
 maps/*.sav
+*.xlsx
 
 # Profiling
 profiler.py

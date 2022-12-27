@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from typing import Tuple, TYPE_CHECKING
 
+import logging
 import config.colour
 import core.g
 
 if TYPE_CHECKING:
     from tcod import Console
     from core.engine import Engine
-    from maps.game_map import SimpleGameMap
+    from maps.game_map import GameMap
 
 from enum import Enum, auto
 from random import Random
@@ -52,7 +53,10 @@ def render_turn_number(console: Console, turn_number: int, location: Tuple[int, 
     x, y = location
 
     console.print(x=x, y=y, string=f"Turn number: {turn_number}")
-    console.print(x=x, y=y - 6, string=f"Tick: {core.g.global_clock.current_tic()}")
+
+    # If debug, add the global clock
+    if logging.DEBUG >= logging.root.level:
+        console.print(x=x, y=y - 6, string=f"Tick: {core.g.global_clock.current_tic()}")
 
 
 def render_names_at_mouse_location(console: Console, x: int, y: int, engine: Engine) -> None:
@@ -63,7 +67,7 @@ def render_names_at_mouse_location(console: Console, x: int, y: int, engine: Eng
     console.print(x=x, y=y, string=names_at_mouse_location)
 
 
-def get_names_at_location(x: int, y: int, game_map: SimpleGameMap) -> str:
+def get_names_at_location(x: int, y: int, game_map: GameMap) -> str:
     if not game_map.in_bounds(x, y) or not game_map.visible[x, y]:
         return ""
 

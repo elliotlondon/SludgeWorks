@@ -101,6 +101,37 @@ class Bite(Mutation):
             return core.abilities.BiteAction(caster, target, x, y, self.damage, self.turns, self.difficulty)
 
 
+class Bludgeon(Mutation):
+    """Brutally attack the target, stunning them if the attack lands successfully."""
+    parent: Actor
+
+    def __init__(self, damage: int, sides: int, turns: int, difficulty: int, cooldown: int):
+        super().__init__(
+            name="Bludgeon",
+            description="Pummel a nearby creature, dealing 2d4 and stunning on a successful hit.",
+            req_target=True,
+            continuous=False,
+            cooldown=0,
+            range=1
+        )
+        self.action = core.abilities.BludgeonAction
+        self.damage = damage
+        self.sides = sides
+        self.turns = turns
+        self.difficulty = difficulty
+        self.cooldown_max = cooldown
+
+    def activate(self, caster: Actor, target: Actor, x: int, y: int) -> \
+            Optional[core.abilities.BludgeonAction]:
+        if self.cooldown > 0 and self.parent.name == "Player":
+            core.g.engine.message_log.add_message("You cannot perform this ability yet.", config.colour.impossible)
+            return None
+        else:
+            self.cooldown = self.cooldown_max
+            return core.abilities.BludgeonAction(caster, target, x, y, self.damage, self.sides,
+                                                 self.turns, self.difficulty)
+
+
 class MemoryWipe(Mutation):
     """Attack the target with a memory wiping mental attack."""
     parent: Actor

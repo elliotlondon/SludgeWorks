@@ -191,3 +191,61 @@ class BurningEffect(Effect):
         else:
             return None
 
+
+class StunEffect(Effect):
+    """Stun an entity for X turns. Stun immunity is added for 3 turns after the stun expires."""
+
+    def __init__(self,
+                 turns: int,
+                 parent: Optional[parts.entity.Actor] = None,
+                 ):
+        self.turns = turns
+        if parent:
+            # If parent isn't provided now then it will be set later.
+            self.parent = parent
+
+    def tick(self):
+        # Add stun immunity if there is one turn left
+        if self.turns == 1:
+            immunity = parts.effects.SecondWindEffect(turns=3)
+
+        # Messages
+        if self.parent.name == "Player":
+            core.g.engine.message_log.add_message(f"You are stunned!", config.colour.stun)
+        self.turns -= 1
+
+    def expiry_message(self):
+        if self.parent.name == "Player":
+            core.g.engine.message_log.add_message(f"You are no longer stunned.", config.colour.stun_end)
+        else:
+            core.g.engine.message_log.add_message(f"The {self.parent.name} is no longer stunned.",
+                                                  config.colour.stun_end)
+
+    def get_colour(self):
+        if not core.g.global_clock.current_tic() % 8:
+            return config.colour.stun
+        else:
+            return None
+
+
+class SecondWindEffect(Effect):
+    """Prevents the entity under this effect from being stunned for X turns."""
+
+    def __init__(self,
+                 turns: int,
+                 parent: Optional[parts.entity.Actor] = None,
+                 ):
+        self.turns = turns
+        if parent:
+            # If parent isn't provided now then it will be set later.
+            self.parent = parent
+
+    def tick(self):
+        # Simply count down, this effect does nothing.
+        self.turns -= 1
+
+    def expiry_message(self):
+        pass
+
+    def get_colour(self):
+        return None

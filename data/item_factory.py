@@ -115,6 +115,7 @@ def create_consumable(data: dict) -> Item:
     elif "Immolation" in data['consumable']['type']:
         consumable = parts.consumable.ImmolateConsumable()
     else:
+        consumable = parts.consumable.Junk()
         NotImplementedError()
 
     item = Item(

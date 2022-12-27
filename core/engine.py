@@ -7,17 +7,18 @@ from tcod.map import compute_fov
 
 import core.input_handlers
 import core.render_functions
+import parts.effects
 from config.exceptions import Impossible
 from gui.message_log import MessageLog
 from core.quests import QuestTracker
 
 if TYPE_CHECKING:
     from parts.entity import Actor
-    from maps.game_map import SimpleGameMap, GameWorld
+    from maps.game_map import GameMap, GameWorld
 
 
 class Engine:
-    game_map: SimpleGameMap
+    game_map: GameMap
     game_world: GameWorld
 
     def __init__(self, player: Actor):
@@ -25,10 +26,31 @@ class Engine:
         self.message_log = MessageLog()
         self.mouse_location = (0, 0)
         self.player = player
-        self.last_actor: Actor = player
+        self.last_actor: Actor
         self.quests = QuestTracker()
 
     def handle_enemy_turns(self) -> None:
+        # Iterate over all enemy turns
+        stunned = False
+        for entity in set(self.game_map.actors) - {self.player}:
+            if entity.ai:
+                entity.trigger_active_effects()
+                if entity.abilities:
+                    for ability in entity.abilities:
+                        ability.tick()
+                        if isinstance(ability, parts.effects.StunEffect):
+                            if ability.turns > 0:
+                                stunned = True
+                # If stunned skip turn by default after ticking the effect
+                if not stunned:
+                    try:
+                        entity.ai.perform()
+                    except Impossible:
+                        pass  # Ignore impossible action exceptions from AI.
+                else:
+                    pass
+        self.turn_number += 1
+
         # When enemy turn starts, first tick all player abilities/mutations
         if self.player.abilities:
             for ability in self.player.abilities:
@@ -39,18 +61,6 @@ class Engine:
                 if mutation.cooldown > 0:
                     mutation.tick()
         self.player.trigger_active_effects()
-        # Iterate over all enemy turns
-        for entity in set(self.game_map.actors) - {self.player}:
-            if entity.ai:
-                entity.trigger_active_effects()
-                if entity.abilities:
-                    for ability in entity.abilities:
-                        ability.tick()
-                try:
-                    entity.ai.perform()
-                except Impossible:
-                    pass  # Ignore impossible action exceptions from AI.
-        self.turn_number += 1
 
     def update_fov(self) -> None:
         """Recompute the visible area based on the players point of view."""

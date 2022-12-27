@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import textwrap
 from json import load
 from pathlib import Path
@@ -12,7 +13,10 @@ import config.inputs
 import core.action
 import core.actions
 import core.g
+import parts.consumable
+import parts.effects
 import parts.inventory
+from config.data_io import save_game
 from config.exceptions import Impossible, DataLoadError
 from core.actions import Action
 from core.render_functions import RenderOrder
@@ -243,6 +247,51 @@ class MainGameEventHandler(EventHandler):
         modifier = event.mod
         player = core.g.engine.player
 
+        # Info menus
+        if key == tcod.event.K_m:
+            return HistoryViewer()
+        elif key == tcod.event.K_c:
+            return CharacterScreenEventHandler()
+        elif key == tcod.event.K_a:
+            return AbilityScreenEventHandler()
+        elif key == tcod.event.K_e:
+            return LookHandler()
+        elif key == tcod.event.K_q:
+            return QuestScreenHandler()
+
+        # Settings
+        elif key == tcod.event.K_ESCAPE:
+            return EscMenuEventHandler()
+        # elif key == tcod.event.K_F11:
+        #     self.toggle_fullscreen()
+
+        # Inventory actions
+        elif key == tcod.event.K_g:
+            action = core.actions.PickupAction(player)
+        elif key == tcod.event.K_i:
+            return InventoryActivateHandler()
+        elif key == tcod.event.K_d:
+            return InventoryDropHandler()
+
+        # Debug commands
+        elif key == tcod.event.K_s and logging.DEBUG >= logging.root.level:
+            core.actions.DescendAction(core.g.engine.player).perform()
+            core.g.engine.update_fov()
+            return MainGameEventHandler()
+
+        # Check for anything which causes the player to automatically skip their turn
+        for effect in core.g.engine.player.active_effects:
+            if isinstance(effect, parts.effects.StunEffect):
+                # Handle enemy turns
+                core.g.engine.handle_enemy_turns()
+                # Render all
+                core.g.engine.game_map.render()
+                core.g.engine.update_fov()
+                core.g.context.present(core.g.console)
+                # Don't forget to update global clock
+                core.g.global_clock.toc()
+                return MainGameEventHandler()
+
         # Movement
         if key in config.inputs.MOVE_KEYS:
             dx, dy = config.inputs.MOVE_KEYS[key]
@@ -255,24 +304,6 @@ class MainGameEventHandler(EventHandler):
                 action = core.actions.BumpAction(player, dx, dy)
         elif key in config.inputs.WAIT_KEYS:
             action = core.actions.WaitAction(player)
-
-        # Info menus
-        elif key == tcod.event.K_m:
-            return HistoryViewer()
-        elif key == tcod.event.K_c:
-            return CharacterScreenEventHandler()
-        elif key == tcod.event.K_a:
-            return AbilityScreenEventHandler()
-        elif key == tcod.event.K_e:
-            return LookHandler()
-        elif key == tcod.event.K_g:
-            action = core.actions.PickupAction(player)
-        elif key == tcod.event.K_i:
-            return InventoryActivateHandler()
-        elif key == tcod.event.K_d:
-            return InventoryDropHandler()
-        elif key == tcod.event.K_q:
-            return QuestScreenHandler()
 
         # Continuous actions
         if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT) \
@@ -306,12 +337,6 @@ class MainGameEventHandler(EventHandler):
                                                              interactables[0].y - player.y)
             else:
                 raise NotImplementedError("Too may objects to interact with surrounding the player.")
-
-        # Settings
-        elif key == tcod.event.K_ESCAPE:
-            return EscMenuEventHandler()
-        # elif key == tcod.event.K_F11:
-        #     self.toggle_fullscreen()
 
         return action
 
@@ -376,7 +401,7 @@ class EscMenuEventHandler(AskUserEventHandler):
             title='',
             clear=True,
             fg=tcod.white,
-            bg=(0, 0, 0),
+            bg=tcod.black,
         )
         console.print(console.width // 2, y, f"┤Esc. Menu├",
                       alignment=tcod.constants.CENTER, fg=tcod.white)
@@ -388,7 +413,7 @@ class EscMenuEventHandler(AskUserEventHandler):
                       alignment=tcod.constants.LEFT, fg=tcod.white)
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
-        from config.setup_game import save_game, MainMenu
+        from config.setup_game import MainMenu
         key = event.sym
 
         if key == tcod.event.K_s:
@@ -625,7 +650,8 @@ class AbilityScreenEventHandler(AskUserEventHandler):
             height=height,
             title="",
             clear=True,
-            fg=tcod.white
+            fg=tcod.white,
+            bg=tcod.black
         )
         console.print(x=console.width // 2, y=y, string="┤Abilities├", alignment=tcod.CENTER, fg=tcod.white)
 
@@ -665,6 +691,10 @@ class AbilityScreenEventHandler(AskUserEventHandler):
         key = event.sym
         index = key - tcod.event.K_1
         if 0 < index + 1 <= num_abilities:
+            # Skip if stunned
+            for effect in core.g.engine.player.active_effects:
+                if isinstance(effect, parts.effects.StunEffect):
+                    return PopupMessage("You are stunned!")
             try:
                 ability = core.g.engine.player.abilities[index]
                 # Check for cooldowns first
@@ -838,8 +868,8 @@ class InventoryEventHandler(AskUserEventHandler):
             height=height,
             title='',
             clear=True,
-            fg=(255, 255, 255),
-            bg=(0, 0, 0),
+            fg=tcod.white,
+            bg=tcod.black,
         )
         console.print(x + 1, y, f"┤{self.TITLE}. TAB to sort├")
 
@@ -885,7 +915,13 @@ class InventoryActivateHandler(InventoryEventHandler):
     TITLE = "Select an item to use:"
 
     def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
+        for effect in core.g.engine.player.active_effects:
+            if isinstance(effect, parts.effects.StunEffect):
+                return PopupMessage("You are stunned!")
         if item.consumable:
+            if isinstance(item.consumable, parts.consumable.Junk):
+                return core.input_handlers.PopupMessage(
+                    "You do not have a use for this item.")
             # Return the action for the selected item.
             return item.consumable.get_action(core.g.engine.player)
         elif item.equippable:
@@ -985,7 +1021,7 @@ class ConversationEventHandler(AskUserEventHandler):
                             core.g.engine.quests.start_quest(
                                 self.convo_json[f"{self.current_screen}"]['tag'].replace("start:", ""))
                             return PopupMessage(f"Quest started: "
-                                        f"{core.g.engine.quests.get_quest_step_name(self.interactee.name.lower())}!")
+                                                f"{core.g.engine.quests.get_quest_step_name(self.interactee.name.lower())}!")
                     break
             return self
         elif key == tcod.event.K_ESCAPE or index == self.len_replies:
@@ -1214,6 +1250,12 @@ class MeleeAbilitySelectHandler(SelectIndexHandler):
             return self
         action = self.ability.activate(caster, target, x, y)
         action.perform()
+        # Aggravate passive enemies with this one simple trick
+        if isinstance(target.ai, parts.ai.PlantKeeper):
+            core.g.engine.message_log.add_message(f"The {target.name} responds to your aggression!",
+                                                  config.colour.enrage)
+            new_ai = parts.ai.HostileEnemy(target)
+            target.ai = new_ai
         return MainGameEventHandler()
 
 

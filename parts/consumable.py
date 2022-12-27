@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-import copy
 import random
 from typing import Optional, TYPE_CHECKING
 
 import config.colour
 import core.g
+import core.input_handlers
 import parts.ai
 import parts.inventory
 from config.exceptions import Impossible
 from core.actions import ItemAction
-import core.input_handlers
 from parts.base_component import BaseComponent
-from utils.random_utils import dnd_bonus_calc
 from parts.effects import BurningEffect
+from utils.random_utils import dnd_bonus_calc
 
 if TYPE_CHECKING:
     from entity import Actor, Item
@@ -42,6 +41,13 @@ class Consumable(BaseComponent):
         # Remove Item from inventory
         if isinstance(inventory, parts.inventory.Inventory):
             inventory.items.remove(entity)
+
+
+class Junk(Consumable):
+    """Class for items which have no use."""
+
+    def activate(self, action: ItemAction):
+        pass
 
 
 class HealingConsumable(Consumable):

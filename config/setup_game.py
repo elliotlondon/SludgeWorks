@@ -1,8 +1,8 @@
 """Handle the loading and initialization of game sessions."""
 from __future__ import annotations
 
+import logging
 import copy
-import pickle
 import traceback
 from pathlib import Path
 from typing import Optional
@@ -17,6 +17,7 @@ from core.engine import Engine
 from data.item_factory import create_item_from_json
 from data.monster_factory import create_monster_from_json
 from maps.game_map import GameWorld
+from config.data_io import load_game
 
 save_location = Path("savegames/savegame.sav")
 
@@ -32,7 +33,7 @@ def new_game() -> Engine:
         max_rooms=25,
         room_min_size=6,
         room_max_size=10,
-        map_width=100,
+        map_width=80,
         map_height=60,
         engine=engine
     )
@@ -62,27 +63,13 @@ def new_game() -> Engine:
     player.inventory.items.extend([medkit, medkit])
 
     # Debug stuff
-    twig = copy.deepcopy(create_item_from_json('data/items/twigs.json', 'immolating_twig'))
-    twig.parent = player.inventory
-    player.inventory.items.append(twig)
-    player.inventory.items.append(twig)
-    player.inventory.items.append(twig)
+    if logging.DEBUG >= logging.root.level:
+        twig = copy.deepcopy(create_item_from_json('data/items/twigs.json', 'immolating_twig'))
+        twig.parent = player.inventory
+        player.inventory.items.append(twig)
+        player.inventory.items.append(twig)
+        player.inventory.items.append(twig)
 
-    core.g.engine = engine
-    return engine
-
-
-def save_game(path: Path) -> None:
-    """If an engine is active then save it."""
-    if not hasattr(core.g, "engine"):
-        return  # If called before a new game is started then g.engine is not assigned.
-    path.write_bytes(pickle.dumps(core.g.engine))
-
-
-def load_game(path: Path) -> Engine:
-    """Load an Engine instance from a file."""
-    engine = pickle.loads(path.read_bytes())
-    assert isinstance(engine, Engine)
     core.g.engine = engine
     return engine
 

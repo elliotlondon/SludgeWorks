@@ -80,6 +80,7 @@ class ShoveAction(AbilityAction):
             else:
                 core.g.engine.message_log.add_message(f"The {self.target.name} resists your shove!",
                                                       config.colour.enemy_evade)
+                return None
 
         core.g.engine.message_log.add_message("This action would have no effect.", config.colour.impossible)
         return None
@@ -133,8 +134,7 @@ class BiteAction(AbilityAction):
             # Check if crit
             if roll_dice(1, np.floor(1 / crit_chance)) == np.floor(1 / crit_chance):
                 crit = True
-                # For mindrakers crits do not do double damage, they do small extra damage and an effect
-                damage = attacker.fighter.damage + 2 - defence_roll
+                damage = attacker.fighter.crit_damage - defence_roll
             else:
                 damage = attacker.fighter.damage - defence_roll
 
@@ -197,6 +197,124 @@ class BiteAction(AbilityAction):
                                                       f'but does no damage!', config.colour.player_evade)
             else:
                 core.g.engine.message_log.add_message(f'The {attacker.name} bites the {defender.name}'
+                                                      f'but does no damage.', config.colour.enemy_evade)
+
+        return None
+
+
+class BludgeonAction(AbilityAction):
+    """Bludgeon an enemy, dealing XdY and stunning if a vit 16 roll fails."""
+
+    def __init__(self, caster: Actor, target: Actor, x: int, y: int, damage: int, sides: int,
+                 turns: int, difficulty: 16):
+        super().__init__(
+            entity=caster,
+            target=target,
+            x=x,
+            y=y,
+        )
+        self.damage = damage
+        self.sides = sides
+        self.turns = turns
+        self.difficulty = difficulty
+
+    def perform(self) -> Optional[Exception]:
+        attacker = self.caster
+        defender = self.target
+
+        crit_chance = 0.10  # Critical hit chance in %
+        max_crit_chance = 0.33  # Define max chance to stop overflows!
+
+        damage = None
+        crit = False
+
+        # Check if target is already stunned, or has stun immunity
+        immune = False
+        for effect in defender.active_effects:
+            if isinstance(effect, parts.effects.StunEffect) or isinstance(effect, parts.effects.SecondWindEffect):
+                immune = True
+
+        # Calculate strength-weighted damage roll
+        damage_roll = attacker.fighter.damage + attacker.fighter.strength_modifier
+        if defender.fighter.armour_total > 0:
+            defence_roll = roll_dice(1, defender.fighter.armour_total)
+        else:
+            defence_roll = 0
+
+        # Check if entity penetrates target's armour
+        penetration_int = abs(damage_roll - defence_roll)
+        if (damage_roll - defence_roll) > 0:
+            # Calculate modified (positive) crit chance
+            while penetration_int > 0 and crit_chance <= max_crit_chance:
+                crit_chance += 0.01
+                penetration_int -= 1
+            # Check if crit
+            if roll_dice(1, np.floor(1 / crit_chance)) == np.floor(1 / crit_chance):
+                crit = True
+                damage = attacker.fighter.crit_damage - defence_roll
+            else:
+                damage = attacker.fighter.damage - defence_roll
+
+        # Crits can penetrate otherwise impervious armour!
+        elif (damage_roll - defence_roll) <= 0:
+            # Calculate modified (negative) crit chance
+            while penetration_int > 0 and crit_chance > 0:
+                crit_chance -= 0.01
+                penetration_int -= 1
+            # Check if crit
+            if crit_chance <= 0:
+                damage = 0
+            else:
+                if roll_dice(1, np.floor(1 / crit_chance)) == np.floor(1 / crit_chance):
+                    crit = True
+                    damage = attacker.fighter.crit_damage - defence_roll
+                else:
+                    damage = 0
+
+        # Check for damage and display chat messages
+        stunned = False
+        if damage > 0:
+            if crit:
+                if defender.blood == "Blood":
+                    core.g.engine.game_map.splatter_tiles(defender.x, defender.y,
+                                                          light_fg=config.colour.blood, modifiers="Bloody")
+                # Always stun on crit.
+                if not immune:
+                    effect = parts.effects.StunEffect(self.turns)
+                    effect.parent = defender
+                    defender.active_effects.append(effect)
+                if defender.name.capitalize() == 'Player':
+                    core.g.engine.message_log.add_message(f'The {attacker.name} brutally bludgeons you for '
+                                                          f'{str(damage)} damage!', config.colour.ability_used)
+                    core.g.engine.message_log.add_message(f'You are stunned!',
+                                                          config.colour.stun)
+                else:
+                    core.g.engine.message_log.add_message(f'The {attacker.name} brutally bludgeons the {defender.name}'
+                                                          f'{str(damage)} damage!', config.colour.enemy_crit)
+                    core.g.engine.message_log.add_message(f"The {defender.name.capitalize()} is stunned!",
+                                                          config.colour.enemy_crit)
+            else:
+                if not immune:
+                    if roll_dice(1, 20) + defender.fighter.vitality_modifier < self.difficulty:
+                        effect = parts.effects.StunEffect(self.turns)
+                        effect.parent = defender
+                        defender.active_effects.append(effect)
+                        stunned = True
+                if defender.name.capitalize() == 'Player':
+                    core.g.engine.message_log.add_message(f'The {attacker.name} bludgeons you for '
+                                                          f'{str(damage)} damage!', config.colour.ability_used)
+                    if stunned:
+                        core.g.engine.message_log.add_message(f'You are stunned from the blow!', config.colour.bleed)
+                else:
+                    core.g.engine.message_log.add_message(f'The {attacker.name} bludgeons the {defender.name}'
+                                                          f'{str(damage)} damage.', config.colour.enemy_atk)
+            defender.fighter.hp -= damage
+        else:
+            if defender.name.capitalize() == 'Player':
+                core.g.engine.message_log.add_message(f'The {attacker.name} bludgeons you '
+                                                      f'but does no damage!', config.colour.player_evade)
+            else:
+                core.g.engine.message_log.add_message(f'The {attacker.name} bludgeons the {defender.name}'
                                                       f'but does no damage.', config.colour.enemy_evade)
 
         return None

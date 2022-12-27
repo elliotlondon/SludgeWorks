@@ -5,29 +5,41 @@
         "plants",
         75
       ],
-      "whip_vine": [
+      "tangleshrub": [
         "plants",
-        25
+        20
+      ],
+      "grove_tender": [
+        "plants",
+        5
       ]
     },
     "2": {
       "bluebell": [
         "plants",
-        75
+        70
       ],
-      "whip_vine": [
+      "tangleshrub": [
         "plants",
         25
+      ],
+      "grove_tender": [
+        "plants",
+        5
       ]
     },
     "3": {
       "bluebell": [
         "plants",
-        75
+        70
       ],
-      "whip_vine": [
+      "tangleshrub": [
         "plants",
         25
+      ],
+      "grove_tender": [
+        "plants",
+        5
       ]
     },
     "4": {
@@ -35,19 +47,13 @@
         "plants",
         33
       ],
-      "whip_vine": [
+      "tangleshrub": [
         "plants",
-        67
-      ]
-    },
-    "5": {
-      "bluebell": [
-        "plants",
-        33
+        57
       ],
-      "whip_vine": [
+      "grove_tender": [
         "plants",
-        67
+        10
       ]
     },
     "6": {
@@ -55,21 +61,35 @@
         "plants",
         33
       ],
-      "whip_vine": [
+      "tangleshrub": [
         "plants",
         67
       ]
     },
     "7": {
-      "whip_vine": [
+      "bluebell": [
+        "plants",
+        33
+      ],
+      "tangleshrub": [
+        "plants",
+        67
+      ]
+    },
+    "8": {
+      "tangleshrub": [
         "plants",
         100
       ]
     },
-    "8": {
-      "whip_vine": [
+    "9": {
+      "tangleshrub": [
         "plants",
-        100
+        75
+      ],
+      "grove_tender": [
+        "plants",
+        25
       ]
     }
   }

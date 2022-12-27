@@ -9,14 +9,14 @@ from typing import Tuple, Iterator, List, TYPE_CHECKING, Optional
 import numpy as np
 
 import config.colour
-import core.g
 import maps.tiles
 import parts.entity
 from config.exceptions import MapGenError, FatalMapGenError
 from data.item_factory import create_item_from_json
 from data.monster_factory import create_monster_from_json
 from data.object_factory import create_static_object_from_json
-from maps.game_map import SimpleGameMap
+from maps.game_map import GameMap
+from maps.maploader import MapLoader
 from utils.math_utils import find_neighbours, Graph
 from utils.random_utils import rotate_array
 
@@ -154,85 +154,98 @@ def get_static_objects_at_random(engine: Engine, path: str, floor_number: int) -
     return spawn_table
 
 
-def generate_dungeon(max_rooms: int, room_min_size: int, room_max_size: int, map_width: int, map_height: int,
-                     engine: Engine) -> SimpleGameMap:
+def generate_dungeon(engine: Engine,
+                     from_file: str = None,
+                     max_rooms: int = 25, room_min_size: int = 6, room_max_size: int = 10,
+                     map_width: int = 100, map_height: int = 60
+                     ) -> GameMap:
     """
-    Generate a new dungeon map.
+    Generate a new dungeon map. Either a filename can be supplied to be constructed with the MapLoader object, or
+    the parameters/flags can be given manually to generate a random map.
     """
     player = engine.player
-    cave_smoothing = engine.game_world.cave_smoothing
-    cave_p = engine.game_world.cave_p
 
-    tries = 1
-    while tries <= 10:
-        # Initialize map
-        dungeon = SimpleGameMap(engine, map_width, map_height, entities=[player])
-        # if engine.game_world.caves:
-        #     dungeon = add_caves(dungeon, smoothing=cave_smoothing, p=cave_p)
-        # if engine.game_world.rooms:
-        #     dungeon = add_rooms(dungeon, max_rooms, room_min_size, room_max_size)
-        # if engine.game_world.erode:
-        #     dungeon = erode(dungeon, 1)
+    if from_file:
+        # Load the map layout from the str supplied
+        dungeon = MapLoader()
+        dungeon.load_map_from_file(from_file)
+        dungeon = dungeon.convert_mapfile(engine)
+        return dungeon
+    else:
+        # Generate the map from the given flags
+        cave_smoothing = engine.game_world.cave_smoothing
+        cave_p = engine.game_world.cave_p
+        tries = 1
+        while tries <= 10:
+            # Initialize map
+            dungeon = GameMap(engine, map_width, map_height, entities=[player])
+            # if engine.game_world.caves:
+            #     dungeon = add_caves(dungeon, smoothing=cave_smoothing, p=cave_p)
+            # if engine.game_world.rooms:
+            #     dungeon = add_rooms(dungeon, max_rooms, room_min_size, room_max_size)
+            # if engine.game_world.erode:
+            #     dungeon = erode(dungeon, 1)
 
-        # First create the underlying caves.
-        dungeon = maps.procgen.add_caves(dungeon, smoothing=1, p=42)
-        random_x, random_y = dungeon.get_random_walkable_nontunnel_tile()
-        graph = Graph(map_width, map_height, dungeon.tiles['walkable'])
-        dungeon.accessible = graph.find_connected_area(random_x, random_y)
+            # First create the underlying caves.
+            dungeon = maps.procgen.add_caves(dungeon, smoothing=1, p=42)
+            random_x, random_y = dungeon.get_random_walkable_nontunnel_tile()
+            graph = Graph(map_width, map_height, dungeon.tiles['walkable'])
+            dungeon.accessible = graph.find_connected_area(random_x, random_y)
 
-        # If too few accessible tiles, retry
-        if len(dungeon.accessible.nonzero()[0]) < 80 * 43 / 4:
-            if logging.DEBUG >= logging.root.level:
-                engine.message_log.add_message(f"Too few accessible tiles ({len(dungeon.accessible.nonzero()[0])}).",
-                                               config.colour.debug)
-            tries += 1
-            continue
-        dungeon.prune_inaccessible(maps.tiles.wall)
-
-        # Randomly add some rooms to the dungeon.
-        extra_rooms = 4
-        maps.procgen.place_random_rooms(dungeon, extra_rooms)
-        dungeon.prune_inaccessible(maps.tiles.wall)
-
-        # Place player
-        engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
-
-        # Add some random rooms in accessible locations
-        for room in range(extra_rooms):
-            if isinstance(maps.procgen.place_congruous_room(dungeon, engine), config.exceptions.MapGenError):
+            # If too few accessible tiles, retry
+            if len(dungeon.accessible.nonzero()[0]) < 80 * 43 / 4:
                 if logging.DEBUG >= logging.root.level:
-                    engine.message_log.add_message("Could not add new room...", config.colour.debug)
+                    engine.message_log.add_message(
+                        f"Too few accessible tiles ({len(dungeon.accessible.nonzero()[0])}).",
+                        config.colour.debug)
+                tries += 1
+                continue
+            dungeon.prune_inaccessible(maps.tiles.muddy_wall)
 
-        # Add rocks/water
-        dungeon = add_rubble(dungeon, events=4)
-        dungeon = add_hazards(dungeon, engine, floods=4, holes=3)
-        dungeon = add_features(dungeon)
+            # Randomly add some rooms to the dungeon.
+            extra_rooms = 4
+            maps.procgen.place_random_rooms(dungeon, extra_rooms)
+            dungeon.prune_inaccessible(maps.tiles.muddy_wall)
 
-        # Populate dungeon
-        place_flora(dungeon, engine, areas=3)
-        place_fauna(dungeon, engine)
-        place_npcs(dungeon, engine)
-        place_items(dungeon, engine)
-        place_static_objects(dungeon, engine)
+            # Place player
+            engine.player.place(*dungeon.get_random_walkable_nontunnel_tile(), dungeon)
 
-        # Finally, add stairs
-        dungeon = add_stairs(dungeon)
-        if isinstance(dungeon, SimpleGameMap):
-            # Mapgen successful, use this floor
-            dungeon.accessible = dungeon.calc_accessible()
-            return dungeon
-        elif isinstance(dungeon, MapGenError):
-            # Mapgen unsuccessful, try again until max tries are reached
-            if logging.DEBUG >= logging.root.level:
-                print(f"DEBUG: Floor generation failed. Attempt: {tries}.", config.colour.debug)
-            tries += 1
-            continue
+            # Add some random rooms in accessible locations
+            for room in range(extra_rooms):
+                if isinstance(maps.procgen.place_congruous_room(dungeon, engine), config.exceptions.MapGenError):
+                    if logging.DEBUG >= logging.root.level:
+                        engine.message_log.add_message("Could not add new room...", config.colour.debug)
+
+            # Add rocks/water
+            dungeon = add_rubble(dungeon, events=4)
+            dungeon = add_hazards(dungeon, engine, floods=4, holes=3)
+            dungeon = add_features(dungeon)
+
+            # Populate dungeon
+            place_flora(dungeon, engine, areas=5)
+            place_fauna(dungeon, engine)
+            place_npcs(dungeon, engine)
+            place_items(dungeon, engine)
+            place_static_objects(dungeon, engine)
+
+            # Finally, add stairs
+            dungeon = add_stairs(dungeon)
+            if isinstance(dungeon, GameMap):
+                # Mapgen successful, use this floor
+                dungeon.accessible = dungeon.calc_accessible()
+                return dungeon
+            elif isinstance(dungeon, MapGenError):
+                # Mapgen unsuccessful, try again until max tries are reached
+                if logging.DEBUG >= logging.root.level:
+                    print(f"DEBUG: Floor generation failed. Attempt: {tries}.", config.colour.debug)
+                tries += 1
+                continue
 
     # Something went wrong with mapgen, sysexit
     raise FatalMapGenError(f"Dungeon generation failed! Reason: floor attempts exceeded.")
 
 
-def place_flora(dungeon: SimpleGameMap, engine: Engine, areas: int) -> None:
+def place_flora(dungeon: GameMap, engine: Engine, areas: int) -> None:
     """
     Fill the current floor with plants, both hostile and decorative.
     A cellular automata method is used to generate an area that plants may spawn in, which is then placed onto the
@@ -240,7 +253,8 @@ def place_flora(dungeon: SimpleGameMap, engine: Engine, areas: int) -> None:
     """
     current_floor = engine.game_world.current_floor
     max_plants = get_max_value_for_floor(max_plants_by_floor, current_floor)
-    number_of_plants = random.randint(int(max_plants / 2), max_plants)
+    # number_of_plants = random.randint(int(max_plants / 2), max_plants)
+    number_of_plants = max_plants * 2
 
     plants, plant_types = get_monsters_at_random(engine, 'data/monsters/spawn_table_plants.json', number_of_plants)
 
@@ -299,7 +313,7 @@ def place_flora(dungeon: SimpleGameMap, engine: Engine, areas: int) -> None:
             plant.spawn(dungeon, x, y)
 
 
-def place_fauna(dungeon: SimpleGameMap, engine: Engine) -> None:
+def place_fauna(dungeon: GameMap, engine: Engine) -> None:
     current_floor = engine.game_world.current_floor
     max_monsters = get_max_value_for_floor(max_monsters_by_floor, current_floor)
     number_of_monsters = random.randint(int(max_monsters / 2), max_monsters)
@@ -329,7 +343,7 @@ def place_fauna(dungeon: SimpleGameMap, engine: Engine) -> None:
             monster.spawn(dungeon, x, y)
 
 
-def place_npcs(dungeon: SimpleGameMap, engine: Engine) -> None:
+def place_npcs(dungeon: GameMap, engine: Engine) -> None:
     # Spawn NPCs depending upon floor conditions
     if engine.game_world.current_floor == 1:
         x, y = dungeon.get_random_walkable_nontunnel_tile()
@@ -337,7 +351,7 @@ def place_npcs(dungeon: SimpleGameMap, engine: Engine) -> None:
         npc.spawn(dungeon, x, y)
 
 
-def place_items(dungeon: SimpleGameMap, engine: Engine) -> None:
+def place_items(dungeon: GameMap, engine: Engine) -> None:
     current_floor = engine.game_world.current_floor
     max_items = get_max_value_for_floor(max_items_by_floor, current_floor)
     number_of_items = random.randint(int(max_items / 2), max_items)
@@ -354,7 +368,7 @@ def place_items(dungeon: SimpleGameMap, engine: Engine) -> None:
             item.spawn(dungeon, x, y)
 
 
-def place_static_objects(dungeon: SimpleGameMap, engine: Engine) -> None:
+def place_static_objects(dungeon: GameMap, engine: Engine) -> None:
     current_floor = engine.game_world.current_floor
     static_objects = get_static_objects_at_random(engine, 'data/static_objects/spawn_table_objects.json', current_floor)
 
@@ -386,8 +400,8 @@ def tunnel_between(start: Tuple[int, int], end: Tuple[int, int]) -> Iterator[Tup
         yield x, y
 
 
-def add_rooms(dungeon: SimpleGameMap, max_rooms: int,
-              room_min_size: int, room_max_size: int) -> SimpleGameMap:
+def add_rooms(dungeon: GameMap, max_rooms: int,
+              room_min_size: int, room_max_size: int) -> GameMap:
     rooms: List[RectangularRoom] = []
 
     for r in range(max_rooms):
@@ -425,7 +439,7 @@ def add_rooms(dungeon: SimpleGameMap, max_rooms: int,
     return dungeon
 
 
-def add_caves(dungeon: SimpleGameMap, smoothing: int, p: int) -> SimpleGameMap:
+def add_caves(dungeon: GameMap, smoothing: int, p: int) -> GameMap:
     """
     A chamber filled with random-sized, sprawling cave rooms, generated using an automata technique.
     p is the probability of a cave sector being created. Smoothing values about 4 do nothing, below 4 cause
@@ -443,24 +457,24 @@ def add_caves(dungeon: SimpleGameMap, smoothing: int, p: int) -> SimpleGameMap:
         for x in range(map_width):
             for y in range(map_height):
                 if x == 0 or x == map_width - 1 or y == 0 or y == map_height - 1:
-                    dungeon.tiles[x, y] = maps.tiles.wall
+                    dungeon.tiles[x, y] = maps.tiles.muddy_wall
                 touching_empty_space = 0
                 for nx, ny in dungeon.find_neighbours(x, y):
                     if not dungeon.tiles[nx, ny]['walkable']:
                         touching_empty_space += 1
                 if touching_empty_space >= 5 and not dungeon.tunnel[x, y]:
-                    dungeon.tiles[x, y] = maps.tiles.wall
+                    dungeon.tiles[x, y] = maps.tiles.muddy_wall
                     dungeon.remove_entity_at_location('Door', x, y)
                 elif touching_empty_space <= 2:
                     dungeon.tiles[x, y] = random.choice(maps.tiles.floor_tiles_1)
                 if x == 0 or x == map_width - 1 or y == 0 or y == map_height - 1:
-                    dungeon.tiles[x, y] = maps.tiles.wall
+                    dungeon.tiles[x, y] = maps.tiles.muddy_wall
                     dungeon.remove_entity_at_location('Door', x, y)
 
     return dungeon
 
 
-def add_rubble(dungeon: SimpleGameMap, events: int) -> SimpleGameMap:
+def add_rubble(dungeon: GameMap, events: int) -> GameMap:
     """
     Add tiles of impassable rubble which may be removed via explosions, digging, etc.
     """
@@ -493,7 +507,7 @@ def add_rubble(dungeon: SimpleGameMap, events: int) -> SimpleGameMap:
     return dungeon
 
 
-def add_stairs(dungeon: SimpleGameMap):
+def add_stairs(dungeon: GameMap):
     """
     Place stairs in random tile in random room that the player can access.
     """
@@ -537,7 +551,7 @@ def add_stairs(dungeon: SimpleGameMap):
                        config.colour.debug)
 
 
-def erode(dungeon: SimpleGameMap, smoothing: int) -> SimpleGameMap:
+def erode(dungeon: GameMap, smoothing: int) -> GameMap:
     """
     A tool for helping to increase the erosion of an already-generated map.
     """
@@ -549,18 +563,18 @@ def erode(dungeon: SimpleGameMap, smoothing: int) -> SimpleGameMap:
                     if not dungeon.tiles[nx][ny]['walkable'] and not dungeon.tiles[nx][ny]['transparent']:
                         touching_empty_space += 1
                 if touching_empty_space >= 5 and not dungeon.tunnel[x, y]:
-                    dungeon.tiles[x][y] = maps.tiles.wall
+                    dungeon.tiles[x][y] = maps.tiles.muddy_wall
                     dungeon.remove_entity_at_location('Door', x, y)
                 elif touching_empty_space <= 3:
                     dungeon.tiles[x][y] = random.choice(maps.tiles.floor_tiles_1)
                 if x == 0 or x == dungeon.width - 1 or y == 0 or y == dungeon.height - 1:
-                    dungeon.tiles[x][y] = maps.tiles.wall
+                    dungeon.tiles[x][y] = maps.tiles.muddy_wall
                     dungeon.remove_entity_at_location('Door', x, y)
 
     return dungeon
 
 
-def spill_liquid(dungeon: SimpleGameMap, smoothing: int) -> SimpleGameMap:
+def spill_liquid(dungeon: GameMap, smoothing: int) -> GameMap:
     """
     Erosion tool for liquids to make bodies of liquid more uniform in their distribution.
     """
@@ -578,7 +592,7 @@ def spill_liquid(dungeon: SimpleGameMap, smoothing: int) -> SimpleGameMap:
     return dungeon
 
 
-def add_hazards(dungeon: SimpleGameMap, engine: Engine, floods: int, holes: int) -> SimpleGameMap:
+def add_hazards(dungeon: GameMap, engine: Engine, floods: int, holes: int) -> GameMap:
     """
     Add hazards such as liquids to the map
     """
@@ -634,6 +648,8 @@ def add_hazards(dungeon: SimpleGameMap, engine: Engine, floods: int, holes: int)
                 try:
                     hole_x = random.choice(x_arr)
                     hole_y = random.choice(y_arr)
+                    if hole_x == engine.player.x and hole_y == engine.player.y:
+                        continue
                     dungeon.tiles[hole_x, hole_y] = maps.tiles.hole
                     dungeon.remove_entity_at_location('Door', hole_x, hole_y)
                 except IndexError:
@@ -644,7 +660,7 @@ def add_hazards(dungeon: SimpleGameMap, engine: Engine, floods: int, holes: int)
     return dungeon
 
 
-def add_features(dungeon: SimpleGameMap) -> SimpleGameMap:
+def add_features(dungeon: GameMap) -> GameMap:
     """
     Adds cosmetic features to the map to make it feel more alive
     """
@@ -659,7 +675,7 @@ def add_features(dungeon: SimpleGameMap) -> SimpleGameMap:
     return dungeon
 
 
-def place_random_rooms(dungeon: SimpleGameMap, rooms: int) -> Optional[Exception]:
+def place_random_rooms(dungeon: GameMap, rooms: int) -> Optional[Exception]:
     """Place some rooms in random locations for the current map, without any regard for whether there is already
     something generated at the placement site."""
 
@@ -700,7 +716,7 @@ def place_random_rooms(dungeon: SimpleGameMap, rooms: int) -> Optional[Exception
     return MapGenError()
 
 
-def place_congruous_room(dungeon: SimpleGameMap, engine: Engine) -> Optional[None | Exception]:
+def place_congruous_room(dungeon: GameMap, engine: Engine) -> Optional[None | Exception]:
     """
     Place a room according to the following procedure:
     - Calculate all tiles at the edges of the currently accessible area for the player
@@ -718,7 +734,7 @@ def place_congruous_room(dungeon: SimpleGameMap, engine: Engine) -> Optional[Non
     for x in range(len(dungeon.tiles[:, 0])):
         for y in range(len(dungeon.tiles[0, :])):
             for nx, ny in dungeon.find_neighbours(x, y):
-                if dungeon.tiles[x, y]['name'] == 'wall' and dungeon.accessible[nx, ny]:
+                if dungeon.tiles[x, y]['name'] == 'muddy_wall' and dungeon.accessible[nx, ny]:
                     edges[x, y] = True
 
     # Define room size

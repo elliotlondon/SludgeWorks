@@ -1,0 +1,20 @@
+[
+  {
+    "trash": {
+      "char": "&",
+      "colour": [
+        56,
+        56,
+        56
+      ],
+      "name": "Heap of Trash",
+      "consumable": {
+        "type": "junk"
+      },
+      "depth": 1,
+      "rarity": 1,
+      "usetext": "You do not know what this item is used for, or perhaps it is useless.",
+      "description": "A poorly stacked pile of filth and garbage. It looks damp and stinks of ichor."
+    }
+  }
+]

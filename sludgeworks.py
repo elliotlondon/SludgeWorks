@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import traceback
 from pathlib import Path
+from logging import basicConfig, DEBUG
 
 import tcod
 from tcod.event import _SDL_TO_CLASS_TABLE, ffi, lib
@@ -11,6 +12,7 @@ import config.setup_game
 import core.g
 import core.input_handlers
 import core.clock
+import config.data_io
 
 
 # Enable global debug
@@ -57,10 +59,10 @@ def main() -> None:
         except config.exceptions.QuitWithoutSaving:
             raise SystemExit()
         except SystemExit:  # Save and quit.
-            config.setup_game.save_game(Path("savegames/savegame.sav"))
+            config.data_io.save_game(Path("savegames/savegame.sav"))
             raise
         except BaseException:  # Save on any other unexpected exception.
-            config.setup_game.save_game(Path("savegames/savegame.sav"))
+            config.data_io.save_game(Path("savegames/savegame.sav"))
             raise
 
 

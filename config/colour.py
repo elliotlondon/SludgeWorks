@@ -49,6 +49,9 @@ bleed_end = tcod.lightest_red
 on_fire = tcod.flame
 on_fire_2 = tcod.orange
 on_fire_end = tcod.light_flame
+enrage = tcod.dark_red
+stun = tcod.cyan
+stun_end = tcod.light_cyan
 
 # Liquids
 blood = tcod.darker_crimson

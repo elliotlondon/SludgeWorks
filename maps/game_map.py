@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 import maps.tiles
 
 
-class SimpleGameMap:
+class GameMap:
     SHROUD = np.array((ord(" "), (255, 255, 255), (0, 0, 0)), dtype=maps.tiles.graphic_dt)
 
     def __init__(
@@ -30,7 +30,7 @@ class SimpleGameMap:
         self.width, self.height = width, height
         self.entities = set(entities)
         self.exiles = []
-        self.tiles = np.full((width, height), fill_value=maps.tiles.wall, order="F")
+        self.tiles = np.full((width, height), fill_value=maps.tiles.muddy_wall, order="F")
         self.tile_modifiers = np.full((width, height), fill_value=[None], order="F")
         self.rooms = []
         self.room_zone = np.full((width, height), fill_value=False, order="F")  # Areas which are rooms
@@ -44,7 +44,7 @@ class SimpleGameMap:
         self.downstairs_location = (0, 0)  # Location of the stairs leading to the exit
 
     @property
-    def gamemap(self) -> SimpleGameMap:
+    def gamemap(self) -> GameMap:
         return self
 
     @property
@@ -325,7 +325,7 @@ class SimpleGameMap:
                         console.tiles_rgb[["ch", "fg"]][entity_x, entity_y] = ord(entity.char), entity.colour
                     else:
                         console.rgb[["ch", "fg", "bg"]][entity_x, entity_y] = ord(entity.char), entity.colour, \
-                                                                                    bg_colours[0]
+                                                                              bg_colours[0]
             except TypeError:
                 raise DataLoadError(f"Fatal error diplaying entity {entity.name}, #{entity}")
 
@@ -391,7 +391,7 @@ class GameWorld:
             caves: bool = True,
             rooms: bool = True,
             erode: bool = False,
-            floors: Dict[str, SimpleGameMap] = None,
+            floors: Dict[str, GameMap] = None,
             current_floor: int = 0
     ):
         if floors is None:
@@ -426,7 +426,7 @@ class GameWorld:
                 room_max_size=self.room_max_size,
                 map_width=self.map_width,
                 map_height=self.map_height,
-                engine=self.engine,
+                engine=self.engine
             )
         elif 2 <= self.current_floor <= 4:
             # 3 floors of surface caves. Caves get broader as you descend
@@ -445,7 +445,13 @@ class GameWorld:
                 engine=self.engine,
             )
         elif self.current_floor == 5:
-            # 4th floor suddenly breaks into tunnels
+            # 5th floor is the Liminus hub.
+            new_floor = generate_dungeon(
+                from_file='liminus',
+                engine=self.engine
+            )
+        elif self.current_floor == 6:
+            # 6th floor suddenly breaks into tunnels
             self.max_rooms = 25
             self.room_max_size = 4
             self.room_min_size = 1
@@ -461,8 +467,8 @@ class GameWorld:
                 map_height=self.map_height,
                 engine=self.engine,
             )
-        elif 6 <= self.current_floor <= 7:
-            # 5th and 6th floors are progressively narrowing tunnels
+        elif 7 <= self.current_floor <= 9:
+            # 7th to 9th floors are progressively narrowing tunnels
             self.max_rooms += 5
             self.room_min_size -= 1
             self.room_max_size -= 1

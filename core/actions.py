@@ -272,6 +272,12 @@ class BumpAction(ActionWithDirection):
             if isinstance(self.target_actor.ai, parts.ai.NPC):
                 return SwapAction(self.entity, self.target_actor, self.dx, self.dy).perform()
             else:
+                # Aggravate passive enemies with this one simple trick
+                if isinstance(self.target_actor.ai, parts.ai.PlantKeeper):
+                    core.g.engine.message_log.add_message(f"The {self.target_actor.name} responds to your aggression!",
+                                                          config.colour.enrage)
+                    new_ai = parts.ai.HostileEnemy(self.target_actor)
+                    self.target_actor.ai = new_ai
                 return MeleeAction(self.entity, self.dx, self.dy).perform()
         else:
             return MovementAction(self.entity, self.dx, self.dy).perform()

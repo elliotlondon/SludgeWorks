@@ -37,19 +37,14 @@ def new_tile(*, name: str,
 def get_clean_name(tile: tile_dt) -> str:
     """Return the information of a selected tile without decoration, for use in the look menu."""
     name = tile[0]
-    name = name.replace('_', '').capitalize()
+    name = name.replace('_', ' ').capitalize()
     name = name.translate({ord(k): None for k in digits})
 
-    name = name.replace("Dirt", "Cave Floor")
-    name = name.replace("dirt", "Cave Floor")
-    name = name.replace("Verdant", "Verdant Cave Floor")
-    name = name.replace("verdant", "Verdant Cave Floor")
-    name = name.replace("Down stairs", "Next Floor")
-    name = name.replace("down stairs", "Next Floor")
-    name = name.replace("Hole", "Chasm")
-    name = name.replace("hole", "Chasm")
-    name = name.replace("woodenwall", "Wooden Wall")
-    name = name.replace("Woodenwall", "Wooden Wall")
+    name = name.replace('Muddy wall', 'Cave wall')
+    name = name.replace('Chasm wall', 'Cave wall')
+    name = name.replace("Dirt", "Cave floor")
+    name = name.replace("Verdant", "Verdant cave floor")
+    name = name.replace("Down stairs", "Next floor")
 
     return name
 
@@ -105,13 +100,19 @@ verdant_chars = [",", ".", "'", "∙"]
 verdant_tiles_1 = [verdant_1, verdant_2, verdant_3, verdant_4]
 
 # Walls [Cave]
-wall = new_tile(name="wall",
+muddy_wall = new_tile(name="muddy_wall",
                 walkable=False, transparent=False,
                 dark=(ord("▓"), tcod.grey, (0, 0, 0)),
                 light=(ord("▓"), (150, 100, 50), (0, 0, 0)),
                 description=list("The cave walls are made of rugged brown rock, and slick with condensation. "
                                  "Marks like writing appear in clusters, "
                                  "partially obscured by fluorescent moss."))
+chasm_wall = new_tile(name="chasm_wall",
+                walkable=False, transparent=False,
+                dark=(ord("▓"), tcod.grey, (0, 0, 0)),
+                light=(ord("▓"), (150, 150, 150), (0, 0, 0)),
+                description=list("Dark, jagged cavern walls stand before you. They are covered with a fine rocky dust, "
+                                 "and there is no trace of plant life over any of the surface."))
 rubble = new_tile(name="rubble",
                   walkable=False, transparent=True,
                   dark=(ord("▲"), tcod.grey, (0, 0, 0)),
@@ -126,6 +127,25 @@ wooden_wall = new_tile(name="wooden_wall",
                        description=list("A wall made of dirtied and misshapen planks of wood. Scratches and bite marks "
                                         "litter the surface. The structure is poorly made, but has clearly survived "
                                         "for some time."))
+
+metal_bars = new_tile(name="metal_bars",
+                       walkable=False, transparent=True,
+                       dark=(ord("╫"), tcod.grey, (0, 0, 0)),
+                       light=(ord("╫"), tcod.dark_grey, (0, 0, 0)),
+                       description=list("A row of tightly spaced and durable metal bars. The metal resembles iron, "
+                                        "but lacks any corrosion and looks difficult to break. Clearly, these have "
+                                        "been placed here for an important reason. "))
+
+# Constructions
+bridge = new_tile(
+    name="bridge",
+    walkable=True,
+    transparent=True,
+    dark=(ord("≡"), tcod.grey, (0, 0, 0)),
+    light=(ord("≡"), (150, 125, 50), (0, 0, 0)),
+    description=list("A 'bridge' made out of many pieces of mostly flat wood, joined together with an assortment of "
+                     "rusted nails, rope, and shoddy joinery. Walk over this at your own peril. ")
+)
 
 # Liquids
 water = new_tile(name="water",
@@ -159,9 +179,18 @@ hole = new_tile(
     transparent=True,
     dark=(ord("░"), (0, 0, 0), (36, 36, 36)),
     light=(ord("░"), (0, 0, 0), (36, 36, 36)),
-    description=list("This area of the cave has recently collapsed, leaving a gigantic void, with the cave floor "
+    description=list("This area of the cave has recently collapsed, with the cave floor "
                      "serving as a cliff edge. You could descend here, but you're certain that you would hurt "
                      "yourself on jagged cliff edge.")
+)
+pit = new_tile(
+    name="pit",
+    walkable=False,
+    transparent=True,
+    dark=(ord("░"), (0, 0, 0), (0, 0, 0)),
+    light=(ord("░"), (0, 0, 0), (0, 0, 0)),
+    description=list("An eerie, pitch-black and seemingly endless pit stands before you. "
+                     "Deep below it is silent, and the air is unsettlingly still. Jumping down here would be suicide. ")
 )
 waterfall = new_tile(
     name="waterfall",
@@ -185,7 +214,7 @@ debug_wall = new_tile(
 
 debug_floor = new_tile(
     name="debug_floor",
-    walkable=False,
+    walkable=True,
     transparent=True,
     dark=(ord("∙"), tcod.fuchsia, (0, 0, 0)),
     light=(ord("∙"), tcod.fuchsia, (0, 0, 0)),

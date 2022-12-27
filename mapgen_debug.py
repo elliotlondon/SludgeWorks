@@ -1,5 +1,4 @@
 """Utility script for checking, debugging and iterating map generation"""
-import random
 import copy
 import lzma
 import pickle
@@ -7,10 +6,9 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
-import numpy as np
 import tcod
+from tcod.event import _SDL_TO_CLASS_TABLE, ffi, lib
 
-import maps.tiles
 import config.colour
 import config.exceptions
 import config.inputs
@@ -18,11 +16,13 @@ import config.setup_game
 import core.g
 import core.input_handlers
 import maps.procgen
+import maps.tiles
+import core.clock
 from core.actions import Action
 from core.engine import Engine
 from data.monster_factory import create_monster_from_json
-from maps.game_map import GameWorld, SimpleGameMap
-from utils.math_utils import Graph, find_neighbours
+from maps.game_map import GameWorld, GameMap
+from utils.math_utils import Graph
 
 
 def main():
@@ -36,17 +36,24 @@ def main():
                                  vsync=True) \
             as core.g.context:
         core.g.console = tcod.Console(screen_width, screen_height, order="F")
+        core.g.global_clock = core.clock.GlobalClock()
         try:
             while True:
                 core.g.console.clear()
                 handler.on_render(console=core.g.console)
                 core.g.context.present(core.g.console)
 
+                # Check for any events with SDL with a timeout, so that animated tiles can be refreshed.
                 try:
-                    for event in tcod.event.get():
-                        core.g.context.convert_event(event)
-                        handler = handler.handle_events(event)
+                    sdl_event = ffi.new("SDL_Event*")
+                    while lib.SDL_WaitEventTimeout(sdl_event, 4):
+                        if sdl_event.type in _SDL_TO_CLASS_TABLE:
+                            event = _SDL_TO_CLASS_TABLE[sdl_event.type].from_sdl_event(sdl_event)
+                            core.g.context.convert_event(event)
+                            handler = handler.handle_events(event)
+                    core.g.global_clock.toc()
                 except Exception:
+                    # Print errors to sdterror and then to the in-game message log
                     traceback.print_exc()
                     if isinstance(handler, core.input_handlers.EventHandler):
                         core.g.engine.message_log.add_message(traceback.format_exc(), config.colour.error)
@@ -278,7 +285,7 @@ def generate_debug_floor(engine: Engine):
         engine.message_log.add_message(f"FloorGen attempt {tries}", config.colour.use)
 
         # Initialize map
-        dungeon = SimpleGameMap(engine, floor_width, floor_height, entities=[engine.player])
+        dungeon = GameMap(engine, floor_width, floor_height, entities=[engine.player])
 
         # First create the underlying caves.
         dungeon = maps.procgen.add_caves(dungeon, smoothing=1, p=42)
@@ -317,7 +324,7 @@ def generate_debug_floor(engine: Engine):
 
         # Add rocks/water
         dungeon = maps.procgen.add_rubble(dungeon, events=7)
-        dungeon = maps.procgen.add_hazards(dungeon, floods=5, holes=3)
+        dungeon = maps.procgen.add_hazards(dungeon, engine, floods=5, holes=3)
         dungeon = maps.procgen.add_features(dungeon)
 
         # Populate dungeon
@@ -329,7 +336,7 @@ def generate_debug_floor(engine: Engine):
 
         # Finally, add stairs
         dungeon = maps.procgen.add_stairs(dungeon)
-        if isinstance(dungeon, SimpleGameMap):
+        if isinstance(dungeon, GameMap):
             # Mapgen successful, use this floor
             dungeon.accessible = dungeon.calc_accessible()
             return dungeon

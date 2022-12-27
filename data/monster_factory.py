@@ -30,16 +30,18 @@ def create_monster(data: dict) -> Actor:
         ai_cls = parts.ai.HostileStationary
     elif data['ai_cls'] == "PassiveStationary":
         ai_cls = parts.ai.PassiveStationary
-    elif data['ai_cls'] == "BrainRaker":
-        ai_cls = parts.ai.BrainRaker
+    elif data['ai_cls'] == "PlantKeeper":
+        ai_cls = parts.ai.PlantKeeper
     else:
         raise NotImplementedError()
 
+    # Provide equipment
     if data['equipment'] == "equipment":
         equipment = Equipment()
     else:
         raise NotImplementedError()
 
+    # Load blood/internal fluids
     if "blood" in data:
         blood = data["blood"]
     else:
@@ -81,6 +83,7 @@ def create_monster(data: dict) -> Actor:
         blood=blood
     )
 
+    # Load abilities/mutations
     if 'abilities' in data:
         monster.abilities = []
         for ability in data['abilities']:
@@ -94,6 +97,12 @@ def create_monster(data: dict) -> Actor:
                                                    data['abilities']['Bite']['cooldown'])
             elif ability == "MemoryWipe":
                 ability_obj = parts.mutations.MemoryWipe(data['abilities']['MemoryWipe']['cooldown'])
+            elif ability == "Bludgeon":
+                ability_obj = parts.mutations.Bludgeon(data['abilities']['Bludgeon']['damage'],
+                                                       data['abilities']['Bludgeon']['sides'],
+                                                       data['abilities']['Bludgeon']['turns'],
+                                                       data['abilities']['Bludgeon']['difficulty'],
+                                                       data['abilities']['Bludgeon']['cooldown'])
             monster.abilities.append(ability_obj)
     if 'mutations' in data:
         monster.mutations = []

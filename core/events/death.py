@@ -36,9 +36,7 @@ class GameOverEventHandler(EventHandler):
 
         turns_survived = f"You survived for {core.g.engine.turn_number} turns."
 
-
-        if core.g.engine.last_actor.name == 'Player':
-
+        if not core.g.engine.last_actor.name:
             death_message = f"Killed by {idiocy_message}."
             killer = ''
         else:

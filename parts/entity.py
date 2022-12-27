@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from parts.equipment import Equipment
     from parts.equippable import Equippable
     from parts.inventory import Inventory
-    from maps.game_map import SimpleGameMap
+    from maps.game_map import GameMap
     from parts.mutations import Mutation
 
 T = TypeVar("T", bound="Entity")
@@ -26,10 +26,10 @@ T = TypeVar("T", bound="Entity")
 class Entity:
     """A generic parent object to represent players, enemies, items, etc."""
 
-    parent: Union[SimpleGameMap, Inventory]
+    parent: Union[GameMap, Inventory]
 
     def __init__(self,
-                 parent: Optional[SimpleGameMap] = None,
+                 parent: Optional[GameMap] = None,
                  x: int = 0,
                  y: int = 0,
                  char: str = "?",
@@ -90,10 +90,10 @@ class Entity:
             self.active_effects.owner = self
 
     @property
-    def gamemap(self) -> SimpleGameMap:
+    def gamemap(self) -> GameMap:
         return self.parent.gamemap
 
-    def spawn(self: T, gamemap: SimpleGameMap, x: int, y: int) -> T:
+    def spawn(self: T, gamemap: GameMap, x: int, y: int) -> T:
         """Spawn a copy of this instance at the given location."""
         clone = copy.deepcopy(self)
         clone.x = x
@@ -102,7 +102,15 @@ class Entity:
         gamemap.entities.add(clone)
         return clone
 
-    def place(self, x: int, y: int, gamemap: Optional[SimpleGameMap] = None) -> None:
+    def spawn_quietly(self: T, gamemap: GameMap, x: int, y: int):
+        """As above but does not return."""
+        clone = copy.deepcopy(self)
+        clone.x = x
+        clone.y = y
+        clone.parent = gamemap
+        gamemap.entities.add(clone)
+
+    def place(self, x: int, y: int, gamemap: Optional[GameMap] = None) -> None:
         """Place this entity at a new location.  Handles moving across GameMaps."""
         self.x = x
         self.y = y

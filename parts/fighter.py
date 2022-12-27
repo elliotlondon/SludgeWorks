@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import numpy as np
 import random
 from typing import TYPE_CHECKING
 
+import config.colour
 import core.g
+import parts.ai
 from config.colour import player_die, enemy_die
 from maps.tiles import verdant_chars
 from parts.ai import HostileStationary, PassiveStationary
@@ -108,6 +111,10 @@ class Fighter(BaseComponent):
     def die(self) -> None:
         xp = self.parent.level.xp_given
 
+        # First, if the creature is not the player and has items in its inventory or equipped, drop them.
+        if len(self.parent.inventory.items) > 0 and not self.parent.name == 'Player':
+            self.parent.inventory.drop_all()
+
         # Plants do not have a corpse
         if isinstance(self.parent.ai, HostileStationary) or isinstance(self.parent.ai, PassiveStationary):
             if self.parent.name.endswith("s"):
@@ -118,6 +125,18 @@ class Fighter(BaseComponent):
 
             # Generate floor in its place
             self.parent.char = random.choice(verdant_chars)
+
+            # Death message
+            core.g.engine.message_log.add_message(death_message, death_message_color)
+
+            # If a plant is killed within 5 tiles of a PlantKeeper, enrage it
+            for entity in core.g.engine.game_map.entities:
+                if entity.name == 'Grove Tender':
+                    if np.sqrt((self.parent.x - entity.x)**2 + (self.parent.y - entity.y)**2) <= 5:
+                        core.g.engine.message_log.add_message(f"A nearby {entity.name} becomes enraged!",
+                                                              config.colour.enrage)
+                        new_ai = parts.ai.HostileEnemy(entity)
+                        entity.ai = new_ai
         else:
             if core.g.engine.player is self.parent:
                 death_message = 'YOU DIED'
@@ -126,6 +145,8 @@ class Fighter(BaseComponent):
             else:
                 death_message = f"The {self.parent.name} dies!"
                 death_message_color = enemy_die
+            # Death message
+            core.g.engine.message_log.add_message(death_message, death_message_color)
 
         # Add to exiles list
         core.g.engine.game_map.exiles.append(self.parent)
@@ -136,9 +157,6 @@ class Fighter(BaseComponent):
         if not isinstance(self.parent.ai, HostileStationary) and not isinstance(self.parent.ai, PassiveStationary):
             corpse = self.parent.corpse
             corpse.spawn(core.g.engine.game_map, self.parent.x, self.parent.y)
-
-        # Death message
-        core.g.engine.message_log.add_message(death_message, death_message_color)
 
         # Award xp to whoever performed the last action. Perhaps needs edge case investigation?
         core.g.engine.last_actor.level.add_xp(xp)

@@ -115,16 +115,19 @@ class HostileEnemy(BaseAI):
                                                            dest_y - self.entity.y).perform()
                 else:
                     return core.actions.WaitAction(self.entity).perform()
-            # 10% chance to path to a random nearby tile up to 6 tiles away
             else:
-                # Make a new path for a tile somewhere nearby
-                dest_x, dest_y = core.g.engine.game_map.get_random_nearby_tile(self.entity.x, self.entity.y,
-                                                                               random.randint(2, 6))
-                if dest_x != 0 and dest_y != 0:
-                    return core.actions.MovementAction(self.entity, dest_x - self.entity.x,
-                                                       dest_y - self.entity.y).perform()
-                else:
-                    return core.actions.WaitAction(self.entity).perform()
+                return core.actions.WaitAction(self.entity).perform()
+            # TODO: This is suspicious, could be causion teleport glitching
+            # # 10% chance to path to a random nearby tile up to 6 tiles away
+            # else:
+            #     # Make a new path for a tile somewhere nearby
+            #     dest_x, dest_y = core.g.engine.game_map.get_random_nearby_tile(self.entity.x, self.entity.y,
+            #                                                                    random.randint(2, 6))
+            #     if dest_x != 0 and dest_y != 0:
+            #         return core.actions.MovementAction(self.entity, dest_x - self.entity.x,
+            #                                            dest_y - self.entity.y).perform()
+            #     else:
+            #         return core.actions.WaitAction(self.entity).perform()
 
 
 class HostileStationary(BaseAI):
@@ -147,12 +150,49 @@ class HostileStationary(BaseAI):
 
 
 class PassiveStationary(BaseAI):
+    """AI for enemies which remain in place. These should be immune to movement-forcing effects."""
     def __init__(self, entity: Actor):
         super().__init__(entity)
         self.path: List[Tuple[int, int]] = []
 
     def perform(self) -> None:
         return core.actions.WaitAction(self.entity).perform()
+
+
+class PlantKeeper(BaseAI):
+    """AI for creatures which are tasked with protecting the nearby flora. They do not harm the player unless
+    plants or themselves are damaged within a few tiles of their current location."""
+
+    def __init__(self, entity: Actor):
+        super().__init__(entity)
+        self.path: List[Tuple[int, int]] = []
+
+    def perform(self) -> None:
+        # Check if a valid path exists and follow it
+        if self.path:
+            if not self.path_isvalid(self.path):
+                self.path = None
+            else:
+                dest_x, dest_y = self.path.pop(0)
+                return core.actions.MovementAction(
+                    self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+                ).perform()
+        # If no valid path exists
+        else:
+            # 75% chance to do nothing
+            if randint(0, 100) <= 75:
+                return core.actions.WaitAction(self.entity).perform()
+            # 25% chance to move to a random nearby tile
+            elif randint(0, 100) <= 25:
+                dest_x = self.entity.x + randint(-1, 1)
+                dest_y = self.entity.y + randint(-1, 1)
+                if (dest_x < core.g.engine.game_map.width) and (dest_y < core.g.engine.game_map.height):
+                    if dest_x != 0 and dest_y != 0:
+                        return core.actions.MovementAction(self.entity, dest_x - self.entity.x,
+                                                           dest_y - self.entity.y).perform()
+                else:
+                    return core.actions.WaitAction(self.entity).perform()
+
 
 
 class NPC(BaseAI):

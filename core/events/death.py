@@ -1,5 +1,7 @@
 import os
+import random
 from typing import Optional
+import numpy as np
 
 import tcod
 
@@ -7,6 +9,15 @@ import config.exceptions
 import config.inputs
 import core.g
 from core.input_handlers import EventHandler, BaseEventHandler
+
+idiocy_messages = [
+                "their own foolishness",
+                "poor life decisions",
+                "knowing too little about too much",
+                "natural selection"
+]
+np.random.seed(random.randint(1, 100))
+idiocy_message = np.random.choice(idiocy_messages)
 
 
 class GameOverEventHandler(EventHandler):
@@ -24,11 +35,18 @@ class GameOverEventHandler(EventHandler):
         super().on_render(console)
 
         turns_survived = f"You survived for {core.g.engine.turn_number} turns."
-        death_message = "Killed by a "
-        try:
-            killer = core.g.engine.last_actor.name
-        except:
-            killer = "<Undefined>"
+
+
+        if core.g.engine.last_actor.name == 'Player':
+
+            death_message = f"Killed by {idiocy_message}."
+            killer = ''
+        else:
+            death_message = "Killed by a "
+            try:
+                killer = core.g.engine.last_actor.name
+            except:
+                killer = "<Undefined>"
 
         max_len = max([len(i) for i in [death_message, turns_survived]])
         width = max_len + 10

@@ -148,6 +148,8 @@ class ExploreEventHandler(EventHandler):
             core.g.engine.game_map.render()
             core.g.engine.update_fov()
             core.g.context.present(core.g.console)
+            # Don't forget to update global clock
+            core.g.global_clock.toc()
 
         return MainGameEventHandler()
 
@@ -188,6 +190,8 @@ class TakeStairsEventHandler(EventHandler):
             core.g.engine.game_map.render()
             core.g.engine.update_fov()
             core.g.context.present(core.g.console)
+            # Don't forget to update global clock
+            core.g.global_clock.toc()
 
         return MainGameEventHandler()
 
@@ -1239,6 +1243,9 @@ class LookHandler(SelectIndexHandler):
         console.tiles_rgb["bg"][x, y] = config.colour.white
         console.tiles_rgb["fg"][x, y] = config.colour.black
 
+        # Update global clock
+        core.g.global_clock.toc()
+
         # Fix camera coords
         screen_shape = core.g.console.width, core.g.console.height - 7
         cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
@@ -1401,9 +1408,12 @@ class SingleRangedAttackHandler(SelectIndexHandler):
         screen_shape = core.g.console.width, core.g.console.height - 7
         cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
         core.g.engine.mouse_location = (core.g.engine.player.x - cam_x, core.g.engine.player.y - cam_y)
+        print()
 
     def on_index_selected(self, x: int, y: int) -> Optional[Action]:
-        return self.callback((x, y))
+        screen_shape = core.g.console.width, core.g.console.height - 7
+        cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
+        return self.callback((x + cam_x, y + cam_y))
 
 
 class AreaRangedAttackHandler(SelectIndexHandler):
@@ -1435,7 +1445,9 @@ class AreaRangedAttackHandler(SelectIndexHandler):
         )
 
     def on_index_selected(self, x: int, y: int) -> Optional[Action]:
-        return self.callback((x, y))
+        screen_shape = core.g.console.width, core.g.console.height - 7
+        cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
+        return self.callback((x + cam_x, y + cam_y))
 
 
 class TeleotherEventHandler(SelectIndexHandler):
@@ -1449,7 +1461,9 @@ class TeleotherEventHandler(SelectIndexHandler):
         core.g.engine.mouse_location = (core.g.engine.player.x - cam_x, core.g.engine.player.y - cam_y)
 
     def on_index_selected(self, x: int, y: int) -> Optional[Action]:
-        return self.callback((x, y))
+        screen_shape = core.g.console.width, core.g.console.height - 7
+        cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
+        return self.callback((x + cam_x, y + cam_y))
 
 
 class HoleJumpEventHandler(AskUserEventHandler):

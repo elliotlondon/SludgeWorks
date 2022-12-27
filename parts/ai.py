@@ -10,6 +10,7 @@ import tcod
 
 import core.actions
 import core.g
+from parts.effects import BurningEffect
 
 if TYPE_CHECKING:
     from parts.entity import Actor
@@ -204,3 +205,42 @@ class ConfusedEnemy(BaseAI):
             # The actor will either try to move or attack in the chosen random direction.
             # Its possible the actor will just bump into the wall, wasting a turn.
             return core.actions.BumpAction(self.entity, direction_x, direction_y, ).perform()
+
+
+class BurningEnemy(BaseAI):
+    """
+    Enemies which are vulnerable or scared of fire will panic and run around trying to put out the flames while on fire.
+    Afterwards, they will revert to their previous AI.
+    If an actor occupies a tile it is randomly moving into, it will attack.
+    """
+
+    def __init__(self, entity: Actor, previous_ai: Optional[BaseAI]):
+        super().__init__(entity)
+        self.previous_ai = previous_ai
+
+    def perform(self) -> None:
+        # Revert the AI back to the original state if the effect has run its course.
+        if len(self.entity.active_effects) == 0:
+            self.entity.ai = self.previous_ai
+        else:
+            for effect in self.entity.active_effects:
+                if not isinstance(effect, BurningEffect):
+                    self.entity.ai = self.previous_ai
+                else:
+                    # Pick a random direction
+                    direction_x, direction_y = random.choice(
+                        [
+                            (-1, -1),  # Northwest
+                            (0, -1),  # North
+                            (1, -1),  # Northeast
+                            (-1, 0),  # West
+                            (1, 0),  # East
+                            (-1, 1),  # Southwest
+                            (0, 1),  # South
+                            (1, 1),  # Southeast
+                        ]
+                    )
+
+                    # The actor will either try to move or attack in the chosen random direction.
+                    # Its possible the actor will just bump into the wall, wasting a turn.
+                    return core.actions.BumpAction(self.entity, direction_x, direction_y, ).perform()

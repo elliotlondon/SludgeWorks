@@ -46,6 +46,9 @@ poison = tcod.dark_green
 poison_end = tcod.green
 bleed = tcod.light_red
 bleed_end = tcod.lightest_red
+on_fire = tcod.flame
+on_fire_2 = tcod.orange
+on_fire_end = tcod.light_flame
 
 # Liquids
 blood = tcod.darker_crimson

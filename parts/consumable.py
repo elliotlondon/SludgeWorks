@@ -13,6 +13,7 @@ from core.actions import ItemAction
 import core.input_handlers
 from parts.base_component import BaseComponent
 from utils.random_utils import dnd_bonus_calc
+from parts.effects import BurningEffect
 
 if TYPE_CHECKING:
     from entity import Actor, Item
@@ -200,7 +201,7 @@ class ConfusionConsumable(Consumable):
         core.g.engine.message_log.add_message(self.parent.usetext, config.colour.use)
 
         # Logic for whether enemy can be confused
-        if isinstance(target.ai, parts.ai.PassiveStationary):
+        if isinstance(target.ai, parts.ai.PassiveStationary) or isinstance(target.ai, parts.ai.HostileStationary):
             core.g.engine.message_log.add_message(
                 f"The {self.parent.name} has no effect...",
                 config.colour.enemy_evade,
@@ -251,4 +252,40 @@ class TeleportOtherConsumable(Consumable):
             # Get a random walkable tile that is not in the player's FOV
             random_x, random_y = core.g.engine.game_map.get_random_unoccupied_nonfov_tile()
             target.teleport(random_x, random_y)
+        self.consume()
+
+
+class ImmolateConsumable(Consumable):
+    def get_action(self, consumer: Actor) -> core.input_handlers.SingleRangedAttackHandler:
+        core.g.engine.message_log.add_message("Select a target location.", config.colour.needs_target)
+        return core.input_handlers.SingleRangedAttackHandler(callback=lambda xy: ItemAction(consumer, self.parent, xy))
+
+    def activate(self, action: ItemAction) -> None:
+        target = action.target_actor
+
+        if not core.g.engine.game_map.visible[action.target_xy]:
+            raise Impossible("You cannot target an area that you cannot see.")
+        if not target:
+            raise Impossible("No enemy at location (You must select an enemy to target).")
+
+        # Display message for use whenever Item is consumed
+        core.g.engine.message_log.add_message(self.parent.usetext, config.colour.use)
+        if action.target_actor.name == "Player":
+            core.g.engine.message_log.add_message(
+                f"Your body is engulfed in searing heat and you burst into flames!",
+                config.colour.on_fire,
+            )
+        else:
+            core.g.engine.message_log.add_message(
+                f"The {target.name} bursts into flames!",
+                config.colour.on_fire,
+            )
+
+        # Add burning effect to target
+        effect = BurningEffect(turns=1)
+        effect.parent = action.target_actor
+        target.active_effects.append(effect)
+        # Make sure that rooted enemies don't wander around
+        if not isinstance(target.ai, parts.ai.PassiveStationary) or isinstance(target.ai, parts.ai.HostileStationary):
+            target.ai = parts.ai.BurningEnemy(entity=target, previous_ai=target.ai)
         self.consume()

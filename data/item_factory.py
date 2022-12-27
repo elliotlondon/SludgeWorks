@@ -112,6 +112,8 @@ def create_consumable(data: dict) -> Item:
                                                                data['consumable']['radius'])
     elif "Teleother" in data['consumable']['type']:
         consumable = parts.consumable.TeleportOtherConsumable()
+    elif "Immolation" in data['consumable']['type']:
+        consumable = parts.consumable.ImmolateConsumable()
     else:
         NotImplementedError()
 

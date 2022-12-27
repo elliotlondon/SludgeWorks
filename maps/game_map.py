@@ -314,7 +314,18 @@ class SimpleGameMap:
             if not self.visible[entity.x, entity.y]:
                 continue
             try:
-                console.tiles_rgb[["ch", "fg"]][entity_x, entity_y] = ord(entity.char), entity.colour
+                # Check if the entities have status effects which require animating
+                if not entity.active_effects:
+                    console.tiles_rgb[["ch", "fg"]][entity_x, entity_y] = ord(entity.char), entity.colour
+                else:
+                    bg_colours = entity.get_effect_colours()
+                    if len(bg_colours) > 1:
+                        random.choice(bg_colours)
+                    elif len(bg_colours) == 0:
+                        console.tiles_rgb[["ch", "fg"]][entity_x, entity_y] = ord(entity.char), entity.colour
+                    else:
+                        console.rgb[["ch", "fg", "bg"]][entity_x, entity_y] = ord(entity.char), entity.colour, \
+                                                                                    bg_colours[0]
             except TypeError:
                 raise DataLoadError(f"Fatal error diplaying entity {entity.name}, #{entity}")
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Tuple, TYPE_CHECKING
 
 import config.colour
+import core.g
 
 if TYPE_CHECKING:
     from tcod import Console
@@ -51,6 +52,7 @@ def render_turn_number(console: Console, turn_number: int, location: Tuple[int, 
     x, y = location
 
     console.print(x=x, y=y, string=f"Turn number: {turn_number}")
+    console.print(x=x, y=y - 6, string=f"Tick: {core.g.global_clock.current_tic()}")
 
 
 def render_names_at_mouse_location(console: Console, x: int, y: int, engine: Engine) -> None:

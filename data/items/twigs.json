@@ -77,5 +77,23 @@
       "usetext": "You snap the twig...",
       "description": "An odd Y-shaped twig of unknown hardwood. You often drop the twig out of unnatural clumsiness."
     }
+  },
+  {
+    "immolating_twig": {
+      "char": "√",
+      "colour": [
+        191,
+        101,
+        0
+      ],
+      "name": "Smouldering Imbued Twig",
+      "consumable": {
+        "type": "Immolation"
+      },
+      "depth": 5,
+      "rarity": 5,
+      "usetext": "You snap the twig...",
+      "description": "An odd Y-shaped twig of unknown hardwood. Embers dance upon its surface."
+    }
   }
 ]

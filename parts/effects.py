@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from typing import TYPE_CHECKING, Optional
 
 import config.colour
@@ -51,6 +52,10 @@ class Effect(BaseComponent):
         """On the passing of a turn, apply this effect."""
         raise NotImplementedError()
 
+    def get_colour(self):
+        """Provide an array of bg colours for use in visually animating entities under this effect."""
+        raise NotImplementedError()
+
 
 class PoisonEffect(Effect):
     """Poison an entity, dealing X damage for Y turns"""
@@ -82,6 +87,12 @@ class PoisonEffect(Effect):
         else:
             core.g.engine.message_log.add_message(f"The {self.parent.name} recovers from the poison.",
                                                   config.colour.poison)
+
+    def get_colour(self):
+        if not core.g.global_clock.current_tic() + 1 % 16:
+            return config.colour.poison
+        else:
+            return None
 
 
 class BleedEffect(Effect):
@@ -125,3 +136,58 @@ class BleedEffect(Effect):
         else:
             core.g.engine.message_log.add_message(f"The {self.parent.name} stops bleeding.",
                                                   config.colour.bleed_end)
+
+    def get_colour(self):
+        if not core.g.global_clock.current_tic() % 16:
+            return config.colour.bleed
+        else:
+            return None
+
+
+class BurningEffect(Effect):
+    """Cause an entity to catch fire, dealing unavoidable X damage per turn and causing them to panic
+    for an indefinite number of turns until the entity makes a successful save"""
+
+    def __init__(self,
+                 turns: int,
+                 parent: Optional[parts.entity.Actor] = None,
+                 ):
+        self.turns = turns
+        if parent:
+            # If parent isn't provided now then it will be set later.
+            self.parent = parent
+        self.first_turn = True
+
+    def tick(self):
+        # Check if the entity is able to put out the flames
+        if self.first_turn or not roll_dice(1, 20) > 14:
+            self.turns = 1
+            damage = random.randint(1, 3)
+            self.parent.fighter.hp -= damage
+            # Messages
+            if self.parent.name == "Player":
+                core.g.engine.message_log.add_message(f"You are on fire! You burn for {damage} damage!",
+                                                      config.colour.on_fire)
+            else:
+                core.g.engine.message_log.add_message(
+                    f"The {self.parent.name} takes {damage} damage from the flames.",
+                    config.colour.on_fire)
+            self.first_turn = False
+        else:
+            self.turns = 0
+
+    def expiry_message(self):
+        if self.parent.name == "Player":
+            core.g.engine.message_log.add_message(f"You are no longer on fire.", config.colour.on_fire_end)
+        else:
+            core.g.engine.message_log.add_message(f"The {self.parent.name} is no longer on fire.",
+                                                  config.colour.on_fire_end)
+
+    def get_colour(self):
+        if not core.g.global_clock.current_tic() % 6:
+            return config.colour.on_fire
+        elif not core.g.global_clock.current_tic() % 4:
+            return config.colour.on_fire_2
+        else:
+            return None
+

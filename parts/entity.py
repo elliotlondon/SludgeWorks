@@ -182,6 +182,20 @@ class Entity:
         dy = other.y - self.y
         return math.hypot(dx, dy)
 
+    def get_effect_colours(self):
+        # Return an array of all colours and rest frames for use in animation.
+        if self.active_effects == []:
+            return None
+        elif len(self.active_effects) > 4:
+            raise NotImplementedError('Visual Error: Too many applied effects for the scheduler to currently handle!')
+        else:
+            colours = []
+            for effect in self.active_effects:
+                try:
+                    colours.append(tuple(effect.get_colour()))
+                except TypeError:
+                    pass
+            return colours
 
 class Actor(Entity):
     """An entity with an AI which may move and act within the game map."""

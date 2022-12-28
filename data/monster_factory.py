@@ -60,45 +60,42 @@ def create_monster(data: dict) -> Actor:
     else:
         blood = "Blood"
 
-    try:
-        monster = Actor(
-            char=data['char'],
-            colour=(data['colour'][0], data['colour'][1], data['colour'][2]),
-            tag=data['tag'],
-            name=data['name'],
-            ai_cls=ai_cls,
-            equipment=equipment,
-            fighter=Fighter(
-                hp=data['fighter']['hp'],
-                max_hp=data['fighter']['max_hp'],
-                damage_dice=data['fighter']['damage_dice'],
-                damage_sides=data['fighter']['damage_sides'],
-                strength=data['fighter']['strength'],
-                dexterity=data['fighter']['dexterity'],
-                vitality=data['fighter']['vitality'],
-                intellect=data['fighter']['intellect'],
-                perception=data['fighter']['perception'],
-                armour=data['fighter']['armour'],
-                dodges=data['fighter']['dodges'],
-            ),
-            corpse=Corpse(
-                char=data['corpse']['char'],
-                colour=(data['corpse']['colour'][0], data['corpse']['colour'][1], data['corpse']['colour'][2]),
-                name=data['corpse']['name'],
-                description=data['corpse']['description']
-            ),
-            inventory=Inventory(
-                capacity=data['inventory']['capacity']
-            ),
-            level=Level(
-                level_up_base=data['level']['level_up_base'],
-                xp_given=data['level']['xp_given']
-            ),
-            description=data['description'],
-            blood=blood
-        )
-    except:
-        print()
+    monster = Actor(
+        char=data['char'],
+        colour=(data['colour'][0], data['colour'][1], data['colour'][2]),
+        tag=data['tag'],
+        name=data['name'],
+        ai_cls=ai_cls,
+        equipment=equipment,
+        fighter=Fighter(
+            hp=data['fighter']['hp'],
+            max_hp=data['fighter']['max_hp'],
+            damage_dice=data['fighter']['damage_dice'],
+            damage_sides=data['fighter']['damage_sides'],
+            strength=data['fighter']['strength'],
+            dexterity=data['fighter']['dexterity'],
+            vitality=data['fighter']['vitality'],
+            intellect=data['fighter']['intellect'],
+            perception=data['fighter']['perception'],
+            armour=data['fighter']['armour'],
+            dodges=data['fighter']['dodges'],
+        ),
+        corpse=Corpse(
+            char=data['corpse']['char'],
+            colour=(data['corpse']['colour'][0], data['corpse']['colour'][1], data['corpse']['colour'][2]),
+            name=data['corpse']['name'],
+            description=data['corpse']['description']
+        ),
+        inventory=Inventory(
+            capacity=data['inventory']['capacity']
+        ),
+        level=Level(
+            level_up_base=data['level']['level_up_base'],
+            xp_given=data['level']['xp_given']
+        ),
+        description=data['description'],
+        blood=blood
+    )
 
     # Append drop table if it has one
     if 'drop_table' in data:

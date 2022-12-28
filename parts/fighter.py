@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import copy
-import numpy as np
 import random
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 import config.colour
 import core.g
-import data.item_factory
 import parts.ai
 from config.colour import player_die, enemy_die
 from maps.tiles import verdant_chars
@@ -158,13 +157,12 @@ class Fighter(BaseComponent):
 
             # If a plant is killed within 5 tiles of a PlantKeeper, enrage it
             for entity in core.g.engine.game_map.entities:
-                if entity.name == 'Grove Tender':
-                    if isinstance(entity.ai, parts.ai.PlantKeeper):
-                        if np.sqrt((self.parent.x - entity.x)**2 + (self.parent.y - entity.y)**2) <= 5:
-                            core.g.engine.message_log.add_message(f"A nearby {entity.name} becomes enraged!",
-                                                                  config.colour.enrage)
-                            new_ai = parts.ai.HostileEnemy(entity)
-                            entity.ai = new_ai
+                if isinstance(entity.ai, parts.ai.PlantKeeper):
+                    if np.sqrt((self.parent.x - entity.x) ** 2 + (self.parent.y - entity.y) ** 2) <= 5:
+                        core.g.engine.message_log.add_message(f"A nearby {entity.name} becomes enraged!",
+                                                              config.colour.enrage)
+                        new_ai = parts.ai.HostileEnemy(entity)
+                        entity.ai = new_ai
         else:
             if core.g.engine.player is self.parent:
                 death_message = 'YOU DIED'

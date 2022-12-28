@@ -158,7 +158,7 @@ class FireballDamageConsumable(Consumable):
 
                         # Make sure that rooted enemies don't wander around
                         if not isinstance(actor.ai, parts.ai.PassiveStationary) or isinstance(actor.ai,
-                                                                                               parts.ai.HostileStationary):
+                                                                                              parts.ai.HostileStationary):
                             actor.ai = parts.ai.BurningEnemy(entity=actor, previous_ai=actor.ai)
 
                         if actor.name == 'Player':

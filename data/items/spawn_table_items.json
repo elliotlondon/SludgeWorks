@@ -28,7 +28,7 @@
       "teleother_twig": 5,
       "fireball_twig": 5,
       "longsword": 5,
-      "cuirass": 5
+      "steel_cuirass": 5
     },
     "6": {
       "healing_mud": 25,
@@ -36,7 +36,7 @@
       "lightning_twig": 10,
       "teleother_twig": 10,
       "fireball_twig": 5,
-      "cuirass": 5
+      "steel_cuirass": 5
     },
     "7": {
       "healing_mud": 25,
@@ -44,7 +44,7 @@
       "lightning_twig": 10,
       "teleother_twig": 10,
       "fireball_twig": 5,
-      "cuirass": 10
+      "steel_cuirass": 10
     },
     "8": {
       "healing_mud": 25,
@@ -52,7 +52,7 @@
       "lightning_twig": 15,
       "teleother_twig": 10,
       "fireball_twig": 10,
-      "cuirass": 10
+      "steel_cuirass": 10
     },
     "9": {
       "healing_mud": 25,

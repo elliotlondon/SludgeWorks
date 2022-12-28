@@ -160,10 +160,10 @@ class DeadInventoryEventHandler(core.input_handlers.AskUserEventHandler):
         super().on_render(console)
         number_of_items_in_inventory = len(core.g.engine.player.inventory.items)
 
-        height = number_of_items_in_inventory + 2
+        height = number_of_items_in_inventory + 3
 
-        if height <= 3:
-            height = 3
+        if height <= 4:
+            height = 4
 
         width = len(self.TITLE) + 20
         x = console.width // 2 - int(width / 2)
@@ -179,7 +179,7 @@ class DeadInventoryEventHandler(core.input_handlers.AskUserEventHandler):
             fg=(255, 255, 255),
             bg=(0, 0, 0),
         )
-        console.print(x + 1, y, f"┤{self.TITLE}. TAB to sort├")
+        console.print(x + width // 4, y, f"┤{self.TITLE}├")
 
         if number_of_items_in_inventory > 0:
             for i, item in enumerate(core.g.engine.player.inventory.items):
@@ -188,9 +188,9 @@ class DeadInventoryEventHandler(core.input_handlers.AskUserEventHandler):
                 if is_equipped:
                     item_string = f"{item_string} (E)"
 
-                console.print(x + 1, y + i + 1, item_string, fg=item.str_colour)
+                console.print(x + 1, y + i + 2, item_string, fg=item.str_colour)
         else:
-            console.print(x + 1, y + 1, "(Empty)")
+            console.print(x + 1, y + 2, "Your inventory was empty.")
 
     def on_exit(self) -> Optional[GameOverEventHandler]:
         """Called when the user is trying to exit or cancel an action. Return to death menu.

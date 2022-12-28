@@ -253,7 +253,6 @@ class Actor(Entity):
         self.inventory = inventory
         self.inventory.parent = self
         self.drop_table = drop_table
-        self.drop_table.parent = self
         self.level = level
         self.level.parent = self
         self.description = description

@@ -71,6 +71,42 @@
         "xp_given": 100
       },
       "description": "A stern and imposing woman stands before you, clad in thick black leather armour. Her stance suggests military training, and only her piercing light blue eyes can be seen above a black bandana."
+    },
+    "ozhol_prisoner": {
+      "char": "@",
+      "colour": [0, 191, 191],
+      "tag": "ozhol_prisoner",
+      "name": "Strange Man",
+      "ai_cls": "NPC",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 34,
+        "max_hp": 34,
+        "damage_dice": 3,
+        "damage_sides": 3,
+        "strength": 12,
+        "dexterity": 12,
+        "vitality": 12,
+        "intellect": 20,
+        "perception": 14,
+        "armour": 0,
+        "xp": 0,
+        "dodges": true
+      },
+      "corpse": {
+        "char": "%",
+        "colour": [0, 95, 151],
+        "name": "Mutated corpse",
+        "description": "A mangled mound of mutated flesh. This creature used to be human."
+      },
+      "inventory": {
+        "capacity": 12
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 100
+      },
+      "description": "This intimidating man is being kept prisoner, bound with thick and iridescent metal chains to multiple points within the room. He stands motionless in the centre; his arms cannot be seen underneath his bizarrely creased blue fabric robes, and his face is not visible under his drooping wide-brimmed hat."
     }
   }
 ]

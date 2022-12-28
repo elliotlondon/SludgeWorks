@@ -1,10 +1,8 @@
 import random
-import copy
+import csv
 
+import core.g
 import maps.game_map
-from data.object_factory import create_static_object_from_json
-from data.item_factory import create_item_from_json
-from data.monster_factory import create_monster_from_json
 
 import pandas as pd
 
@@ -26,6 +24,7 @@ class MapLoader():
         # Attempt to load the map in .csv format according to the supplied filename str.
         try:
             self.mapfile = pd.read_csv(f"data/prefabs/{fname}.csv")
+            # self.mapfile = csv.reader(f"data/prefabs/{fname}.csv")
         except FileNotFoundError:
             raise FileNotFoundError(f"Map prefab file '{fname}' not found.")
 
@@ -37,7 +36,7 @@ class MapLoader():
         # First, create a GameMap of the same size as the loaded map
         new_map = GameMap(engine, map_width, map_height)
 
-        # Iterate over all cells to generate the tiles and objects in the corresponding game_map coords
+        # Iterate over all cells to generate the tiles and in the corresponding game_map coords
         for i in range(map_width):
             for j in range(map_height):
                 # Get cell value
@@ -80,31 +79,25 @@ class MapLoader():
                 if 'stairs' in cell_value:
                     new_map.tiles[i, j] = maps.tiles.down_stairs
                     new_map.downstairs_location = (i, j)
-
-                # Now check additional cell values and spawn/create appropriately
                 if 'player' in cell_value:
                     engine.player.place(*(i, j), new_map)
-                elif 'metal_door_top' in cell_value:
-                    door_top = copy.deepcopy(
-                        create_static_object_from_json(f"data/static_objects/core_objects.json", 'metal_door_top'))
-                    door_top.spawn_quietly(new_map, i, j)
-                elif 'metal_door_side' in cell_value:
-                    door_top = copy.deepcopy(
-                        create_static_object_from_json(f"data/static_objects/core_objects.json", 'metal_door_top'))
-                    door_top.spawn_quietly(new_map, i, j)
-                elif 'door_top' in cell_value:
-                    door_top = copy.deepcopy(
-                        create_static_object_from_json(f"data/static_objects/core_objects.json", 'shanty_door_top'))
-                    door_top.spawn_quietly(new_map, i, j)
-                elif 'door_side' in cell_value:
-                    door_side = copy.deepcopy(
-                        create_static_object_from_json(f"data/static_objects/core_objects.json",
-                                                       'shanty_door_side'))
-                    door_side.spawn_quietly(new_map, i, j)
-                elif 'trash' in cell_value:
-                    trash = copy.deepcopy(
-                        create_item_from_json(f"data/items/other.json", 'trash'))
-                    trash.spawn_quietly(new_map, i, j)
+
+        # Now items, monsters and NPCs
+        for i in range(map_width):
+            for j in range(map_height):
+                # Get cell value
+                cell_value = self.mapfile.values[j, i]
+                if type(cell_value) == float:
+                    continue
+                else:
+                    cell_value.split()
+
+                print(cell_value)
+                try:
+                    entity = core.g.engine.clone(str(cell_value))
+                    entity.spawn_quietly(new_map, i, j)
+                except:
+                    pass
 
         new_map.accessible = new_map.calc_accessible()
         return new_map

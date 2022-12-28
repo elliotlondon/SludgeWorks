@@ -31,3 +31,5 @@ build/
 dist/
 .build
 runspec.txt
+*.spec
+sludgeworks/

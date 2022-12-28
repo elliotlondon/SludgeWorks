@@ -97,7 +97,7 @@ class Engine:
         # First handle open/closed door changing fov algo
         for entity in self.game_map.entities:
             if 'Door' in entity.name:
-                if 'Open' in entity.properties:
+                if 'Open' in entity.properties or 'Seethrough' in entity.properties:
                     self.game_map.tiles[entity.x, entity.y]['transparent'] = True
                 elif 'Closed' in entity.properties:
                     self.game_map.tiles[entity.x, entity.y]['transparent'] = False

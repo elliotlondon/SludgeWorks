@@ -26,23 +26,23 @@
       "description": "This poorly constructed door is made from planks of stained, misshapen wood, covered in knots and burrs. Wood is rarely seen here, but the builder either does not know or does not care.",
       "properties": ["Unlocked", "Closed"]
   },
-  "metal_door_top": {
+  "cell_door_top": {
       "char": "─",
       "colour": [125, 125, 125],
-      "tag": "metal_door_top",
-      "name": "Metal Door",
+      "tag": "cell_door_top",
+      "name": "Cell Door",
       "interact_message": "This door is blocked.",
-      "description": "A smooth and sturdy-looking door made out of a glossy silver metal. This seems to have completely avoided any corrosion or corruption due to the mechanics of the Sludgeworks.",
-      "properties": ["Locked", "Closed"]
+      "description": "A smooth and sturdy-looking cell door made out of a glossy silver metal. This seems to have completely avoided any corrosion or corruption due to the mechanics of the Sludgeworks.",
+      "properties": ["Locked", "Closed", "Seethrough"]
   },
 
-  "metal_door_side": {
+  "cell_door_side": {
       "char": "│",
       "colour": [125, 125, 125],
-      "tag": "metal_door_side",
-      "name": "Metal Door",
+      "tag": "cell_door_side",
+      "name": "Cell Door",
       "interact_message": "This door is blocked.",
-      "description": "A smooth and sturdy-looking door made out of a glossy silver metal. This seems to have completely avoided any corrosion or corruption due to the mechanics of the Sludgeworks.",
-      "properties": ["Locked", "Closed"]
+      "description": "A smooth and sturdy-looking cell door made out of a glossy silver metal. This seems to have completely avoided any corrosion or corruption due to the mechanics of the Sludgeworks.",
+      "properties": ["Locked", "Closed", "Seethrough"]
   }
 }

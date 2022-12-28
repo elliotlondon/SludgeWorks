@@ -269,8 +269,6 @@ class TeleportOtherConsumable(Consumable):
             raise Impossible("You cannot target an area that you cannot see.")
         if not target:
             raise Impossible("No enemy at location (You must select an enemy to target).")
-        if target is consumer:
-            raise Impossible("You can't bring yourself to target yourself.")
 
         # Display message for use whenever Item is consumed
         core.g.engine.message_log.add_message(self.parent.usetext, config.colour.use)
@@ -282,9 +280,16 @@ class TeleportOtherConsumable(Consumable):
                 config.colour.enemy_evade,
             )
         else:
-            core.g.engine.message_log.add_message(f"The space around {target.name} warps and it disappears from view!",
-                                                  config.colour.status_effect_applied,
-                                                  )
+            if target.name == 'Player':
+                core.g.engine.message_log.add_message(
+                    f"The space around you warps and soon after you emerge in a different place!",
+                    config.colour.status_effect_applied,
+                    )
+            else:
+                core.g.engine.message_log.add_message(
+                    f"The space around {target.name} warps and it disappears from view!",
+                    config.colour.status_effect_applied,
+                    )
 
             # Get a random walkable tile that is not in the player's FOV
             random_x, random_y = core.g.engine.game_map.get_random_walkable_nonfov_tile()

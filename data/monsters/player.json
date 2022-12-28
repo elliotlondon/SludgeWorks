@@ -27,7 +27,7 @@
         "description": "Your mind reels at the sight before you. How is this even possible?"
       },
       "inventory": {
-        "capacity": 26
+        "capacity": 24
       },
       "level": {
         "level_up_base": 100,

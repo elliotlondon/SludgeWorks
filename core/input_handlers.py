@@ -852,10 +852,10 @@ class InventoryEventHandler(AskUserEventHandler):
         super().on_render(console)
         number_of_items_in_inventory = len(core.g.engine.player.inventory.items)
 
-        height = number_of_items_in_inventory + 2
+        height = number_of_items_in_inventory + 4
 
-        if height <= 3:
-            height = 3
+        if height <= 4:
+            height = 5
 
         width = len(self.TITLE) + 20
         x = console.width // 2 - int(width / 2)
@@ -871,8 +871,10 @@ class InventoryEventHandler(AskUserEventHandler):
             fg=tcod.white,
             bg=tcod.black,
         )
+        # Header
         console.print(x + 1, y, f"┤{self.TITLE}. TAB to sort├")
 
+        # Items
         if number_of_items_in_inventory > 0:
             for i, item in enumerate(core.g.engine.player.inventory.items):
                 quantity = 1
@@ -887,10 +889,20 @@ class InventoryEventHandler(AskUserEventHandler):
                     quantity = core.g.engine.player.inventory.quantities[i]
                 quantity_str = f"x{quantity}"
 
-                console.print(x + 1, y + i + 1, item_string, fg=item.str_colour)
-                console.print(x + width - len(quantity_str) - 1, y + i + 1, quantity_str, fg=tcod.light_grey)
+                console.print(x + 1, y + i + 2, item_string, fg=item.str_colour)
+                console.print(x + width - len(quantity_str) - 1, y + i + 2, quantity_str, fg=tcod.light_grey)
         else:
-            console.print(x + 1, y + 1, "(Empty)")
+            console.print(width // 2, y + height // 2, "There is nothing in your inventory.")
+
+        # Footer
+        if number_of_items_in_inventory <= core.g.engine.player.inventory.capacity * 0.6:
+            colour = tcod.white
+        elif number_of_items_in_inventory <= core.g.engine.player.inventory.capacity * 0.8:
+            colour = tcod.yellow
+        else:
+            colour = tcod.red
+        print_msg = f"┤({number_of_items_in_inventory}/{core.g.engine.player.inventory.capacity})├"
+        console.print(x + width - len(print_msg), y + height - 1, print_msg, colour)
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         player = core.g.engine.player

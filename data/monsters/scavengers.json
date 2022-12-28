@@ -3,6 +3,7 @@
     "wretch": {
       "char": "w",
       "colour": [127, 0, 0],
+      "tag": "wretch",
       "name": "Wretch",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",
@@ -40,6 +41,7 @@
     "sludge_fiend": {
       "char": "f",
       "colour": [255, 0, 0],
+      "tag": "sludge_fiend",
       "name": "Sludge Fiend",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",
@@ -85,6 +87,7 @@
     "thresher": {
       "char": "T",
       "colour": [0, 95, 191],
+      "tag": "thresher",
       "name": "Thresher",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",
@@ -116,12 +119,22 @@
         "xp_given": 275
       },
       "description": "A colossal ogre-like hominid covered in patches of matted hair and littered with scars. It smashes everything it can find with childlike glee."
+    },
+    "abilities": {
+         "Bludgeon": {
+          "damage": 2,
+          "sides": 3,
+          "turns": 1,
+          "difficulty": 16,
+           "cooldown": 5
+        }
     }
   },
   {
     "moire_beast": {
       "char": "M",
       "colour": [159, 159, 159],
+      "tag": "moire_beast",
       "name": "Moire Beast",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",
@@ -159,6 +172,7 @@
     "lupine_terror": {
       "char": "L",
       "colour": [95, 95, 95],
+      "tag": "lupine_terror",
       "name": "Lupine Terror",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",
@@ -196,6 +210,7 @@
     "bloodseeker": {
       "char": "B",
       "colour": [255, 63, 111],
+      "tag": "bloodseeker",
       "name": "Bloodseeker",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",

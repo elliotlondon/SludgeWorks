@@ -3,6 +3,7 @@
     "player": {
       "char": "@",
       "colour": [255, 255, 255],
+      "tag": "player",
       "name": "Player",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",

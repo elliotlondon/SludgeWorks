@@ -7,11 +7,12 @@
         191,
         0
       ],
+      "tag": "lightning_twig",
       "name": "Crackling Imbued Twig",
       "consumable": {
         "type": "Lightning",
-        "upper_bound": 20,
-        "lower_bound": 16,
+        "upper_bound": 14,
+        "lower_bound": 8,
         "range": 8
       },
       "stackable": true,
@@ -29,6 +30,7 @@
         0,
         191
       ],
+      "tag": "confusing_twig",
       "name": "Warping Imbued Twig",
       "consumable": {
         "type": "Confusion",
@@ -49,6 +51,7 @@
         0,
         0
       ],
+      "tag": "fireball_twig",
       "name": "Burnt Imbued Twig",
       "consumable": {
         "type": "Fireball",
@@ -71,6 +74,7 @@
         63,
         191
       ],
+      "tag": "teleother_twig",
       "name": "Repelling Imbued Twig",
       "consumable": {
         "type": "Teleother"
@@ -90,6 +94,7 @@
         101,
         0
       ],
+      "tag": "immolating_twig",
       "name": "Smouldering Imbued Twig",
       "consumable": {
         "type": "Immolation"

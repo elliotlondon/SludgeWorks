@@ -29,14 +29,24 @@ def create_item_from_json(path: str, request: str) -> Item:
                 raise DataLoadError
             return item
 
+def create_all_items_from_json(path: str) -> List[Item]:
+    f = open(path, 'r', encoding='utf-8')
+    item_dict = json.load(f)
 
-def get_item_path(item_name: str) -> str:
-    """Provide the specific folder for an item depending upon its name."""
-    if 'twig' in item_name:
-        return 'data/items/twigs.json'
-    else:
-        raise NotImplementedError("Item cannot yet be created, as it cannot be found within the required folder.")
+    items = []
+    for i in range(len(item_dict)):
+        name = list(item_dict[i].keys())[0]
+        data = item_dict[i][name]
 
+        # Determine item type
+        if 'equipment_type' in data:
+            item = create_equipment(data)
+        elif 'consumable' in data:
+            item = create_consumable(data)
+        else:
+            raise DataLoadError
+        items.append(item)
+    return items
 
 def create_equipment(data) -> Item:
     # Find out which slot the item goes in
@@ -69,6 +79,7 @@ def create_equipment(data) -> Item:
     item = Item(
         char=data['char'],
         colour=(data['colour'][0], data['colour'][1], data['colour'][2]),
+        tag=data['tag'],
         name=data['name'],
         equippable=Equippable(
             equipment_type=equipment_type,
@@ -131,6 +142,7 @@ def create_consumable(data: dict) -> Item:
     item = Item(
         char=data['char'],
         colour=(data['colour'][0], data['colour'][1], data['colour'][2]),
+        tag=data['tag'],
         name=data['name'],
         consumable=consumable,
         depth=data['depth'],

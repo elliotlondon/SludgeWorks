@@ -14,7 +14,6 @@ from maps.tiles import verdant_chars
 from parts.ai import HostileStationary, PassiveStationary
 from parts.base_component import BaseComponent
 from utils.random_utils import roll_dice, dnd_bonus_calc
-from data.item_factory import create_item_from_json, get_item_path
 
 if TYPE_CHECKING:
     from entity import Actor
@@ -109,6 +108,9 @@ class Fighter(BaseComponent):
         return amount_recovered
 
     def take_damage(self, amount: int) -> None:
+        # Passive entities become hostile when they take damage
+        if isinstance(self.parent.ai, parts.ai.NPC) or isinstance(self.parent.ai, parts.ai.PlantKeeper):
+            self.parent.ai = parts.ai.HostileEnemy(entity=self.parent)
         self.hp -= amount
 
     def die(self) -> None:
@@ -132,14 +134,12 @@ class Fighter(BaseComponent):
                 if 'table' in selection[0]:
                     sub_table = getattr(module, selection[0])
                     selection = random.choices(list(sub_table.keys()), weights=list(sub_table.values()))
-                    item_path = get_item_path(selection[0])
-                    new_item = copy.deepcopy(create_item_from_json(item_path, selection[0]))
+                    new_item = core.g.engine.clone(selection[0])
                     new_item.place(self.parent.x, self.parent.y, self.gamemap)
                 elif 'nothing' in selection[0]:
                     pass
                 else:
-                    item_path = get_item_path(selection[0])
-                    new_item = copy.deepcopy(create_item_from_json(item_path, selection[0]))
+                    new_item = core.g.engine.clone(selection[0])
                     new_item.place(self.parent.x, self.parent.y, self.gamemap)
 
         # Plants do not have a corpse
@@ -159,11 +159,12 @@ class Fighter(BaseComponent):
             # If a plant is killed within 5 tiles of a PlantKeeper, enrage it
             for entity in core.g.engine.game_map.entities:
                 if entity.name == 'Grove Tender':
-                    if np.sqrt((self.parent.x - entity.x)**2 + (self.parent.y - entity.y)**2) <= 5:
-                        core.g.engine.message_log.add_message(f"A nearby {entity.name} becomes enraged!",
-                                                              config.colour.enrage)
-                        new_ai = parts.ai.HostileEnemy(entity)
-                        entity.ai = new_ai
+                    if isinstance(entity.ai, parts.ai.PlantKeeper):
+                        if np.sqrt((self.parent.x - entity.x)**2 + (self.parent.y - entity.y)**2) <= 5:
+                            core.g.engine.message_log.add_message(f"A nearby {entity.name} becomes enraged!",
+                                                                  config.colour.enrage)
+                            new_ai = parts.ai.HostileEnemy(entity)
+                            entity.ai = new_ai
         else:
             if core.g.engine.player is self.parent:
                 death_message = 'YOU DIED'
@@ -186,4 +187,5 @@ class Fighter(BaseComponent):
             corpse.spawn(core.g.engine.game_map, self.parent.x, self.parent.y)
 
         # Award xp to whoever performed the last action. Perhaps needs edge case investigation?
-        core.g.engine.last_actor.level.add_xp(xp)
+        if hasattr(core.g.engine, 'last_actor'):
+            core.g.engine.last_actor.level.add_xp(xp)

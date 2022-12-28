@@ -7,6 +7,7 @@
         63,
         63
       ],
+      "tag": "medkit",
       "name": "Surface Medkit",
       "consumable": {
         "type": "Healing",
@@ -21,12 +22,13 @@
   },
   {
     "healing_mud": {
-      "char": "‼",
+      "char": "≈",
       "colour": [
-        255,
+        191,
         127,
         0
       ],
+      "tag": "healing_mud",
       "name": "Healing Mud",
       "consumable": {
         "type": "RandomHeal",

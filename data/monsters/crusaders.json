@@ -3,6 +3,7 @@
     "crusader": {
       "char": "C",
       "colour": [255, 255, 0],
+      "tag": "crusader",
       "name": "Cleansing Hand Crusader",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",
@@ -40,6 +41,7 @@
     "purifier": {
       "char": "P",
       "colour": [191, 191, 0],
+      "tag": "purifier",
       "name": "Cleansing Hand Purifier",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",
@@ -77,6 +79,7 @@
     "duelist": {
       "char": "D",
       "colour": [255, 255, 127],
+      "tag": "duelist",
       "name": "Cleansing Hand Duelist",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",

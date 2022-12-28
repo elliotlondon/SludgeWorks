@@ -7,6 +7,7 @@
         95,
         0
       ],
+      "tag": "leather_armour",
       "name": "Leather Armour",
       "equipment_type": "Torso",
       "equipment": {
@@ -24,13 +25,14 @@
     }
   },
   {
-    "cuirass": {
+    "steel_cuirass": {
       "char": "]",
       "colour": [
         203,
         203,
         203
       ],
+      "tag": "steel_cuirass",
       "name": "Steel Cuirass",
       "equipment_type": "Torso",
       "equipment": {

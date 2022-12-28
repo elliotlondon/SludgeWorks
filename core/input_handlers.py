@@ -901,7 +901,7 @@ class InventoryEventHandler(AskUserEventHandler):
             colour = tcod.yellow
         else:
             colour = tcod.red
-        print_msg = f"┤({number_of_items_in_inventory}/{core.g.engine.player.inventory.capacity})├"
+        print_msg = f"┤({sum(core.g.engine.player.inventory.quantities)}/{core.g.engine.player.inventory.capacity})├"
         console.print(x + width - len(print_msg), y + height - 1, print_msg, colour)
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
@@ -1468,12 +1468,9 @@ class SingleRangedAttackHandler(SelectIndexHandler):
         screen_shape = core.g.console.width, core.g.console.height - 7
         cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
         core.g.engine.mouse_location = (core.g.engine.player.x - cam_x, core.g.engine.player.y - cam_y)
-        print()
 
     def on_index_selected(self, x: int, y: int) -> Optional[Action]:
-        screen_shape = core.g.console.width, core.g.console.height - 7
-        cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
-        return self.callback((x + cam_x, y + cam_y))
+        return self.callback((x, y))
 
 
 class AreaRangedAttackHandler(SelectIndexHandler):

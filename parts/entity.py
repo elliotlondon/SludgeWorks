@@ -34,7 +34,8 @@ class Entity:
                  y: int = 0,
                  char: str = "?",
                  colour: Tuple[int, int, int] = (255, 255, 255),
-                 name: str = "<Unnamed>",
+                 tag: str = "<Undefined>",
+                 name: str = "<Undefined>",
                  blocks_movement: bool = False,
                  description="<Blank>",
                  render_order=RenderOrder.CORPSE,
@@ -53,6 +54,7 @@ class Entity:
         self.char = char
         self.colour = colour
         self.name = name
+        self.tag = tag
         self.description = description
         self.blocks_movement = blocks_movement
         if parent:
@@ -215,7 +217,8 @@ class Actor(Entity):
             y: int = 0,
             char: str = "?",
             colour: Tuple[int, int, int] = (255, 255, 255),
-            name: str = "<Unnamed>",
+            tag: str = "<Undefined>",
+            name: str = "<Undefined>",
             ai_cls: Type[BaseAI],
             equipment: Equipment,
             fighter: Fighter,
@@ -233,6 +236,7 @@ class Actor(Entity):
             y=y,
             char=char,
             colour=colour,
+            tag=tag,
             name=name,
             description=description,
             blocks_movement=True,
@@ -286,7 +290,8 @@ class Item(Entity):
             y: int = 0,
             char: str = "?",
             colour: Tuple[int, int, int] = (255, 255, 255),
-            name: str = "<Unnamed>",
+            tag: str = "<Undefined>",
+            name: str = "<Undefined>",
             consumable: Optional[Consumable] = None,
             equippable: Optional[Equippable] = None,
             stackable: Optional[bool] = False,
@@ -301,6 +306,7 @@ class Item(Entity):
             char=char,
             colour=colour,
             name=name,
+            tag=tag,
             blocks_movement=False,
             render_order=RenderOrder.ITEM,
             description=description
@@ -367,7 +373,8 @@ class StaticObject(Entity):
             y: int = 0,
             char: str = "?",
             colour: Tuple[int, int, int] = (255, 255, 255),
-            name: str = "<Unnamed>",
+            tag: str = "<Undefined>",
+            name: str = "<Undefined>",
             interact_message: str = "<Undefined>",
             description: str,
             properties: Optional[List]
@@ -378,6 +385,7 @@ class StaticObject(Entity):
             char=char,
             colour=colour,
             name=name,
+            tag=tag,
             blocks_movement=True,
             render_order=RenderOrder.STATIC_OBJECT,
             description=description

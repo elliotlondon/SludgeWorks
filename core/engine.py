@@ -1,19 +1,22 @@
 from __future__ import annotations
 
+import copy
 from typing import TYPE_CHECKING
 
 import tcod
 from tcod.map import compute_fov
 
-import core.input_handlers
-import core.render_functions
+from config.exceptions import DataLoadError
 import parts.effects
 from config.exceptions import Impossible
 from gui.message_log import MessageLog
 from core.quests import QuestTracker
+from data.item_factory import create_all_items_from_json
+from data.monster_factory import create_all_monsters_from_json
+from data.object_factory import create_all_static_objects_from_json
 
 if TYPE_CHECKING:
-    from parts.entity import Actor
+    from parts.entity import Actor, Entity
     from maps.game_map import GameMap, GameWorld
 
 
@@ -28,6 +31,33 @@ class Engine:
         self.player = player
         self.last_actor: Actor
         self.quests = QuestTracker()
+        self.entities = []
+
+        # During init load all entities so that they can be deepcopied easily in future from all other locations.
+        # Load items
+        self.entities.extend(create_all_items_from_json('data/items/armour.json'))
+        # self.entities.extend(create_all_items_from_json('data/items/artefacts.json'))
+        self.entities.extend(create_all_items_from_json('data/items/healing.json'))
+        self.entities.extend(create_all_items_from_json('data/items/other.json'))
+        self.entities.extend(create_all_items_from_json('data/items/twigs.json'))
+        self.entities.extend(create_all_items_from_json('data/items/weapons.json'))
+        # # Load entities
+        self.entities.extend(create_all_monsters_from_json('data/monsters/bosses.json'))
+        self.entities.extend(create_all_monsters_from_json('data/monsters/crusaders.json'))
+        self.entities.extend(create_all_monsters_from_json('data/monsters/cultists.json'))
+        self.entities.extend(create_all_monsters_from_json('data/monsters/horrors.json'))
+        self.entities.extend(create_all_monsters_from_json('data/monsters/npcs.json'))
+        self.entities.extend(create_all_monsters_from_json('data/monsters/plants.json'))
+        self.entities.extend(create_all_monsters_from_json('data/monsters/scavengers.json'))
+        # Load static objects
+        self.entities.extend(create_all_static_objects_from_json('data/static_objects/core_objects.json'))
+
+    def clone(self, name: str) -> Entity:
+        """Return a deepcopy of an entity with the same name as that which is specified"""
+        for entity in self.entities:
+            if entity.tag == name:
+                return copy.deepcopy(entity)
+        raise DataLoadError(f"Entity {name} could not be copied from engine.")
 
     def handle_enemy_turns(self) -> None:
         # Iterate over all enemy turns

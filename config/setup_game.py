@@ -46,31 +46,35 @@ def new_game() -> Engine:
     )
 
     # Spawn starting player equipment
-    dagger = copy.deepcopy(create_item_from_json('data/items/weapons.json', 'dagger'))
-    leather_armor = copy.deepcopy(create_item_from_json('data/items/armour.json', 'leather_armour'))
-    medkit = copy.deepcopy(create_item_from_json('data/items/healing.json', 'medkit'))
+    dagger = engine.clone('dagger')
+    leather_armour = engine.clone('leather_armour')
+    medkit = engine.clone('medkit')
 
     dagger.parent = player.inventory
-    leather_armor.parent = player.inventory
+    leather_armour.parent = player.inventory
     medkit.parent = player.inventory
 
     player.inventory.items.append(dagger)
     player.inventory.quantities.append(1)
     player.equipment.toggle_equip(dagger, add_message=False)
 
-    player.inventory.items.append(leather_armor)
+    player.inventory.items.append(leather_armour)
     player.inventory.quantities.append(1)
-    player.equipment.toggle_equip(leather_armor, add_message=False)
+    player.equipment.toggle_equip(leather_armour, add_message=False)
 
     player.inventory.items.append(medkit)
     player.inventory.quantities.append(2)
 
     # Debug stuff
-    if logging.DEBUG >= logging.root.level:
-        twig = copy.deepcopy(create_item_from_json('data/items/twigs.json', 'immolating_twig'))
+    if logging.INFO >= logging.root.level:
+        twig = engine.clone('lightning_twig')
         twig.parent = player.inventory
         player.inventory.items.append(twig)
-        player.inventory.quantities.append(3)
+        player.inventory.quantities.append(2)
+        twig = engine.clone('fireball_twig')
+        twig.parent = player.inventory
+        player.inventory.items.append(twig)
+        player.inventory.quantities.append(2)
 
     core.g.engine = engine
     return engine

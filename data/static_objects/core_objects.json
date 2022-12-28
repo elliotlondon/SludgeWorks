@@ -3,6 +3,7 @@
     "sludge_fountain": {
         "char": "Æ",
         "colour": [63, 207, 255],
+        "tag": "sludge_fountain",
         "name": "Fountain of Sludge",
         "interact_message": "Bathe in the sludge, absorbing its power?",
         "description": "Layers of downwards-sloping, fossilized bracket fungus have been sculpted by eons of sludge. You cannot see any source of the liquid, only the path of least resistance that it travels towards the moss-thickened cave floor. Bizarre moths flutter about, tasting the cyan goo.",
@@ -11,6 +12,7 @@
     "shanty_door_top": {
         "char": "─",
         "colour": [125, 75, 75],
+        "tag": "shanty_door_top",
         "name": "Shanty Door",
         "interact_message": "This door is blocked.",
         "description": "This poorly constructed door is made from planks of stained, misshapen wood, covered in knots and burrs. Wood is rarely seen here, but the builder either does not know or does not care.",
@@ -19,6 +21,7 @@
     "shanty_door_side": {
         "char": "│",
         "colour": [125, 75, 75],
+        "tag": "shanty_door_side",
         "name": "Shanty Door",
         "interact_message": "This door is blocked.",
         "description": "This poorly constructed door is made from planks of stained, misshapen wood, covered in knots and burrs. Wood is rarely seen here, but the builder either does not know or does not care.",
@@ -27,7 +30,8 @@
     "metal_door_top": {
         "char": "─",
         "colour": [125, 125, 125],
-        "name": "Shanty Door",
+        "tag": "metal_door_top",
+        "name": "Metal Door",
         "interact_message": "This door is blocked.",
         "description": "A smooth and sturdy-looking door made out of a glossy silver metal. This seems to have completely avoided any corrosion or corruption due to the mechanics of the Sludgeworks.",
         "properties": ["Locked", "Closed"]
@@ -36,7 +40,8 @@
     "metal_door_side": {
         "char": "│",
         "colour": [125, 125, 125],
-        "name": "Shanty Door",
+        "tag": "metal_door_side",
+        "name": "Metal Door",
         "interact_message": "This door is blocked.",
         "description": "A smooth and sturdy-looking door made out of a glossy silver metal. This seems to have completely avoided any corrosion or corruption due to the mechanics of the Sludgeworks.",
         "properties": ["Locked", "Closed"]

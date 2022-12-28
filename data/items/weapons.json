@@ -7,6 +7,7 @@
         159,
         159
       ],
+      "tag": "dagger",
       "name": "Dagger",
       "equipment_type": "MainHand",
       "equipment": {
@@ -31,6 +32,7 @@
         121,
         51
       ],
+      "tag": "fungal_dagger",
       "name": "Fungal Dagger",
       "equipment_type": "MainHand",
       "equipment": {
@@ -62,6 +64,7 @@
         159,
         159
       ],
+      "tag": "longsword",
       "name": "Longsword",
       "equipment_type": "MainHand",
       "equipment": {

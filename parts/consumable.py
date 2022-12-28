@@ -145,6 +145,29 @@ class FireballDamageConsumable(Consumable):
                 actor.fighter.take_damage(self.damage)
                 targets_hit = True
 
+                # # This attack aggravates passive entities
+                # if isinstance(actor.ai, parts.ai.NPC) or isinstance(actor.ai, parts.ai.PlantKeeper):
+                #     actor.ai = parts.ai.HostileEnemy(entity=actor)
+
+                # 50% chance to add a burning effect to the target (if it didn't die)
+                if actor.fighter.hp > 0:
+                    if random.randint(1, 100) >= 50:
+                        effect = BurningEffect(turns=1)
+                        effect.parent = actor
+                        actor.active_effects.append(effect)
+
+                        # Make sure that rooted enemies don't wander around
+                        if not isinstance(actor.ai, parts.ai.PassiveStationary) or isinstance(actor.ai,
+                                                                                               parts.ai.HostileStationary):
+                            actor.ai = parts.ai.BurningEnemy(entity=actor, previous_ai=actor.ai)
+
+                        if actor.name == 'Player':
+                            core.g.engine.message_log.add_message(f"You are set on fire by the explosion!")
+                        elif actor.name.endswith('s'):
+                            core.g.engine.message_log.add_message(f"The {actor.name} catch fire!")
+                        else:
+                            core.g.engine.message_log.add_message(f"The {actor.name} catches fire!")
+
         if not targets_hit:
             core.g.engine.message_log.add_message("It has seems to have no effect...", config.colour.invalid)
         self.consume()
@@ -264,7 +287,7 @@ class TeleportOtherConsumable(Consumable):
                                                   )
 
             # Get a random walkable tile that is not in the player's FOV
-            random_x, random_y = core.g.engine.game_map.get_random_unoccupied_nonfov_tile()
+            random_x, random_y = core.g.engine.game_map.get_random_walkable_nonfov_tile()
             target.teleport(random_x, random_y)
         self.consume()
 
@@ -299,6 +322,11 @@ class ImmolateConsumable(Consumable):
         effect = BurningEffect(turns=1)
         effect.parent = action.target_actor
         target.active_effects.append(effect)
+
+        # Flip the switch so that docile entities will become hostile after being hit by this effect
+        if isinstance(target.ai, parts.ai.NPC) or isinstance(target.ai, parts.ai.PlantKeeper):
+            target.ai = parts.ai.HostileEnemy(entity=target)
+
         # Make sure that rooted enemies don't wander around
         if not isinstance(target.ai, parts.ai.PassiveStationary) or isinstance(target.ai, parts.ai.HostileStationary):
             target.ai = parts.ai.BurningEnemy(entity=target, previous_ai=target.ai)

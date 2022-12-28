@@ -3,6 +3,7 @@
     "alanwric": {
       "char": "Å",
       "colour": [255, 255, 63],
+      "tag": "alanwric",
       "name": "Alanwric the Spinning Blade",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",
@@ -40,6 +41,7 @@
     "teague": {
       "char": "τ",
       "colour": [63, 63, 0],
+      "tag": "teague",
       "name": "Teague the Martyr",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",
@@ -77,6 +79,7 @@
     "dymacia": {
       "char": "δ",
       "colour": [63, 0, 63],
+      "tag": "dymacia",
       "name": "Cultist Queen Dymacia",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",

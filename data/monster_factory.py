@@ -1,4 +1,5 @@
 import json
+from typing import List
 
 import parts.ai
 import parts.mutations
@@ -18,6 +19,18 @@ def create_monster_from_json(path: str, request: str) -> Actor:
             data = monster_dict[i][request]
             monster = create_monster(data)
             return monster
+
+def create_all_monsters_from_json(path: str) -> List[Actor]:
+    f = open(path, encoding='utf-8')
+    monster_dict = json.load(f)
+
+    monsters = []
+    for i in range(len(monster_dict)):
+        name = list(monster_dict[i].keys())[0]
+        data = monster_dict[i][name]
+        monster = create_monster(data)
+        monsters.append(monster)
+    return monsters
 
 
 def create_monster(data: dict) -> Actor:
@@ -47,41 +60,45 @@ def create_monster(data: dict) -> Actor:
     else:
         blood = "Blood"
 
-    monster = Actor(
-        char=data['char'],
-        colour=(data['colour'][0], data['colour'][1], data['colour'][2]),
-        name=data['name'],
-        ai_cls=ai_cls,
-        equipment=equipment,
-        fighter=Fighter(
-            hp=data['fighter']['hp'],
-            max_hp=data['fighter']['max_hp'],
-            damage_dice=data['fighter']['damage_dice'],
-            damage_sides=data['fighter']['damage_sides'],
-            strength=data['fighter']['strength'],
-            dexterity=data['fighter']['dexterity'],
-            vitality=data['fighter']['vitality'],
-            intellect=data['fighter']['intellect'],
-            perception=data['fighter']['perception'],
-            armour=data['fighter']['armour'],
-            dodges=data['fighter']['dodges'],
-        ),
-        corpse=Corpse(
-            char=data['corpse']['char'],
-            colour=(data['corpse']['colour'][0], data['corpse']['colour'][1], data['corpse']['colour'][2]),
-            name=data['corpse']['name'],
-            description=data['corpse']['description']
-        ),
-        inventory=Inventory(
-            capacity=data['inventory']['capacity']
-        ),
-        level=Level(
-            level_up_base=data['level']['level_up_base'],
-            xp_given=data['level']['xp_given']
-        ),
-        description=data['description'],
-        blood=blood
-    )
+    try:
+        monster = Actor(
+            char=data['char'],
+            colour=(data['colour'][0], data['colour'][1], data['colour'][2]),
+            tag=data['tag'],
+            name=data['name'],
+            ai_cls=ai_cls,
+            equipment=equipment,
+            fighter=Fighter(
+                hp=data['fighter']['hp'],
+                max_hp=data['fighter']['max_hp'],
+                damage_dice=data['fighter']['damage_dice'],
+                damage_sides=data['fighter']['damage_sides'],
+                strength=data['fighter']['strength'],
+                dexterity=data['fighter']['dexterity'],
+                vitality=data['fighter']['vitality'],
+                intellect=data['fighter']['intellect'],
+                perception=data['fighter']['perception'],
+                armour=data['fighter']['armour'],
+                dodges=data['fighter']['dodges'],
+            ),
+            corpse=Corpse(
+                char=data['corpse']['char'],
+                colour=(data['corpse']['colour'][0], data['corpse']['colour'][1], data['corpse']['colour'][2]),
+                name=data['corpse']['name'],
+                description=data['corpse']['description']
+            ),
+            inventory=Inventory(
+                capacity=data['inventory']['capacity']
+            ),
+            level=Level(
+                level_up_base=data['level']['level_up_base'],
+                xp_given=data['level']['xp_given']
+            ),
+            description=data['description'],
+            blood=blood
+        )
+    except:
+        print()
 
     # Append drop table if it has one
     if 'drop_table' in data:

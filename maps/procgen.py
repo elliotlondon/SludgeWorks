@@ -79,7 +79,7 @@ def get_max_value_for_floor(max_value_by_floor: List[Tuple[int, int]], floor: in
     return current_value
 
 
-def get_monsters_at_random(engine: Engine, path: str, number_of_entities: int) -> [List[str], List[str]]:
+def get_monsters_at_random(engine: Engine, path: str, number_of_entities: int) -> List[str]:
     # Load drop table for current floor
     f = open(path)
     spawn_table = json.load(f)[0]
@@ -91,11 +91,9 @@ def get_monsters_at_random(engine: Engine, path: str, number_of_entities: int) -
         floor_value = engine.game_world.current_floor
     spawn_table = spawn_table[f"{floor_value}"]
 
-    entity_types = []
     entity_weighted_chances = {}
     for key, value in spawn_table.items():
-        entity_types.append(value[0])
-        entity_weighted_chances[key] = value[1]
+        entity_weighted_chances[key] = value
 
     entities = list(entity_weighted_chances.keys())
     entity_weighted_chance_values = list(entity_weighted_chances.values())
@@ -105,15 +103,13 @@ def get_monsters_at_random(engine: Engine, path: str, number_of_entities: int) -
                          weights=entity_weighted_chance_values, k=number_of_entities)
     # Now construct the lists of item and type
     chosen_monsters = []
-    chosen_types = []
     for i in idx:
         chosen_monsters.append(entities[i])
-        chosen_types.append(entity_types[i])
 
-    return chosen_monsters, chosen_types
+    return chosen_monsters
 
 
-def get_items_at_random(engine: Engine, path: str, number_of_entities: int) -> [List[str], List[str]]:
+def get_items_at_random(engine: Engine, path: str, number_of_entities: int) -> List[str]:
     # Load drop table for current floor
     f = open(path)
     spawn_table = json.load(f)[0]
@@ -125,11 +121,9 @@ def get_items_at_random(engine: Engine, path: str, number_of_entities: int) -> [
         floor_value = engine.game_world.current_floor
     spawn_table = spawn_table[f"{floor_value}"]
 
-    entity_types = []
     entity_weighted_chances = {}
     for key, value in spawn_table.items():
-        entity_types.append(value[0])
-        entity_weighted_chances[key] = value[1]
+        entity_weighted_chances[key] = value
 
     entities = list(entity_weighted_chances.keys())
     entity_weighted_chance_values = list(entity_weighted_chances.values())
@@ -139,12 +133,10 @@ def get_items_at_random(engine: Engine, path: str, number_of_entities: int) -> [
                          weights=entity_weighted_chance_values, k=number_of_entities)
     # Now construct the lists of item and type
     chosen_items = []
-    chosen_types = []
     for i in idx:
         chosen_items.append(entities[i])
-        chosen_types.append(entity_types[i])
 
-    return chosen_items, chosen_types
+    return chosen_items
 
 
 def get_static_objects_at_random(engine: Engine, path: str, floor_number: int) -> List[parts.entity.StaticObject]:
@@ -256,7 +248,7 @@ def place_flora(dungeon: GameMap, engine: Engine, areas: int) -> None:
     # number_of_plants = random.randint(int(max_plants / 2), max_plants)
     number_of_plants = max_plants * 2
 
-    plants, plant_types = get_monsters_at_random(engine, 'data/monsters/spawn_table_plants.json', number_of_plants)
+    plants = get_monsters_at_random(engine, 'data/monsters/spawn_table_plants.json', number_of_plants)
 
     # Generate cellular automata areas
     area_size = random.randint(5, 10)
@@ -309,7 +301,7 @@ def place_flora(dungeon: GameMap, engine: Engine, areas: int) -> None:
 
         # Spawn in free, non-blocked location
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities) and dungeon.tiles[x, y]['walkable']:
-            plant = copy.deepcopy(create_monster_from_json(f"data/monsters/{plant_types[i]}.json", plants[i]))
+            plant = dungeon.engine.clone(plants[i])
             plant.spawn(dungeon, x, y)
 
 
@@ -319,8 +311,7 @@ def place_fauna(dungeon: GameMap, engine: Engine) -> None:
     number_of_monsters = random.randint(int(max_monsters / 2), max_monsters)
 
     # Spawn monsters
-    monsters, monster_types = get_monsters_at_random(engine, 'data/monsters/spawn_table_monsters.json',
-                                                     number_of_monsters)
+    monsters = get_monsters_at_random(engine, 'data/monsters/spawn_table_monsters.json', number_of_monsters)
     for i in range(len(monsters)):
         # Get the indices of tiles which are walkable
         x, y = dungeon.get_random_walkable_nonfov_tile()
@@ -336,7 +327,7 @@ def place_fauna(dungeon: GameMap, engine: Engine) -> None:
 
         # Spawn in free, non-blocked location
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
-            monster = copy.deepcopy(create_monster_from_json(f"data/monsters/{monster_types[i]}.json", monsters[i]))
+            monster = dungeon.engine.clone(monsters[i])
             # Randomised effects go here
             if monster.name == "Risen Sacrifice":
                 monster.fighter.hp = random.randint(4, 8)
@@ -345,10 +336,20 @@ def place_fauna(dungeon: GameMap, engine: Engine) -> None:
 
 def place_npcs(dungeon: GameMap, engine: Engine) -> None:
     # Spawn NPCs depending upon floor conditions
+    counter = 0
     if engine.game_world.current_floor == 1:
-        x, y = dungeon.get_random_walkable_nontunnel_tile()
-        npc = copy.deepcopy(create_monster_from_json(f"data/monsters/npcs.json", "gilbert"))
-        npc.spawn(dungeon, x, y)
+        while counter < 100:
+            counter += 1
+            x, y = dungeon.get_random_walkable_nontunnel_tile()
+            spawn_dist = np.sqrt((x - dungeon.engine.player.x) ** 2 + (y - dungeon.engine.player.y) ** 2)
+            if spawn_dist <= 10:
+                continue
+            else:
+                npc = dungeon.engine.clone('gilbert')
+                npc.spawn(dungeon, x, y)
+                break
+        if counter > 100:
+            raise MapGenError(f"NPC{npc.name} could not be placed: maximum attempts exceeded.")
 
 
 def place_items(dungeon: GameMap, engine: Engine) -> None:
@@ -356,7 +357,7 @@ def place_items(dungeon: GameMap, engine: Engine) -> None:
     max_items = get_max_value_for_floor(max_items_by_floor, current_floor)
     number_of_items = random.randint(int(max_items / 2), max_items)
 
-    items, item_types = get_items_at_random(engine, 'data/items/spawn_table_items.json', number_of_items)
+    items = get_items_at_random(engine, 'data/items/spawn_table_items.json', number_of_items)
 
     for i in range(len(items)):
         # Get random walkable tile
@@ -364,7 +365,7 @@ def place_items(dungeon: GameMap, engine: Engine) -> None:
 
         # Spawn in free, non-blocked location
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
-            item = copy.deepcopy(create_item_from_json(f"data/items/{item_types[i]}.json", items[i]))
+            item = dungeon.engine.clone(items[i])
             item.spawn(dungeon, x, y)
 
 
@@ -375,8 +376,7 @@ def place_static_objects(dungeon: GameMap, engine: Engine) -> None:
     # For now simply spawn one sludge fountain per floor
     x, y = dungeon.get_random_walkable_nonfov_tile()
 
-    static_object = copy.deepcopy(
-        create_static_object_from_json(f"data/static_objects/core_objects.json", 'sludge_fountain'))
+    static_object = dungeon.engine.clone('sludge_fountain')
     static_object.spawn(dungeon, x, y)
 
 

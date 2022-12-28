@@ -3,6 +3,7 @@
     "risen_sacrifice": {
       "char": "r",
       "colour": [255, 191, 255],
+      "tag": "risen_sacrifice",
       "name": "Risen Sacrifice",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",
@@ -40,6 +41,7 @@
     "celebrant": {
       "char": "c",
       "colour": [239, 191, 255],
+      "tag": "celebrant",
       "name": "Eternal Cult Celebrant",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",
@@ -77,6 +79,7 @@
     "kidnapper": {
       "char": "K",
       "colour": [255, 63, 255],
+      "tag": "kidnapper",
       "name": "Eternal Cult Kidnapper",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",

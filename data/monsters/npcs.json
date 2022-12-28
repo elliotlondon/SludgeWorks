@@ -3,6 +3,7 @@
     "gilbert": {
       "char": "@",
       "colour": [0, 255, 0],
+      "tag": "gilbert",
       "name": "Gilbert",
       "ai_cls": "NPC",
       "equipment": "equipment",
@@ -34,6 +35,42 @@
         "xp_given": 100
       },
       "description": "This stout, red-haired man is clothed in brown leather armour covered in small pockets. He carries himself anxiously, constantly checking them for missing items, both real and imagined."
+    },
+    "administrator": {
+      "char": "@",
+      "colour": [0, 191, 191],
+      "tag": "administrator",
+      "name": "Administrator Hawise",
+      "ai_cls": "NPC",
+      "equipment": "equipment",
+      "fighter": {
+        "hp": 20,
+        "max_hp": 20,
+        "damage_dice": 2,
+        "damage_sides": 4,
+        "strength": 12,
+        "dexterity": 16,
+        "vitality": 12,
+        "intellect": 14,
+        "perception": 14,
+        "armour": 2,
+        "xp": 0,
+        "dodges": true
+      },
+      "corpse": {
+        "char": "%",
+        "colour": [127, 0, 0],
+        "name": "Human corpse",
+        "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
+      },
+      "inventory": {
+        "capacity": 12
+      },
+      "level": {
+        "level_up_base": 0,
+        "xp_given": 100
+      },
+      "description": "A stern and imposing woman stands before you, clad in thick black leather armour. Her stance suggests military training, and only her piercing light blue eyes can be seen above a black bandana."
     }
   }
 ]

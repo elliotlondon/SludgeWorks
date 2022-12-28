@@ -7,7 +7,7 @@ from parts.base_component import BaseComponent
 from parts.equipment_types import EquipmentType
 
 if TYPE_CHECKING:
-    from entity import Actor, Item
+    from entity import Actor, Item, Entity
     from parts.effects import ItemModifier
 
 
@@ -142,7 +142,7 @@ class Equipment(BaseComponent):
 
         setattr(self, slot, None)
 
-    def toggle_equip(self, equippable_item: Item, add_message: bool = True) -> None:
+    def toggle_equip(self, equippable_item: Entity, add_message: bool = True) -> None:
         slot = None
         if equippable_item.equippable:
             type = equippable_item.equippable.equipment_type

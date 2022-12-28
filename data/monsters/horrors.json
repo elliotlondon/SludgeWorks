@@ -3,6 +3,7 @@
     "hunchback": {
       "char": "H",
       "colour": [191, 151, 96],
+      "tag": "hunchback",
       "name": "Hunchback",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",
@@ -40,6 +41,7 @@
     "brainraker": {
       "char": "ß",
       "colour": [0, 95, 151],
+      "tag": "brainraker",
       "name": "Brainraker",
       "ai_cls": "HostileEnemy",
       "equipment": "equipment",

@@ -3,6 +3,7 @@
     "tangleshrub": {
       "char": "s",
       "colour": [150, 50, 100],
+      "tag": "tangleshrub",
       "name": "Tangleshrub",
       "ai_cls": "HostileStationary",
       "equipment": "equipment",
@@ -45,6 +46,7 @@
         159,
         255
       ],
+      "tag": "bluebell",
       "name": "Glowing Bluebells",
       "ai_cls": "PassiveStationary",
       "equipment": "equipment",
@@ -91,6 +93,7 @@
         191,
         0
       ],
+      "tag": "grove_tender",
       "name": "Grove Tender",
       "ai_cls": "PlantKeeper",
       "equipment": "equipment",

@@ -7,7 +7,7 @@ import core.g
 from parts.base_component import BaseComponent
 
 if TYPE_CHECKING:
-    from parts.entity import Actor, Item
+    from parts.entity import Actor, Item, Entity
     from parts.effects import ItemModifier
 
 
@@ -16,7 +16,7 @@ class Inventory(BaseComponent):
 
     def __init__(self, capacity: int):
         self.capacity = capacity
-        self.items: List[Item] = []
+        self.items: List[Entity] = []
         self.quantities: List[int] = []
 
     # @staticmethod

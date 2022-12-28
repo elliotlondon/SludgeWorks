@@ -221,6 +221,7 @@ class Actor(Entity):
             fighter: Fighter,
             corpse: Corpse,
             inventory: Inventory,
+            drop_table = Optional[dict],
             level: Level,
             description: str,
             blood: str,
@@ -247,6 +248,8 @@ class Actor(Entity):
         self.corpse.parent = self
         self.inventory = inventory
         self.inventory.parent = self
+        self.drop_table = drop_table
+        self.drop_table.parent = self
         self.level = level
         self.level.parent = self
         self.description = description

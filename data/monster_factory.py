@@ -83,6 +83,12 @@ def create_monster(data: dict) -> Actor:
         blood=blood
     )
 
+    # Append drop table if it has one
+    if 'drop_table' in data:
+        monster.drop_table = data['drop_table']
+    else:
+        monster.drop_table = {}
+
     # Load abilities/mutations
     if 'abilities' in data:
         monster.abilities = []
@@ -106,7 +112,6 @@ def create_monster(data: dict) -> Actor:
             monster.abilities.append(ability_obj)
     if 'mutations' in data:
         monster.mutations = []
-        mutation_obj = None
         for mutation in data['mutations']:
             # if mutation == "Entomb":
             monster.mutations.append(mutation)

@@ -1,7 +1,6 @@
 grove_tender = {
     "nothing": 0.5,
-    "twig_table": 0.25,
-
+    "twig_table": 0.5,
 }
 
 twig_table = {

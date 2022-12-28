@@ -1,3 +1,5 @@
+from typing import Optional
+
 import json
 from typing import List
 
@@ -26,6 +28,14 @@ def create_item_from_json(path: str, request: str) -> Item:
             else:
                 raise DataLoadError
             return item
+
+
+def get_item_path(item_name: str) -> str:
+    """Provide the specific folder for an item depending upon its name."""
+    if 'twig' in item_name:
+        return 'data/items/twigs.json'
+    else:
+        raise NotImplementedError("Item cannot yet be created, as it cannot be found within the required folder.")
 
 
 def create_equipment(data) -> Item:

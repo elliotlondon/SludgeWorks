@@ -1,17 +1,20 @@
 from __future__ import annotations
 
+import copy
 import numpy as np
 import random
 from typing import TYPE_CHECKING
 
 import config.colour
 import core.g
+import data.item_factory
 import parts.ai
 from config.colour import player_die, enemy_die
 from maps.tiles import verdant_chars
 from parts.ai import HostileStationary, PassiveStationary
 from parts.base_component import BaseComponent
 from utils.random_utils import roll_dice, dnd_bonus_calc
+from data.item_factory import create_item_from_json, get_item_path
 
 if TYPE_CHECKING:
     from entity import Actor
@@ -114,6 +117,30 @@ class Fighter(BaseComponent):
         # First, if the creature is not the player and has items in its inventory or equipped, drop them.
         if len(self.parent.inventory.items) > 0 and not self.parent.name == 'Player':
             self.parent.inventory.drop_all()
+
+        # Next, if the creature has an associated drop table, make an appropriate number of rolls on it, and drop
+        # The items which are rolled for
+        if hasattr(self.parent, 'drop_table'):
+            if not len(self.parent.drop_table) == 0:
+                # Import magic to grab drop table programmatically
+                from importlib import import_module
+                module = import_module(f'data.drop_tables', package=None)
+                main_table = getattr(module, self.parent.drop_table)
+
+                # Process subtables
+                selection = random.choices(list(main_table.keys()), weights=list(main_table.values()))
+                if 'table' in selection[0]:
+                    sub_table = getattr(module, selection[0])
+                    selection = random.choices(list(sub_table.keys()), weights=list(sub_table.values()))
+                    item_path = get_item_path(selection[0])
+                    new_item = copy.deepcopy(create_item_from_json(item_path, selection[0]))
+                    new_item.place(self.parent.x, self.parent.y, self.gamemap)
+                elif 'nothing' in selection[0]:
+                    pass
+                else:
+                    item_path = get_item_path(selection[0])
+                    new_item = copy.deepcopy(create_item_from_json(item_path, selection[0]))
+                    new_item.place(self.parent.x, self.parent.y, self.gamemap)
 
         # Plants do not have a corpse
         if isinstance(self.parent.ai, HostileStationary) or isinstance(self.parent.ai, PassiveStationary):

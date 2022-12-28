@@ -74,7 +74,32 @@ dirt_4 = new_tile(name="dirt_4",
                   light=(ord("`"), tcod.grey, (0, 0, 0)),
                   description=list("The dirt beneath your feet is soft and dampened by the humidity of the cave. "
                                    "Decomposing plant matter is mixed into the soil."))
+chasm_floor_1 = new_tile(name="chasm_floor_1",
+                  walkable=True, transparent=True,
+                  dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
+                  light=(ord("∙"), tcod.grey, (25, 25, 25)),
+                  description=list("Made of a hard and smooth stone, the floor here has a significant buildup of some "
+                                   "unknown rocky powder that has seemed to have totally absorbed all moisture. "))
+chasm_floor_2 = new_tile(name="chasm_floor_1",
+                  walkable=True, transparent=True,
+                  dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
+                  light=(ord("`"), tcod.grey, (25, 25, 25)),
+                  description=list("Made of a hard and smooth stone, the floor here has a significant buildup of some "
+                                   "unknown rocky powder that has seemed to have totally absorbed all moisture. "))
+chasm_floor_3 = new_tile(name="chasm_floor_1",
+                  walkable=True, transparent=True,
+                  dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
+                  light=(ord(","), tcod.grey, (25, 25, 25)),
+                  description=list("Made of a hard and smooth stone, the floor here has a significant buildup of some "
+                                   "unknown rocky powder that has seemed to have totally absorbed all moisture. "))
+chasm_floor_4 = new_tile(name="chasm_floor_1",
+                  walkable=True, transparent=True,
+                  dark=(ord(" "), (255, 255, 255), (0, 0, 0)),
+                  light=(ord("`"), tcod.grey, (25, 25, 25)),
+                  description=list("Made of a hard and smooth stone, the floor here has a significant buildup of some "
+                                   "unknown rocky powder that has seemed to have totally absorbed all moisture. "))
 floor_tiles_1 = [dirt_1, dirt_2, dirt_3, dirt_4]
+chasm_floor_tiles = [chasm_floor_1, chasm_floor_2, chasm_floor_3, chasm_floor_4]
 
 verdant_1 = new_tile(name="verdant_1",
                      walkable=True, transparent=True,

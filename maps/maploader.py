@@ -51,6 +51,8 @@ class MapLoader():
                     new_map.tiles[i, j] = random.choice(maps.tiles.floor_tiles_1)
                 elif 'verdant' in cell_value:
                     new_map.tiles[i, j] = random.choice(maps.tiles.verdant_tiles_1)
+                elif 'chasm_floor' in cell_value:
+                    new_map.tiles[i, j] = random.choice(maps.tiles.chasm_floor_tiles)
                 elif 'muddy_wall' in cell_value:
                     new_map.tiles[i, j] = maps.tiles.muddy_wall
                 elif 'chasm_wall' in cell_value:

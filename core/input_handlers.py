@@ -320,7 +320,11 @@ class MainGameEventHandler(EventHandler):
             elif len(interactables) == 1:
                 # Decide which interaction to return, depending upon context.
                 if isinstance(interactables[0].ai, parts.ai.NPC):
-                    return ConversationEventHandler(interactables[0])
+                    convo = ConversationEventHandler(interactables[0])
+                    if not convo.convo_json:
+                        return PopupMessage(f"{interactables[0].name} does not engage with you.")
+                    else:
+                        return convo
                 elif isinstance(interactables[0], parts.entity.StaticObject):
                     if interactables[0].name == "Fountain of Sludge":
                         return SludgeFountainEventHandler(interactables[0])
@@ -981,7 +985,7 @@ class ConversationEventHandler(AskUserEventHandler):
         for line in string.splitlines():
             yield from textwrap.wrap(line, width, expand_tabs=True)
 
-    def get_convo_from_json(self) -> dict:
+    def get_convo_from_json(self) -> Optional[dict]:
         """Load a conversation json file for a specified character."""
 
         # First, check if the interactee provides context-dependent conversations
@@ -990,8 +994,9 @@ class ConversationEventHandler(AskUserEventHandler):
             if self.interactee.name.lower() in fname.stem:
                 convos += 1
         if convos == 0:
-            raise DataLoadError(f"Conversation could not be loaded for entity {self.interactee.name}, "
-                                f"{self.interactee}")
+            return None
+            # raise DataLoadError(f"Conversation could not be loaded for entity {self.interactee.name}, "
+            #                     f"{self.interactee}")
         elif convos == 1:
             path = Path(f"data/convos/{self.interactee.name.lower()}_0.json")
             f = open(path, 'r', encoding='utf-8')
@@ -1048,8 +1053,12 @@ class ConversationEventHandler(AskUserEventHandler):
 
             return MainGameEventHandler()
 
-    def on_render(self, console: tcod.Console) -> None:
+    def on_render(self, console: tcod.Console) -> Optional[PopupMessage]:
         super().on_render(console)
+        # Check to see if there is an available conversation
+        if not self.convo_json:
+            return
+
         # Populate speech and replies
         if not self.speech or not self.replies:
             self.init_convo("0")
@@ -1365,7 +1374,7 @@ class LookHandler(SelectIndexHandler):
                 i = 1
                 for entity in sorted(entities, key=lambda x: x.render_order.value):
                     # Get entity info
-                    entity_content['name'] = entity.name.capitalize()
+                    entity_content['name'] = entity.name.title()
                     entity_content['colour'] = entity.colour
                     entity_content['description'] = entity.description
                     if entity.name == "Player":

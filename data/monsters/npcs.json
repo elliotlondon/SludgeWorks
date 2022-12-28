@@ -58,9 +58,9 @@
     },
     "corpse": {
       "char": "%",
-      "colour": [127, 0, 0],
-      "name": "Human corpse",
-      "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
+      "colour": [0, 95, 151],
+      "name": "Mutated corpse",
+      "description": "A mangled mound of mutated flesh. This creature used to be human."
     },
     "inventory": {
       "capacity": 12
@@ -106,5 +106,113 @@
       "xp_given": 100
     },
     "description": "This intimidating man is being kept prisoner, bound with thick and iridescent metal chains to multiple points within the room. He stands motionless in the centre; his arms cannot be seen underneath his bizarrely creased blue fabric robes, neither can his face under his drooping wide-brimmed hat."
+  },
+  "yttra": {
+    "char": "@",
+    "colour": [191, 151, 151],
+    "tag": "yttra",
+    "name": "Yttra",
+    "ai_cls": "NPC",
+    "equipment": "equipment",
+    "fighter": {
+      "hp": 18,
+      "max_hp": 18,
+      "damage_dice": 2,
+      "damage_sides": 4,
+      "strength": 16,
+      "dexterity": 12,
+      "vitality": 14,
+      "intellect": 12,
+      "perception": 12,
+      "armour": 2,
+      "xp": 0,
+      "dodges": true
+    },
+    "corpse": {
+      "char": "%",
+      "colour": [127, 0, 0],
+      "name": "Human corpse",
+      "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
+    },
+    "inventory": {
+      "capacity": 12
+    },
+    "level": {
+      "level_up_base": 0,
+      "xp_given": 100
+    },
+    "description": "Yttra appears weathered and is covered in scars from a hard life in the Midreach. She seems ever busy removing corrosion from her weapons and adjusting the straps on her many unusual pieces of clothing."
+  },
+  "fedeman": {
+    "char": "@",
+    "colour": [211, 191, 0],
+    "tag": "fedeman",
+    "name": "Gilder Fedeman",
+    "ai_cls": "NPC",
+    "equipment": "equipment",
+    "fighter": {
+      "hp": 22,
+      "max_hp": 22,
+      "damage_dice": 1,
+      "damage_sides": 4,
+      "strength": 14,
+      "dexterity": 14,
+      "vitality": 16,
+      "intellect": 16,
+      "perception": 16,
+      "armour": 1,
+      "xp": 0,
+      "dodges": true
+    },
+    "corpse": {
+      "char": "%",
+      "colour": [0, 95, 151],
+      "name": "Mutated corpse",
+      "description": "A mangled mound of mutated flesh. This creature used to be human."
+    },
+    "inventory": {
+      "capacity": 12
+    },
+    "level": {
+      "level_up_base": 0,
+      "xp_given": 100
+    },
+    "description": "Surrounded by all manner of curios, unfamiliar devices and carefully-packaged wares, the Gilder gestures you to lay down your finds and barter. His demeanor is disarming and his dress unkempt, but a man in possession of such wealth must not be dismissed."
+  },
+  "derwen": {
+    "char": "@",
+    "colour": [21, 121, 21],
+    "tag": "derwen",
+    "name": "Old Derwen",
+    "ai_cls": "NPC",
+    "equipment": "equipment",
+    "fighter": {
+      "hp": 10,
+      "max_hp": 10,
+      "damage_dice": 1,
+      "damage_sides": 2,
+      "strength": 10,
+      "dexterity": 10,
+      "vitality": 22,
+      "intellect": 26,
+      "perception": 18,
+      "armour": 0,
+      "xp": 0,
+      "dodges": true
+    },
+    "corpse": {
+      "char": "%",
+      "colour": [51, 191, 51],
+      "name": "Mutated corpse",
+      "description": "A mangled mound of mutated flesh. This creature used to be human."
+    },
+    "inventory": {
+      "capacity": 12
+    },
+    "level": {
+      "level_up_base": 0,
+      "xp_given": 100
+    },
+    "description": "He squats among the mounds of garbage, a friend to filth. Disgusting."
   }
 }

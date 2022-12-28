@@ -1,116 +1,118 @@
-[
-  {
-    "crusader": {
-      "char": "C",
-      "colour": [255, 255, 0],
-      "tag": "crusader",
-      "name": "Cleansing Hand Crusader",
-      "ai_cls": "HostileEnemy",
-      "equipment": "equipment",
-      "fighter": {
-        "hp": 22,
-        "max_hp": 22,
-        "damage_dice": 1,
-        "damage_sides": 4,
-        "strength": 16,
-        "dexterity": 14,
-        "vitality": 12,
-        "intellect": 12,
-        "perception": 12,
-        "armour": 1,
-        "xp": 350,
-        "dodges": true
-      },
-      "corpse": {
-        "char": "%",
-        "colour": [127, 0, 0],
-        "name": "Human corpse",
-        "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
-      },
-      "inventory": {
-        "capacity": 8
-      },
-      "level": {
-        "level_up_base": 0,
-        "xp_given": 350
-      },
-      "description": "A rank and file soldier of the Cleansing Hand. His armour is a mixture of leather padding and ring mail and he stance is confident."
-    }
+{
+  "crusader": {
+    "char": "C",
+    "colour": [
+      255,
+      255,
+      0
+    ],
+    "tag": "crusader",
+    "name": "Cleansing Hand Crusader",
+    "ai_cls": "HostileEnemy",
+    "equipment": "equipment",
+    "fighter": {
+      "hp": 22,
+      "max_hp": 22,
+      "damage_dice": 1,
+      "damage_sides": 4,
+      "strength": 16,
+      "dexterity": 14,
+      "vitality": 12,
+      "intellect": 12,
+      "perception": 12,
+      "armour": 1,
+      "xp": 350,
+      "dodges": true
+    },
+    "corpse": {
+      "char": "%",
+      "colour": [
+        127,
+        0,
+        0
+      ],
+      "name": "Human corpse",
+      "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
+    },
+    "inventory": {
+      "capacity": 8
+    },
+    "level": {
+      "level_up_base": 0,
+      "xp_given": 350
+    },
+    "description": "A rank and file soldier of the Cleansing Hand. His armour is a mixture of leather padding and ring mail and he stance is confident."
   },
-  {
-    "purifier": {
-      "char": "P",
-      "colour": [191, 191, 0],
-      "tag": "purifier",
-      "name": "Cleansing Hand Purifier",
-      "ai_cls": "HostileEnemy",
-      "equipment": "equipment",
-      "fighter": {
-        "hp": 32,
-        "max_hp": 32,
-        "damage_dice": 1,
-        "damage_sides": 6,
-        "strength": 24,
-        "dexterity": 14,
-        "vitality": 16,
-        "intellect": 10,
-        "perception": 6,
-        "armour": 1,
-        "xp": 425,
-        "dodges": true
-      },
-      "corpse": {
-        "char": "%",
-        "colour": [127, 0, 0],
-        "name": "Human corpse",
-        "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
-      },
-      "inventory": {
-        "capacity": 8
-      },
-      "level": {
-        "level_up_base": 0,
-        "xp_given": 425
-      },
-      "description": "A cruel morningstar is held by this veteran crusader. Never again will the last bastion of purity be defiled by entropy."
-    }
+  "purifier": {
+    "char": "P",
+    "colour": [191, 191, 0],
+    "tag": "purifier",
+    "name": "Cleansing Hand Purifier",
+    "ai_cls": "HostileEnemy",
+    "equipment": "equipment",
+    "fighter": {
+      "hp": 32,
+      "max_hp": 32,
+      "damage_dice": 1,
+      "damage_sides": 6,
+      "strength": 24,
+      "dexterity": 14,
+      "vitality": 16,
+      "intellect": 10,
+      "perception": 6,
+      "armour": 1,
+      "xp": 425,
+      "dodges": true
+    },
+    "corpse": {
+      "char": "%",
+      "colour": [127, 0, 0],
+      "name": "Human corpse",
+      "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
+    },
+    "inventory": {
+      "capacity": 8
+    },
+    "level": {
+      "level_up_base": 0,
+      "xp_given": 425
+    },
+    "description": "A cruel morningstar is held by this veteran crusader. Never again will the last bastion of purity be defiled by entropy."
   },
-  {
-    "duelist": {
-      "char": "D",
-      "colour": [255, 255, 127],
-      "tag": "duelist",
-      "name": "Cleansing Hand Duelist",
-      "ai_cls": "HostileEnemy",
-      "equipment": "equipment",
-      "fighter": {
-        "hp": 18,
-        "max_hp": 18,
-        "damage_dice": 2,
-        "damage_sides": 4,
-        "strength": 16,
-        "dexterity": 24,
-        "vitality": 16,
-        "intellect": 14,
-        "perception": 14,
-        "armour": 2,
-        "xp": 600,
-        "dodges": true
-      },
-      "corpse": {
-        "char": "%",
-        "colour": [127, 0, 0],
-        "name": "Human corpse",
-        "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
-      },
-      "inventory": {
-        "capacity": 8
-      },
-      "level": {
-        "level_up_base": 0,
-        "xp_given": 600
-      },
-      "description": "A duelist of the Ascetic Church sect of the Cleansing Hand. He stands statue-like, goading attacks with his alber stance."
-    }
+  "duelist": {
+    "char": "D",
+    "colour": [255, 255, 127],
+    "tag": "duelist",
+    "name": "Cleansing Hand Duelist",
+    "ai_cls": "HostileEnemy",
+    "equipment": "equipment",
+    "fighter": {
+      "hp": 18,
+      "max_hp": 18,
+      "damage_dice": 2,
+      "damage_sides": 4,
+      "strength": 16,
+      "dexterity": 24,
+      "vitality": 16,
+      "intellect": 14,
+      "perception": 14,
+      "armour": 2,
+      "xp": 600,
+      "dodges": true
+    },
+    "corpse": {
+      "char": "%",
+      "colour": [127, 0, 0],
+      "name": "Human corpse",
+      "description": "Somehow avoiding the corrupting influence of the Sludgeworks, this creature retained its humanity until the bitter end."
+    },
+    "inventory": {
+      "capacity": 8
+    },
+    "level": {
+      "level_up_base": 0,
+      "xp_given": 600
+    },
+    "description": "A duelist of the Ascetic Church sect of the Cleansing Hand. He stands statue-like, goading attacks with his alber stance."
   }
-]
+}

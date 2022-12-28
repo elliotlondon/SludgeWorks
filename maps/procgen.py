@@ -902,10 +902,8 @@ def place_congruous_room(dungeon: GameMap, engine: Engine) -> Optional[None | Ex
         dungeon.tiles[w_tile[0], w_tile[1]] = maps.tiles.wooden_wall
 
     # Add doors as static objects with appropriate face
-    door_top = copy.deepcopy(
-        create_static_object_from_json(f"data/static_objects/core_objects.json", 'shanty_door_top'))
-    door_side = copy.deepcopy(
-        create_static_object_from_json(f"data/static_objects/core_objects.json", 'shanty_door_side'))
+    door_top = dungeon.engine.clone('shanty_door_top')
+    door_side = dungeon.engine.clone('shanty_door_side')
     while doors > 0:
         if selections == []:
             if logging.DEBUG >= logging.root.level:

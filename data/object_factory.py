@@ -20,8 +20,8 @@ def create_all_static_objects_from_json(path: str) -> List[StaticObject]:
 
     objects = []
     for i in range(len(object_dict)):
-        name = list(object_dict[i].keys())[0]
-        data = object_dict[i][name]
+        name = list(object_dict.keys())[i]
+        data = object_dict[name]
         static_object = create_static_object(data)
         objects.append(static_object)
     return objects

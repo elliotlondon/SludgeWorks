@@ -1,116 +1,110 @@
-[
-  {
-    "risen_sacrifice": {
-      "char": "r",
-      "colour": [255, 191, 255],
-      "tag": "risen_sacrifice",
-      "name": "Risen Sacrifice",
-      "ai_cls": "HostileEnemy",
-      "equipment": "equipment",
-      "fighter": {
-        "hp": null,
-        "max_hp": 20,
-        "damage_dice": 1,
-        "damage_sides": 4,
-        "strength": 12,
-        "dexterity": 12,
-        "vitality": 10,
-        "intellect": 10,
-        "perception": 10,
-        "armour": 0,
-        "xp": 45,
-        "dodges": true
-      },
-      "corpse": {
-        "char": "%",
-        "colour": [127, 0, 0],
-        "name": "Mutated corpse",
-        "description": "A mangled mound of mutated flesh. This creature used to be human."
-      },
-      "inventory": {
-        "capacity": 8
-      },
-      "level": {
-        "level_up_base": 0,
-        "xp_given": 45
-      },
-      "description": "The gaunt form of a human used in ritual sacrifice that has refused to stay dead. It smiles as it wanders sleepily through the caverns."
-    }
+{
+  "risen_sacrifice": {
+    "char": "r",
+    "colour": [255, 191, 255],
+    "tag": "risen_sacrifice",
+    "name": "Risen Sacrifice",
+    "ai_cls": "HostileEnemy",
+    "equipment": "equipment",
+    "fighter": {
+      "hp": null,
+      "max_hp": 20,
+      "damage_dice": 1,
+      "damage_sides": 4,
+      "strength": 12,
+      "dexterity": 12,
+      "vitality": 10,
+      "intellect": 10,
+      "perception": 10,
+      "armour": 0,
+      "xp": 45,
+      "dodges": true
+    },
+    "corpse": {
+      "char": "%",
+      "colour": [127, 0, 0],
+      "name": "Mutated corpse",
+      "description": "A mangled mound of mutated flesh. This creature used to be human."
+    },
+    "inventory": {
+      "capacity": 8
+    },
+    "level": {
+      "level_up_base": 0,
+      "xp_given": 45
+    },
+    "description": "The gaunt form of a human used in ritual sacrifice that has refused to stay dead. It smiles as it wanders sleepily through the caverns."
   },
-  {
-    "celebrant": {
-      "char": "c",
-      "colour": [239, 191, 255],
-      "tag": "celebrant",
-      "name": "Eternal Cult Celebrant",
-      "ai_cls": "HostileEnemy",
-      "equipment": "equipment",
-      "fighter": {
-        "hp": 8,
-        "max_hp": 8,
-        "damage_dice": 2,
-        "damage_sides": 2,
-        "strength": 10,
-        "dexterity": 12,
-        "vitality": 18,
-        "intellect": 16,
-        "perception": 10,
-        "armour": 0,
-        "xp": 160,
-        "dodges": true
-      },
-      "corpse": {
-        "char": "%",
-        "colour": [127, 0, 0],
-        "name": "Mutated corpse",
-        "description": "A mangled mound of mutated flesh. This creature used to be human."
-      },
-      "inventory": {
-        "capacity": 8
-      },
-      "level": {
-        "level_up_base": 0,
-        "xp_given": 160
-      },
-      "description": "A horrifically scarred human who clutches a dagger as it wanders through the scratch-marked tunnels. The cult demands more sacrifices."
-    }
+  "celebrant": {
+    "char": "c",
+    "colour": [239, 191, 255],
+    "tag": "celebrant",
+    "name": "Eternal Cult Celebrant",
+    "ai_cls": "HostileEnemy",
+    "equipment": "equipment",
+    "fighter": {
+      "hp": 8,
+      "max_hp": 8,
+      "damage_dice": 2,
+      "damage_sides": 2,
+      "strength": 10,
+      "dexterity": 12,
+      "vitality": 18,
+      "intellect": 16,
+      "perception": 10,
+      "armour": 0,
+      "xp": 160,
+      "dodges": true
+    },
+    "corpse": {
+      "char": "%",
+      "colour": [127, 0, 0],
+      "name": "Mutated corpse",
+      "description": "A mangled mound of mutated flesh. This creature used to be human."
+    },
+    "inventory": {
+      "capacity": 8
+    },
+    "level": {
+      "level_up_base": 0,
+      "xp_given": 160
+    },
+    "description": "A horrifically scarred human who clutches a dagger as it wanders through the scratch-marked tunnels. The cult demands more sacrifices."
   },
-  {
-    "kidnapper": {
-      "char": "K",
-      "colour": [255, 63, 255],
-      "tag": "kidnapper",
-      "name": "Eternal Cult Kidnapper",
-      "ai_cls": "HostileEnemy",
-      "equipment": "equipment",
-      "fighter": {
-        "hp": 10,
-        "max_hp": 10,
-        "damage_dice": 2,
-        "damage_sides": 4,
-        "strength": 16,
-        "dexterity": 10,
-        "vitality": 16,
-        "intellect": 10,
-        "perception": 16,
-        "armour": 0,
-        "xp": 275,
-        "dodges": true
-      },
-      "corpse": {
-        "char": "%",
-        "colour": [127, 0, 0],
-        "name": "Mutated corpse",
-        "description": "A mangled mound of mutated flesh. This creature used to be human."
-      },
-      "inventory": {
-        "capacity": 8
-      },
-      "level": {
-        "level_up_base": 0,
-        "xp_given": 275
-      },
-      "description": "The flow of new flesh into the Palace of Hedonism must be constant. This cloaked figure ensures that this commandment is upheld."
-    }
+  "kidnapper": {
+    "char": "K",
+    "colour": [255, 63, 255],
+    "tag": "kidnapper",
+    "name": "Eternal Cult Kidnapper",
+    "ai_cls": "HostileEnemy",
+    "equipment": "equipment",
+    "fighter": {
+      "hp": 10,
+      "max_hp": 10,
+      "damage_dice": 2,
+      "damage_sides": 4,
+      "strength": 16,
+      "dexterity": 10,
+      "vitality": 16,
+      "intellect": 10,
+      "perception": 16,
+      "armour": 0,
+      "xp": 275,
+      "dodges": true
+    },
+    "corpse": {
+      "char": "%",
+      "colour": [127, 0, 0],
+      "name": "Mutated corpse",
+      "description": "A mangled mound of mutated flesh. This creature used to be human."
+    },
+    "inventory": {
+      "capacity": 8
+    },
+    "level": {
+      "level_up_base": 0,
+      "xp_given": 275
+    },
+    "description": "The flow of new flesh into the Palace of Hedonism must be constant. This cloaked figure ensures that this commandment is upheld."
   }
-]
+}

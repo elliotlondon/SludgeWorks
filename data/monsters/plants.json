@@ -1,145 +1,139 @@
-[
-  {
-    "tangleshrub": {
-      "char": "s",
-      "colour": [150, 50, 100],
-      "tag": "tangleshrub",
-      "name": "Tangleshrub",
-      "ai_cls": "HostileStationary",
-      "equipment": "equipment",
-      "fighter": {
-        "hp": 4,
-        "max_hp": 4,
-        "damage_dice": 1,
-        "damage_sides": 2,
-        "strength": 14,
-        "dexterity": 6,
-        "vitality": 10,
-        "intellect": 1,
-        "perception": 0,
-        "armour": 1,
-        "xp": 25,
-        "dodges": false
-      },
-      "corpse": {
-        "char": " ",
-        "colour": [255, 255, 255],
-        "name": "<Undefined>",
-        "description": "<Undefined>"
-      },
-      "inventory": {
-        "capacity": 0
-      },
-      "level": {
-        "level_up_base": 0,
-        "xp_given": 25
-      },
-      "description": "A highly specialized carnivorous plant resembling a dead, waist-high bush that flays the skin off any creature that wanders nearby.",
-      "blood": "Sap"
-    }
+{
+  "tangleshrub": {
+    "char": "s",
+    "colour": [150, 50, 100],
+    "tag": "tangleshrub",
+    "name": "Tangleshrub",
+    "ai_cls": "HostileStationary",
+    "equipment": "equipment",
+    "fighter": {
+      "hp": 4,
+      "max_hp": 4,
+      "damage_dice": 1,
+      "damage_sides": 2,
+      "strength": 14,
+      "dexterity": 6,
+      "vitality": 10,
+      "intellect": 1,
+      "perception": 0,
+      "armour": 1,
+      "xp": 25,
+      "dodges": false
+    },
+    "corpse": {
+      "char": " ",
+      "colour": [255, 255, 255],
+      "name": "<Undefined>",
+      "description": "<Undefined>"
+    },
+    "inventory": {
+      "capacity": 0
+    },
+    "level": {
+      "level_up_base": 0,
+      "xp_given": 25
+    },
+    "description": "A highly specialized carnivorous plant resembling a dead, waist-high bush that flays the skin off any creature that wanders nearby.",
+    "blood": "Sap"
   },
-  {
-    "bluebell": {
-      "char": "b",
+  "bluebell": {
+    "char": "b",
+    "colour": [
+      63,
+      159,
+      255
+    ],
+    "tag": "bluebell",
+    "name": "Glowing Bluebells",
+    "ai_cls": "PassiveStationary",
+    "equipment": "equipment",
+    "fighter": {
+      "hp": 1,
+      "max_hp": 1,
+      "damage_dice": 1,
+      "damage_sides": 1,
+      "strength": 1,
+      "dexterity": 1,
+      "vitality": 1,
+      "intellect": 1,
+      "perception": 16,
+      "armour": 0,
+      "xp": 0,
+      "dodges": false
+    },
+    "corpse": {
+      "char": " ",
       "colour": [
-        63,
-        159,
+        255,
+        255,
         255
       ],
-      "tag": "bluebell",
-      "name": "Glowing Bluebells",
-      "ai_cls": "PassiveStationary",
-      "equipment": "equipment",
-      "fighter": {
-        "hp": 1,
-        "max_hp": 1,
-        "damage_dice": 1,
-        "damage_sides": 1,
-        "strength": 1,
-        "dexterity": 1,
-        "vitality": 1,
-        "intellect": 1,
-        "perception": 16,
-        "armour": 0,
-        "xp": 0,
-        "dodges": false
-      },
-      "corpse": {
-        "char": " ",
-        "colour": [
-          255,
-          255,
-          255
-        ],
-        "name": "<Undefined>",
-        "description": "<Undefined>"
-      },
-      "inventory": {
-        "capacity": 0
-      },
-      "level": {
-        "level_up_base": 0,
-        "xp_given": 0
-      },
-      "description": "A delicate plant with weeping blue flowers that illuminate the caves with a soothing glow.",
-      "blood": "Sap"
-    }
+      "name": "<Undefined>",
+      "description": "<Undefined>"
+    },
+    "inventory": {
+      "capacity": 0
+    },
+    "level": {
+      "level_up_base": 0,
+      "xp_given": 0
+    },
+    "description": "A delicate plant with weeping blue flowers that illuminate the caves with a soothing glow.",
+    "blood": "Sap"
   },
-  {
-    "grove_tender": {
-      "char": "G",
+  "grove_tender": {
+    "char": "G",
+    "colour": [
+      0,
+      191,
+      0
+    ],
+    "tag": "grove_tender",
+    "name": "Grove Tender",
+    "ai_cls": "PlantKeeper",
+    "equipment": "equipment",
+    "fighter": {
+      "hp": 14,
+      "max_hp": 14,
+      "damage_dice": 1,
+      "damage_sides": 5,
+      "strength": 16,
+      "dexterity": 10,
+      "vitality": 14,
+      "intellect": 8,
+      "perception": 8,
+      "armour": 1,
+      "xp": 300,
+      "dodges": false
+    },
+    "corpse": {
+      "char": "%",
       "colour": [
         0,
-        191,
+        151,
         0
       ],
-      "tag": "grove_tender",
-      "name": "Grove Tender",
-      "ai_cls": "PlantKeeper",
-      "equipment": "equipment",
-      "fighter": {
-        "hp": 14,
-        "max_hp": 14,
-        "damage_dice": 1,
-        "damage_sides": 5,
-        "strength": 16,
-        "dexterity": 10,
-        "vitality": 14,
-        "intellect": 8,
-        "perception": 8,
-        "armour": 1,
-        "xp": 300,
-        "dodges": false
-      },
-      "corpse": {
-        "char": "%",
-        "colour": [
-          0,
-          151,
-          0
-        ],
-        "name": "Blossoming Corpse",
-        "description": "This vaguely humanoid corpse is coated in a thick layer of vegetation which has recently started to bloom, filling the air with an overwhelmingly sweet scent."
-      },
-      "inventory": {
-        "capacity": 4
-      },
-      "drop_table": "grove_tender",
-      "level": {
-        "level_up_base": 0,
-        "xp_given": 0
-      },
-      "description": "A boulder-sized tangle of roots and lush, shooting plants in the silhouette of a giant humanoid. It ambles slowly through the caves, spreading fertile mud and seeds as the unexplored areas.",
-      "blood": "Sap",
-      "abilities": {
-         "Bludgeon": {
-          "damage": 2,
-          "sides": 3,
-          "turns": 2,
-          "difficulty": 16,
-           "cooldown": 6
-        }
-    }
-    }
+      "name": "Blossoming Corpse",
+      "description": "This vaguely humanoid corpse is coated in a thick layer of vegetation which has recently started to bloom, filling the air with an overwhelmingly sweet scent."
+    },
+    "inventory": {
+      "capacity": 4
+    },
+    "drop_table": "grove_tender",
+    "level": {
+      "level_up_base": 0,
+      "xp_given": 0
+    },
+    "description": "A boulder-sized tangle of roots and lush, shooting plants in the silhouette of a giant humanoid. It ambles slowly through the caves, spreading fertile mud and seeds as the unexplored areas.",
+    "blood": "Sap",
+    "abilities": {
+       "Bludgeon": {
+        "damage": 2,
+        "sides": 3,
+        "turns": 2,
+        "difficulty": 16,
+         "cooldown": 6
+      }
   }
-]
+  }
+}

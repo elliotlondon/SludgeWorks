@@ -14,11 +14,10 @@ def create_monster_from_json(path: str, request: str) -> Actor:
     f = open(path, encoding='utf-8')
     monster_dict = json.load(f)
 
-    for i in range(len(monster_dict)):
-        if request in monster_dict[i]:
-            data = monster_dict[i][request]
-            monster = create_monster(data)
-            return monster
+    if request in monster_dict:
+        data = monster_dict[request]
+        monster = create_monster(data)
+        return monster
 
 def create_all_monsters_from_json(path: str) -> List[Actor]:
     f = open(path, encoding='utf-8')
@@ -26,8 +25,8 @@ def create_all_monsters_from_json(path: str) -> List[Actor]:
 
     monsters = []
     for i in range(len(monster_dict)):
-        name = list(monster_dict[i].keys())[0]
-        data = monster_dict[i][name]
+        name = list(monster_dict.keys())[i]
+        data = monster_dict[name]
         monster = create_monster(data)
         monsters.append(monster)
     return monsters

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import traceback
 from pathlib import Path
-from logging import basicConfig, DEBUG
+import logging
 
 import tcod
 from tcod.event import _SDL_TO_CLASS_TABLE, ffi, lib
@@ -16,7 +16,8 @@ import config.data_io
 
 
 # Enable global debug
-# basicConfig(level=DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 def main() -> None:

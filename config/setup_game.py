@@ -55,20 +55,22 @@ def new_game() -> Engine:
     medkit.parent = player.inventory
 
     player.inventory.items.append(dagger)
+    player.inventory.quantities.append(1)
     player.equipment.toggle_equip(dagger, add_message=False)
 
     player.inventory.items.append(leather_armor)
+    player.inventory.quantities.append(1)
     player.equipment.toggle_equip(leather_armor, add_message=False)
 
-    player.inventory.items.extend([medkit, medkit])
+    player.inventory.items.append(medkit)
+    player.inventory.quantities.append(2)
 
     # Debug stuff
     if logging.DEBUG >= logging.root.level:
         twig = copy.deepcopy(create_item_from_json('data/items/twigs.json', 'immolating_twig'))
         twig.parent = player.inventory
         player.inventory.items.append(twig)
-        player.inventory.items.append(twig)
-        player.inventory.items.append(twig)
+        player.inventory.quantities.append(3)
 
     core.g.engine = engine
     return engine
@@ -95,14 +97,14 @@ class MainMenu(core.input_handlers.BaseEventHandler):
                 alignment=tcod.CENTER
             )
 
-        console.print(
-            11,
-            console.height - 2,
-            "https://github.com/elliotlondon/Sludgeworks",
-            fg=config.colour.menu_text,
-            bg=(0, 0, 0),
-            alignment=tcod.LEFT
-        )
+        # console.print(
+        #     11,
+        #     console.height - 2,
+        #     "https://github.com/elliotlondon/Sludgeworks",
+        #     fg=config.colour.menu_text,
+        #     bg=(0, 0, 0),
+        #     alignment=tcod.LEFT
+        # )
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[core.input_handlers.BaseEventHandler]:
         if event.sym in (tcod.event.K_q, tcod.event.K_ESCAPE):

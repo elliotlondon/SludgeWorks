@@ -39,9 +39,24 @@ class PickupAction(Action):
 
                 core.g.engine.game_map.entities.remove(item)
                 item.parent = self.entity.inventory
-                inventory.items.append(item)
 
-                core.g.engine.message_log.add_message(f"You pick up the {item.name}!")
+                # Check for stackability
+                if item.stackable:
+                    # Check if there is already an instance in the inventory
+                    exists = False
+                    for i, element in enumerate(inventory.items):
+                        if item.name == element.name:
+                            inventory.quantities[i] += 1
+                            exists = True
+                            break
+                    if not exists:
+                        inventory.items.append(item)
+                        inventory.quantities.append(1)
+                else:
+                    inventory.items.append(item)
+                    inventory.quantities.append(1)
+
+                core.g.engine.message_log.add_message(f"You pick up the {item.name}.")
                 return
 
         raise Impossible("There is nothing here to pick up.")

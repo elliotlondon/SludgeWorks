@@ -38,9 +38,17 @@ class Consumable(BaseComponent):
         entity = self.parent
         inventory = entity.parent
 
-        # Remove Item from inventory
+        # Remove Item from inventory, unless stackable, then reduce stack by 1
         if isinstance(inventory, parts.inventory.Inventory):
-            inventory.items.remove(entity)
+            if entity.stackable:
+                index = inventory.items.index(entity)
+                if inventory.quantities[index] == 1:
+                    inventory.remove(entity)
+                else:
+                    inventory.quantities[index] -= 1
+            else:
+                inventory.remove(entity)
+            inventory.sanity_check()
 
 
 class Junk(Consumable):

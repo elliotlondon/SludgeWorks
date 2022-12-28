@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from typing import List, TYPE_CHECKING
 
 import core.g
@@ -16,8 +17,7 @@ class Inventory(BaseComponent):
     def __init__(self, capacity: int):
         self.capacity = capacity
         self.items: List[Item] = []
-        # self.inv_items: List[Item] = []
-        # self.equip_items = []
+        self.quantities: List[int] = []
 
     # @staticmethod
     # def spawn_with(entity, item_entity):
@@ -34,61 +34,6 @@ class Inventory(BaseComponent):
     #                 results.append({'equip': item_entity})
     #         else:
     #             results.append({'message': Message(f'The {item_entity.name} cannot be used', tcod.white)})
-    #     return results
-
-    # @staticmethod
-    # def pick_up(entity, item):
-    #     results = []
-    #     if len(entity.inventory.inv_items) >= entity.inventory.capacity:
-    #         if entity.name == 'Player':
-    #             results.append({
-    #                 'item_added': None,
-    #                 'message': Message('You cannot carry any more, your inventory is full', tcod.yellow)})
-    #     else:
-    #         if entity.name == 'Player':
-    #             results.append({
-    #                 'item_added': item,
-    #                 'message': Message(f'{entity.name} picks up the {item.name}!', tcod.blue)})
-    #         entity.inventory.inv_items.append(item)
-    #     return results
-
-    # @staticmethod
-    # def use(entity, item_entity, **kwargs):
-    #     results = []
-    #     # First, consider the case where the item is in the inventory
-    #     if item_entity in entity.inventory.inv_items:
-    #         if item_entity.item.use_function is None:
-    #             # Can you equip it? Let's do it!
-    #             if item_entity.equippable.slot:
-    #                 # Check if there's already something occupying the slot
-    #                 if entity.equipment.check_if_occupied(entity, item_entity):
-    #                     for item in entity.inventory.equip_items:
-    #                         if item.equippable.slot == item_entity.equippable.slot:
-    #                             entity.inventory.dequip(entity, item)
-    #                             entity.inventory.equip(entity, item_entity)
-    #                             results.append(
-    #                                 {'equipped': item_entity, 'message': Message(f'{item_entity.name} equipped',
-    #                                                                              tcod.white)})
-    #                         else:
-    #                             results = entity.inventory.equip(entity, item_entity)
-    #                 else:
-    #                     results = entity.inventory.equip(entity, item_entity)
-    #             else:
-    #                 results.append({'message': Message(f'The {item_entity.name} cannot be used', tcod.white)})
-    #         else:
-    #             if item_entity.item.targeting and not (kwargs.get('target_x') or kwargs.get('target_y')):
-    #                 results.append({'targeting': item_entity})
-    #             # If it's a consumable, let's consume it!
-    #             else:
-    #                 kwargs = {**item_entity.item.function_kwargs, **kwargs}
-    #                 item_use_results = item_entity.item.use_function(entity, **kwargs)
-    #                 for item_use_result in item_use_results:
-    #                     if item_use_result.get('consumed'):
-    #                         entity.inventory.remove_item(entity, item_entity)
-    #                 results.extend(item_use_results)
-    #     # For now, equipped items can only be un-equipped
-    #     elif item_entity in entity.inventory.equip_items:
-    #         entity.inventory.dequip(entity, item_entity)
     #     return results
 
     # @staticmethod
@@ -127,16 +72,49 @@ class Inventory(BaseComponent):
     #                 results.append({'message': Message('Inventory full, {0} dropped'.format(item.name), tcod.grey)})
     #     return results
 
+    def sanity_check(self):
+        """Check if the items and quantities are the same length"""
+        if not len(self.items) == len(self.quantities):
+            raise TypeError(f"Inventory crash. {len(self.items)} and {len(self.quantities)}.")
+
+    def remove(self, item: Item):
+        """Redefined list method to handle stackable items"""
+        index = self.items.index(item)
+        if item.stackable:
+            if self.quantities[index] == 1:
+                # Just one left, so pop it and the corresponding index
+                self.items.pop(index)
+                self.quantities.pop(index)
+            elif self.quantities[index] <= 0:
+                raise IndexError(f"Inventory item {item.name}, {item} has quantity {self.quantities[index]}."
+                                 f"Something went wrong.")
+            else:
+                self.quantities[index] -= 1
+        else:
+            self.items.pop(index)
+            self.quantities.pop(index)
+        self.sanity_check()
+
     def drop(self, item: Item) -> None:
         """Removes an item from an inventory and restores it to the game map at the drop location."""
 
-        self.items.remove(item)
-        item.place(self.parent.x, self.parent.y, self.gamemap)
-
-        if self.parent.name == 'Player':
-            core.g.engine.message_log.add_message(f"You drop the {item.name}.")
+        # Place on map and remove from inventory
+        dropped_item = copy.deepcopy(item)
+        dropped_item.place(self.parent.x, self.parent.y, self.gamemap)
+        self.remove(item)
+        # Check to see if the item is a stack
+        if item.stackable:
+            if self.parent.name == 'Player':
+                core.g.engine.message_log.add_message(f"You drop a {item.name}.")
+            else:
+                core.g.engine.message_log.add_message(f"{self.parent.name} drops a {item.name}.")
         else:
-            core.g.engine.message_log.add_message(f"{self.parent.name} drops the {item.name}.")
+            if self.parent.name == 'Player':
+                core.g.engine.message_log.add_message(f"You drop the {item.name}.")
+            else:
+                core.g.engine.message_log.add_message(f"{self.parent.name} drops the {item.name}.")
+        self.sanity_check()
+
 
     def drop_all(self):
         """Drops everything at your current location, including equipped items."""
@@ -145,7 +123,7 @@ class Inventory(BaseComponent):
             if item.equipment.item_is_equipped():
                 item.equipment.unequip_from_slot()
 
-            self.items.remove(item)
+            self.remove(item)
             item.place(self.parent.x, self.parent.y, self.gamemap)
 
             if self.parent.name == 'Player':
@@ -154,29 +132,44 @@ class Inventory(BaseComponent):
                 core.g.engine.message_log.add_message(f"{self.parent.name} drops the {item.name}.")
 
 
-def autosort(items: List[Item]) -> List[Item]:
-    """Automatically sorts a list of items according to internal rules."""
+    def autosort(self):
+        """Automatically sorts the items and quantities according to item values and types."""
 
-    # First sort list into consumables and weapons/armour
-    equipment = []
-    consumeables = []
-    for item in items:
-        if item.equippable:
-            equipment.append(item)
-        else:
-            consumeables.append(item)
+        # First sort list into consumables and weapons/armour
+        equipment = []
+        consumables = []
+        equipment_quantities = []
+        consumables_quantities = []
+        for item in self.items:
+            index = self.items.index(item)
+            if item.equippable:
+                equipment.append(item)
+                equipment_quantities.append(self.quantities[index])
+            else:
+                consumables.append(item)
+                consumables_quantities.append(self.quantities[index])
 
-    # Now split weapons/armour lists
-    weapons = []
-    armour = []
-    for item in equipment:
-        if item.equippable.damage_dice:
-            weapons.append(item)
-        else:
-            armour.append(item)
+        # Now split weapons/armour lists
+        weapons = []
+        armour = []
+        weapon_quantities = []
+        armour_quantities = []
+        for item in equipment:
+            index = self.items.index(item)
+            if item.equippable.damage_dice:
+                weapons.append(item)
+                weapon_quantities.append(self.quantities[index])
+            else:
+                armour.append(item)
+                armour_quantities.append(self.quantities[index])
 
-    # Sort all lists according to item depth and rarity
-    sorted(weapons, key=lambda x: (x.depth, x.rarity))
-    sorted(armour, key=lambda x: (x.depth, x.rarity))
-    sorted(consumeables, key=lambda x: (x.depth, x.rarity))
-    return weapons + armour + consumeables
+        # Sort all lists according to item depth and rarity
+        sorted(weapons, key=lambda x: (x.depth, x.rarity))
+        sorted(armour, key=lambda x: (x.depth, x.rarity))
+        sorted(consumables, key=lambda x: (x.depth, x.rarity))
+        new_quantities = []
+        for element in (weapons + armour + consumables):
+            index = self.items.index(element)
+            new_quantities.append(self.quantities[index])
+        self.quantities = new_quantities
+        self.items = weapons + armour + consumables

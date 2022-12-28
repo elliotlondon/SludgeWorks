@@ -14,6 +14,7 @@
         "lower_bound": 16,
         "range": 8
       },
+      "stackable": true,
       "depth": 1,
       "rarity": 2,
       "usetext": "You snap the twig...",
@@ -33,6 +34,7 @@
         "type": "Confusion",
         "number_of_turns": 8
       },
+      "stackable": true,
       "depth": 1,
       "rarity": 2,
       "usetext": "You snap the twig...",
@@ -54,6 +56,7 @@
         "lower_bound": 16,
         "radius": 3
       },
+      "stackable": true,
       "depth": 2,
       "rarity": 3,
       "usetext": "You snap the twig...",
@@ -72,6 +75,7 @@
       "consumable": {
         "type": "Teleother"
       },
+      "stackable": true,
       "depth": 2,
       "rarity": 3,
       "usetext": "You snap the twig...",
@@ -90,6 +94,7 @@
       "consumable": {
         "type": "Immolation"
       },
+      "stackable": true,
       "depth": 5,
       "rarity": 5,
       "usetext": "You snap the twig...",

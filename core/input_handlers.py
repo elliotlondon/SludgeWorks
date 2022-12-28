@@ -274,10 +274,10 @@ class MainGameEventHandler(EventHandler):
             return InventoryDropHandler()
 
         # Debug commands
-        elif key == tcod.event.K_s and logging.DEBUG >= logging.root.level:
+        elif key == tcod.event.K_s and logging.INFO >= logging.root.level:
             core.actions.DescendAction(core.g.engine.player).perform()
             core.g.engine.update_fov()
-            return MainGameEventHandler()
+            # return ExperimentalMenuHandler()
 
         # Check for anything which causes the player to automatically skip their turn
         for effect in core.g.engine.player.active_effects:
@@ -875,14 +875,20 @@ class InventoryEventHandler(AskUserEventHandler):
 
         if number_of_items_in_inventory > 0:
             for i, item in enumerate(core.g.engine.player.inventory.items):
+                quantity = 1
                 item_key = chr(ord("a") + i)
                 is_equipped = core.g.engine.player.equipment.item_is_equipped(item)
 
+                # Create item name str
                 item_string = f"({item_key}) {item.name}"
                 if is_equipped:
                     item_string = f"{item_string} (E)"
+                if item.stackable:
+                    quantity = core.g.engine.player.inventory.quantities[i]
+                quantity_str = f"x{quantity}"
 
                 console.print(x + 1, y + i + 1, item_string, fg=item.str_colour)
+                console.print(x + width - len(quantity_str) - 1, y + i + 1, quantity_str, fg=tcod.light_grey)
         else:
             console.print(x + 1, y + 1, "(Empty)")
 
@@ -899,7 +905,7 @@ class InventoryEventHandler(AskUserEventHandler):
                 return None
             return self.on_item_selected(selected_item)
         elif key == tcod.event.KeySym.TAB:
-            player.inventory.items = parts.inventory.autosort(player.inventory.items)
+            player.inventory.autosort()
             core.g.engine.message_log.add_message("You reorganize your inventory.",
                                                   config.colour.use)
             return None

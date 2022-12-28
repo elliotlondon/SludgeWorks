@@ -117,7 +117,7 @@ class HostileEnemy(BaseAI):
                     return core.actions.WaitAction(self.entity).perform()
             else:
                 return core.actions.WaitAction(self.entity).perform()
-            # TODO: This is suspicious, could be causion teleport glitching
+            # TODO: This is suspicious, could be causing teleport glitching
             # # 10% chance to path to a random nearby tile up to 6 tiles away
             # else:
             #     # Make a new path for a tile somewhere nearby

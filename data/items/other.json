@@ -11,6 +11,7 @@
       "consumable": {
         "type": "junk"
       },
+      "stackable": true,
       "depth": 1,
       "rarity": 1,
       "usetext": "You do not know what this item is used for, or perhaps it is useless.",

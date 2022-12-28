@@ -12,6 +12,7 @@
         "type": "Healing",
         "amount": 5
       },
+      "stackable": true,
       "depth": 0,
       "rarity": 1,
       "usetext": "You use the medkit to heal yourself.",
@@ -32,6 +33,7 @@
         "upper_bound": 8,
         "lower_bound": 12
       },
+      "stackable": true,
       "depth": 1,
       "rarity": 1,
       "usetext": "You slather yourself in the healing mud...",

@@ -75,6 +75,24 @@ class GameMap:
     def items(self) -> Iterator[Item]:
         yield from (entity for entity in self.entities if isinstance(entity, parts.entity.Item))
 
+    def quantity(self, entity: Entity) -> int:
+        """Provide the number of objects at a given tile coordinate"""
+        counter = 0
+        if isinstance(entity, parts.entity.Actor):
+            for actor in self.actors:
+                if actor.name == entity.name and actor.x == entity.x and actor.y == entity.y:
+                    counter += 1
+        elif isinstance(entity, parts.entity.Item):
+            for item in self.items:
+                if item.name == entity.name and item.x == entity.x and item.y == entity.y:
+                    counter += 1
+        else:
+            for other in self.entities:
+                if other.name == entity.name and other.x == entity.x and other.y == entity.y:
+                    counter += 1
+
+        return counter
+
     def get_tile_at_explored_location(self, location_x: int, location_y: int) -> Optional[maps.tiles.tile_dt]:
         """Returns a tile within the explored array."""
         if self.explored[location_x, location_y]:

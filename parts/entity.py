@@ -286,6 +286,7 @@ class Item(Entity):
             name: str = "<Unnamed>",
             consumable: Optional[Consumable] = None,
             equippable: Optional[Equippable] = None,
+            stackable: Optional[bool] = False,
             depth=0,
             rarity=None,
             usetext: str = "<Undefined>",
@@ -309,6 +310,10 @@ class Item(Entity):
         self.equippable = equippable
         if self.equippable:
             self.equippable.parent = self
+
+        self.stackable = stackable
+        if self.stackable:
+            self.stackable.parent = self
 
         # Item string colour when viewed in a menu. Defaults to object colour
         self.str_colour = colour

@@ -128,6 +128,10 @@ def create_consumable(data: dict) -> Item:
         usetext=data['usetext'],
         description=data['description']
     )
+
+    if 'stackable' in data:
+        item.stackable = True
+
     return item
 
 # def steel_cuirass(x, y):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import copy
 from typing import TYPE_CHECKING
 
@@ -111,5 +112,5 @@ class Engine:
         # If a tile is "visible" it should be added to "explored".
         self.game_map.explored |= self.game_map.visible
 
-        # # if logging.DEBUG >= logging.root.level:
-        # self.game_map.visible[:] = self.game_map
+        if 5 >= logging.root.level < 1:
+            self.game_map.visible[:] = self.game_map

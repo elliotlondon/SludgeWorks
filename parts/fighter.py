@@ -184,6 +184,9 @@ class Fighter(BaseComponent):
             corpse = self.parent.corpse
             corpse.spawn(core.g.engine.game_map, self.parent.x, self.parent.y)
 
-        # Award xp to whoever performed the last action. Perhaps needs edge case investigation?
-        if hasattr(core.g.engine, 'last_actor'):
-            core.g.engine.last_actor.level.add_xp(xp)
+        # TODO: Smarter xp allocation
+        # # Award xp to whoever performed the last action. Perhaps needs edge case investigation?
+        # if hasattr(core.g.engine, 'last_actor'):
+        #     core.g.engine.last_actor.level.add_xp(xp)
+        if not self.parent.name == 'Player':
+            core.g.engine.player.level.add_xp(xp)

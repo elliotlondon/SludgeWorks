@@ -271,12 +271,12 @@ class Actor(Entity):
         cycled through, and their effects are performed."""
         if self.active_effects:
             for effect in self.active_effects:
-                if effect.turns > 0:
-                    if self.is_alive:
-                        effect.tick()
-                else:
-                    effect.expiry_message()
-                    self.active_effects.remove(effect)
+                if self.is_alive:
+                    if effect.turns > 0:
+                            effect.tick()
+                    else:
+                        effect.expiry_message()
+                        self.active_effects.remove(effect)
 
 
 class Item(Entity):

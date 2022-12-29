@@ -12,9 +12,6 @@ import config.colour
 import maps.tiles
 import parts.entity
 from config.exceptions import MapGenError, FatalMapGenError
-from data.item_factory import create_item_from_json
-from data.monster_factory import create_monster_from_json
-from data.object_factory import create_static_object_from_json
 from maps.game_map import GameMap
 from maps.maploader import MapLoader
 from utils.math_utils import find_neighbours, Graph
@@ -225,6 +222,12 @@ def generate_dungeon(engine: Engine,
             if isinstance(dungeon, GameMap):
                 # Mapgen successful, use this floor
                 dungeon.accessible = dungeon.calc_accessible()
+
+                # As a failsafe, make all of the outer border a wall tile
+                for x in range(dungeon.width):
+                    for y in range(dungeon.height):
+                        if x == 0 or x == map_width - 1 or y == 0 or y == map_height - 1:
+                            dungeon.tiles[x, y] = maps.tiles.muddy_wall
                 return dungeon
             elif isinstance(dungeon, MapGenError):
                 # Mapgen unsuccessful, try again until max tries are reached
@@ -264,8 +267,8 @@ def place_flora(dungeon: GameMap, engine: Engine, areas: int) -> None:
         y_arr = np.arange(start_y - int(area_size / 2), (start_y + int(area_size / 2)))
 
         # Make sure that values are within the game map
-        x_arr = x_arr[np.where(np.logical_and(x_arr > 0, x_arr < dungeon.width))]
-        y_arr = y_arr[np.where(np.logical_and(y_arr > 0, y_arr < dungeon.height))]
+        x_arr = x_arr[np.where(np.logical_and(x_arr > 1, x_arr < dungeon.width - 1))]
+        y_arr = y_arr[np.where(np.logical_and(y_arr > 1, y_arr < dungeon.height - 1))]
 
         # Randomly populate with greenery
         for x in x_arr:
@@ -277,8 +280,8 @@ def place_flora(dungeon: GameMap, engine: Engine, areas: int) -> None:
                         dungeon.tiles[x, y] = random.choice(maps.tiles.verdant_tiles_1)
                         verdant_array.append([x, y])
 
-        for x in range(dungeon.width):
-            for y in range(dungeon.height):
+        for x in range(1, dungeon.width - 1):
+            for y in range(1, dungeon.height - 1):
                 verdant = 0
                 for nx, ny in dungeon.find_neighbours(x, y):
                     if 'verdant' in dungeon.tiles[nx, ny]['name']:

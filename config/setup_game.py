@@ -39,6 +39,7 @@ def new_game() -> Engine:
     )
     engine.game_world.generate_floor()
     engine.update_fov()
+    core.g.engine = engine
 
     engine.message_log.add_message(
         "You enter the Sludgeworks, unable to climb back out. "

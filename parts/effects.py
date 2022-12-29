@@ -74,8 +74,8 @@ class PoisonEffect(Effect):
     def tick(self):
         self.parent.fighter.hp -= self.damage
         if self.parent.name == "Player":
-            core.g.engine.message_log.add_message(f"You takes {self.damage} damage from the poison.",
-                                                  config.colour.poison)
+                core.g.engine.message_log.add_message(f"You takes {self.damage} damage from the poison.",
+                                                      config.colour.poison)
         else:
             core.g.engine.message_log.add_message(f"The {self.parent.name} takes {self.damage} damage from the poison.",
                                                   config.colour.poison)

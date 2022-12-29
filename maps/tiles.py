@@ -195,8 +195,9 @@ down_stairs = new_tile(
     transparent=True,
     dark=(ord(">"), (255, 255, 255), (0, 0, 0)),
     light=(ord(">"), (255, 255, 255), (0, 0, 0)),
-    description=list("A huge, roughly circular hole in the ground stands here, well-lit by luminous greenery. "
-                     "Air from the surface rushes towards the rift, carried to another unknown cavern. ")
+    description=list("The floor gives way to a rocky tunnel, well-lit by luminous greenery. "
+                     "Air from the surface rushes into it, carried to another unknown cavern. "
+                     "It is possible to travel to another part of the caves by going through here. ")
 )
 hole = new_tile(
     name="hole",

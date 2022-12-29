@@ -87,8 +87,14 @@ class MapLoader():
                 # Now for NPCs, monsters, items, etc. Always len 2 or more
                 if len(cell_value) >= 2 and not 'stairs' in cell_value and not 'player' in cell_value:
                     for obj in range(1, len(cell_value)):
-                        entity = core.g.engine.clone(str(cell_value[obj]))
-                        entity.spawn_quietly(new_map, i, j)
+                        if '_locked' in cell_value[obj]:
+                            entity_str = cell_value[obj].replace('_locked', '')
+                            entity = core.g.engine.clone(entity_str)
+                            entity.properties.extend(['Locked', 'Closed'])
+                            entity.spawn_quietly(new_map, i, j)
+                        else:
+                            entity = core.g.engine.clone(str(cell_value[obj]))
+                            entity.spawn_quietly(new_map, i, j)
 
         new_map.accessible = new_map.calc_accessible()
         return new_map

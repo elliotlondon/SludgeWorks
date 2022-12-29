@@ -3,6 +3,7 @@ from typing import Iterable, List, Reversible, Tuple
 
 import tcod
 
+import core.g
 from config.colour import white
 
 
@@ -30,10 +31,13 @@ class MessageLog:
         If `stack` is True then the message can stack with a previous message
         of the same text.
         """
-        if stack and self.messages and text == self.messages[-1].plain_text:
-            self.messages[-1].count += 1
+        if core.g.engine.player.is_alive or 'YOU DIED' in text:
+            if stack and self.messages and text == self.messages[-1].plain_text:
+                self.messages[-1].count += 1
+            else:
+                self.messages.append(Message(text, fg))
         else:
-            self.messages.append(Message(text, fg))
+            pass
 
     def render(self, console: tcod.Console, x: int, y: int, width: int, height: int) -> None:
         """Render this log over the given area.

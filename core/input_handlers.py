@@ -81,6 +81,12 @@ class EventHandler(BaseEventHandler):
         core.g.engine.handle_enemy_turns()
         core.g.engine.update_fov()
 
+    @staticmethod
+    def wrap(string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():  # Handle newlines in messages.
+            yield from textwrap.wrap(line, width, expand_tabs=True)
+
     def ev_quit(self, event: tcod.event.Quit) -> Optional[ActionOrHandler]:
         raise SystemExit()
 
@@ -93,22 +99,27 @@ class EventHandler(BaseEventHandler):
 
 
 class PopupMessage(EventHandler):
+    """Produce a simple popup message which returns a specific event handler. (previous, or mainmenu, etc.)"""
     TITLE = "<Untitled>"
 
-    def __init__(self, text: str):
+    def __init__(self, text: str, handler: EventHandler):
         self.text = text
+        self.handler = handler
 
-    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
-        return MainGameEventHandler()
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[EventHandler]:
+        return self.handler
 
-    def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[MainGameEventHandler]:
-        return MainGameEventHandler()
+    def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[EventHandler]:
+        return self.handler
 
     def on_render(self, console: tcod.Console) -> None:
         """Create the popup window with a message within."""
         super().on_render(console)
-        width = len(self.text) + 4
-        height = 6
+        width = 34
+
+        # Split up message here
+        lines = list(self.wrap(self.text, width - 4))
+        height = len(lines) + 4
         x = console.width // 2 - int(width / 2)
         y = console.height // 2 - int(height / 2)
 
@@ -120,9 +131,14 @@ class PopupMessage(EventHandler):
             title='',
             clear=True,
             fg=(255, 255, 255),
-            bg=(0, 0, 0)
+            bg=tcod.black
         )
-        console.print(x=x + int(width / 2), y=y + 2, string=self.text, alignment=tcod.CENTER)
+
+        # Wrap the message and print it line by line
+        y_offset = 2
+        for line in lines:
+            console.print(x=x + int(width / 2), y=y + y_offset, string=line, alignment=tcod.CENTER)
+            y_offset += 1
         console.print(x=x + int(width / 2), y=y + height - 1, string="[OK]", alignment=tcod.CENTER)
 
 
@@ -316,18 +332,24 @@ class MainGameEventHandler(EventHandler):
         elif key == tcod.event.K_SPACE or key == tcod.event.K_KP_SPACE:
             interactables = core.g.engine.game_map.get_surrounding_interactables(player.x, player.y)
             if len(interactables) == 0:
-                return PopupMessage("There is nothing nearby to interact with.")
+                return PopupMessage("There is nothing nearby to interact with.",
+                                    MainGameEventHandler())
             elif len(interactables) == 1:
                 # Decide which interaction to return, depending upon context.
                 if isinstance(interactables[0].ai, parts.ai.NPC):
                     convo = ConversationEventHandler(interactables[0])
                     if not convo.convo_json:
-                        return PopupMessage(f"{interactables[0].name} does not engage with you.")
+                        return PopupMessage(f"{interactables[0].name} does not engage with you.",
+                                            MainGameEventHandler())
                     else:
                         return convo
                 elif isinstance(interactables[0], parts.entity.StaticObject):
                     if interactables[0].name == "Fountain of Sludge":
+                        # if not interactables[0].used:
                         return SludgeFountainEventHandler(interactables[0])
+                        # else:
+                        # return PopupMessage(f"The sludge around the fountain pools impotently, devoid of power.",
+                        #                     MainGameEventHandler())
                     if "Door" in interactables[0].name:
                         # First check if anything prevents the door action from being performed
                         blocker = core.g.engine.game_map.get_actor_at_location(interactables[0].x, interactables[0].y)
@@ -663,18 +685,18 @@ class AbilityScreenEventHandler(AskUserEventHandler):
         if not core.g.engine.player.abilities:
             console.print(x=x + 1, y=y + 2, string=f"Your body is a blank slate, with no special traits...")
         else:
-            for ability in core.g.engine.player.abilities:
+            for i, ability in enumerate(core.g.engine.player.abilities):
                 self.abilities.append(ability)
 
                 # Change colour and add turns left if ability is on cooldown
                 if ability.cooldown > 0:
                     fg_colour = tcod.grey
                     console.print(x=x + 1, y=y + y_offset + 2,
-                                  string=f"[{y_offset + 1}]: {ability.name} ({ability.cooldown})", fg=fg_colour)
+                                  string=f"[{i + 1}]: {ability.name} ({ability.cooldown})", fg=fg_colour)
                 else:
                     fg_colour = tcod.white
                     console.print(x=x + 1, y=y + y_offset + 2,
-                                  string=f"[{y_offset + 1}]: {ability.name}", fg=fg_colour)
+                                  string=f"[{i + 1}]: {ability.name}", fg=fg_colour)
                 # Dispay ability range
                 if ability.range == 0:
                     range_str = "Self"
@@ -698,7 +720,7 @@ class AbilityScreenEventHandler(AskUserEventHandler):
             # Skip if stunned
             for effect in core.g.engine.player.active_effects:
                 if isinstance(effect, parts.effects.StunEffect):
-                    return PopupMessage("You are stunned!")
+                    return PopupMessage("You are stunned!", AbilityScreenEventHandler())
             try:
                 ability = core.g.engine.player.abilities[index]
                 # Check for cooldowns first
@@ -939,11 +961,11 @@ class InventoryActivateHandler(InventoryEventHandler):
     def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
         for effect in core.g.engine.player.active_effects:
             if isinstance(effect, parts.effects.StunEffect):
-                return PopupMessage("You are stunned!")
+                return PopupMessage("You are stunned!", InventoryActivateHandler())
         if item.consumable:
             if isinstance(item.consumable, parts.consumable.Junk):
-                return core.input_handlers.PopupMessage(
-                    "You do not have a use for this item.")
+                return core.input_handlers.PopupMessage("You do not have a use for this item.",
+                                                        InventoryActivateHandler())
             # Return the action for the selected item.
             return item.consumable.get_action(core.g.engine.player)
         elif item.equippable:
@@ -1044,7 +1066,8 @@ class ConversationEventHandler(AskUserEventHandler):
                             core.g.engine.quests.start_quest(
                                 self.convo_json[f"{self.current_screen}"]['tag'].replace("start:", ""))
                             return PopupMessage(f"Quest started: "
-                                                f"{core.g.engine.quests.get_quest_step_name(self.interactee.name.lower())}!")
+                                                f"{core.g.engine.quests.get_quest_step_name(self.interactee.name.lower())}!",
+                                                ConversationEventHandler(self.interactee))
                     break
             return self
         elif key == tcod.event.K_ESCAPE or index == self.len_replies:
@@ -1120,10 +1143,11 @@ class SludgeFountainEventHandler(AskUserEventHandler):
         super().__init__(),
         self.interactee = interactee
 
-    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler, PopupMessage]:
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[EventHandler]:
         if event.sym in config.inputs.YESNO_KEYS or event.sym == tcod.event.K_SPACE:
             if event.sym not in (tcod.event.K_n, tcod.event.K_ESCAPE, tcod.event.K_SPACE):
-                return PopupMessage("You bathe in the sludge...")
+                self.interactee.used = True
+                return MutateEventHandler()
             return MainGameEventHandler()
         return None
 
@@ -1152,6 +1176,59 @@ class SludgeFountainEventHandler(AskUserEventHandler):
                       alignment=tcod.constants.CENTER, fg=self.interactee.colour)
         console.print(x=console.width // 2 + 6, y=y + 5, string=f"[N]: No",
                       alignment=tcod.constants.CENTER, fg=self.interactee.colour)
+
+
+class MutateEventHandler(AskUserEventHandler):
+    """Handle an event which causes the player to mutate."""
+
+    def __init__(self):
+        super().__init__(),
+        self.mutation: parts.mutations.Mutation
+        self.mutate_event = True
+        self.message = "You bathe in the sludge..."
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        if self.mutate_event:
+            # Choose mutation
+            self.mutation = parts.mutations.select_mutation(core.g.engine.player)
+            if self.mutation:
+                mutate_msg = core.g.engine.player.mutate(self.mutation)
+                self.message = f"Your body mutates! {mutate_msg}You gain the mutation: {self.mutation.name}"
+            else:
+                self.message = "You sense that a great change in your body would have occurred, were your genome " \
+                               "not already so cluttered."
+            self.mutate_event = False
+        else:
+            return MainGameEventHandler()
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Create the popup window with a message within."""
+        super().on_render(console)
+        width = 34
+
+        # Split up message here
+        lines = list(self.wrap(self.message, width - 4))
+        height = len(lines) + 4
+        x = console.width // 2 - int(width / 2)
+        y = console.height // 2 - int(height / 2)
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=(255, 255, 255),
+            bg=tcod.black
+        )
+
+        # Wrap the message and print it line by line
+        y_offset = 2
+        for line in lines:
+            console.print(x=x + int(width / 2), y=y + y_offset, string=line, alignment=tcod.CENTER)
+            y_offset += 1
+        console.print(x=x + int(width / 2), y=y + height - 1, string="[OK]", alignment=tcod.CENTER)
 
 
 class DoorEventHandler(AskUserEventHandler):

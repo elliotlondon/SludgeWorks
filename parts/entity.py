@@ -259,7 +259,11 @@ class Actor(Entity):
         self.blood = blood
 
         self.abilities = abilities
+        if not self.abilities:
+            self.abilities = []
         self.mutations = mutations
+        if not self.mutations:
+            self.mutations = []
 
     @property
     def is_alive(self) -> bool:
@@ -277,6 +281,21 @@ class Actor(Entity):
                     else:
                         effect.expiry_message()
                         self.active_effects.remove(effect)
+
+    def mutate(self, mutation: parts.mutations.Mutation) -> Optional[str]:
+        """Function to add a mutation to an Actor."""
+        for i in self.mutations:
+            if i.name == mutation.name:
+                raise AttributeError(f"Attempted to add mutation {mutation.name} to {self.name}, but"
+                                     f"this entity already has this mutation.")
+        self.mutations.append(mutation)
+        self.abilities.append(mutation)
+
+        if self.name == 'Player':
+            if mutation.message != "<Undefined>":
+                return mutation.message + ' '
+            else:
+                return ''
 
 
 class Item(Entity):
@@ -375,8 +394,9 @@ class StaticObject(Entity):
             tag: str = "<Undefined>",
             name: str = "<Undefined>",
             interact_message: str = "<Undefined>",
-            description: str,
-            properties: Optional[List]
+            description: str = "<Undefined>",
+            properties: Optional[List],
+            used: bool = False
     ):
         super().__init__(
             x=x,
@@ -393,6 +413,7 @@ class StaticObject(Entity):
         self.base_colour = colour
         self.interact_message = interact_message
         self.properties = properties
+        self.used = used
 
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):

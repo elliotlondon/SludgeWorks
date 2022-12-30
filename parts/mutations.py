@@ -1,4 +1,5 @@
 from typing import Optional
+import random
 
 import config.colour
 import core.abilities
@@ -8,6 +9,35 @@ from parts.base_component import BaseComponent
 from parts.entity import Actor
 
 
+def select_mutation(player: Actor):
+    """
+    Function to be used to select a mutation to be given to a player when a mutating action occurs.
+    As of right now, simply choose a mutation which the player does not have, and is valid
+    For them to be given. TODO: More sophisticated mutation selection.
+    """
+    choices = ["Bite", "Bludgeon"]
+    random.shuffle(choices)
+    for choice in choices:
+        if choice == "Bite":
+            mutation = Bite(damage=1, turns=4, difficulty=12, cooldown=4)
+        elif choice == "Bludgeon":
+            mutation = Bludgeon(damage=2, sides=3, turns=1, difficulty=16, cooldown=5)
+        if check_existing(player, mutation.name):
+            continue
+        return mutation
+
+
+def check_existing(entity: Actor, name: str) -> bool:
+    """Check whether an entity already has a given mutation"""
+    if len(entity.mutations) > 0:
+        for existing in entity.mutations:
+            if existing.name == name:
+                return True
+        return False
+    else:
+        return False
+
+
 class Mutation(BaseComponent):
     """Effects which can be inherent or added, constant or continuous, which are assigned to an Actor
     and may be updated through effects, such as a level-up. Mutations can be thought of as abilities."""
@@ -15,6 +45,7 @@ class Mutation(BaseComponent):
 
     def __init__(self,
                  name: str = "<Undefined>",
+                 message: str = "<Undefined>",
                  description: str = "<Undefined>",
                  req_target: bool = False,
                  continuous: bool = False,
@@ -22,6 +53,7 @@ class Mutation(BaseComponent):
                  range: int = 0
                  ):
         self.name = name
+        self.message = message
         self.description = description
         self.req_target = req_target
         self.continuous = continuous
@@ -78,7 +110,8 @@ class Bite(Mutation):
 
     def __init__(self, damage: int, turns: int, difficulty: int, cooldown: int):
         super().__init__(
-            name="Shove",
+            name="Bite",
+            message="You gain a set of animalistic fangs!",
             description="Bite a neaby creature. Deals 1d4, and can cause minor bleeding on hit.",
             req_target=True,
             continuous=False,

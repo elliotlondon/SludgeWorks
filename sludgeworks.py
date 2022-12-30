@@ -16,8 +16,9 @@ import config.data_io
 
 
 # Enable global debug
+# logging.basicConfig(level=5)
 # logging.basicConfig(level=logging.DEBUG)
-# logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 
 def main() -> None:

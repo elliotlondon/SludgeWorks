@@ -211,9 +211,9 @@ def generate_dungeon(engine: Engine,
             dungeon = add_features(dungeon)
 
             # Populate dungeon
-            # place_flora(dungeon, engine, areas=5)
-            # place_fauna(dungeon, engine)
-            # place_npcs(dungeon, engine)
+            place_flora(dungeon, engine, areas=5)
+            place_fauna(dungeon, engine)
+            place_npcs(dungeon, engine)
             place_items(dungeon, engine)
             place_static_objects(dungeon, engine)
 

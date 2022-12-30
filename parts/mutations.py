@@ -19,9 +19,9 @@ def select_mutation(player: Actor):
     random.shuffle(choices)
     for choice in choices:
         if choice == "Bite":
-            mutation = Bite(damage=1, turns=4, difficulty=12, cooldown=4)
+            mutation = Bite(damage=1, turns=4, difficulty=12, cooldown=10)
         elif choice == "Bludgeon":
-            mutation = Bludgeon(damage=2, sides=3, turns=1, difficulty=16, cooldown=5)
+            mutation = Bludgeon(damage=2, sides=3, turns=1, difficulty=16, cooldown=16)
         if check_existing(player, mutation.name):
             continue
         return mutation

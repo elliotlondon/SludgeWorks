@@ -172,7 +172,7 @@ class BiteAction(AbilityAction):
                                                           config.colour.bleed)
                 else:
                     core.g.engine.message_log.add_message(f'The {attacker.name} critically bites the {defender.name}'
-                                                          f'{str(damage)} damage!', config.colour.enemy_crit)
+                                                          f'for {str(damage)} damage!', config.colour.enemy_crit)
                     core.g.engine.message_log.add_message(f"The {defender.name.capitalize()} starts bleeding!",
                                                           config.colour.enemy_crit)
             else:
@@ -189,7 +189,7 @@ class BiteAction(AbilityAction):
                         core.g.engine.message_log.add_message(f'You start bleeding!', config.colour.bleed)
                 else:
                     core.g.engine.message_log.add_message(f'The {attacker.name} bites the {defender.name}'
-                                                          f'{str(damage)} damage.', config.colour.enemy_atk)
+                                                          f'for {str(damage)} damage.', config.colour.enemy_atk)
             defender.fighter.hp -= damage
         else:
             if defender.name.capitalize() == 'Player':
@@ -290,7 +290,7 @@ class BludgeonAction(AbilityAction):
                                                           config.colour.stun)
                 else:
                     core.g.engine.message_log.add_message(f'The {attacker.name} brutally bludgeons the {defender.name}'
-                                                          f'{str(damage)} damage!', config.colour.enemy_crit)
+                                                          f'for {str(damage)} damage!', config.colour.enemy_crit)
                     core.g.engine.message_log.add_message(f"The {defender.name.capitalize()} is stunned!",
                                                           config.colour.enemy_crit)
             else:
@@ -307,7 +307,7 @@ class BludgeonAction(AbilityAction):
                         core.g.engine.message_log.add_message(f'You are stunned from the blow!', config.colour.bleed)
                 else:
                     core.g.engine.message_log.add_message(f'The {attacker.name} bludgeons the {defender.name}'
-                                                          f'{str(damage)} damage.', config.colour.enemy_atk)
+                                                          f'for {str(damage)} damage.', config.colour.enemy_atk)
             defender.fighter.hp -= damage
         else:
             if defender.name.capitalize() == 'Player':

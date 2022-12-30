@@ -345,11 +345,11 @@ class MainGameEventHandler(EventHandler):
                         return convo
                 elif isinstance(interactables[0], parts.entity.StaticObject):
                     if interactables[0].name == "Fountain of Sludge":
-                        # if not interactables[0].used:
-                        return SludgeFountainEventHandler(interactables[0])
-                        # else:
-                        # return PopupMessage(f"The sludge around the fountain pools impotently, devoid of power.",
-                        #                     MainGameEventHandler())
+                        if not interactables[0].used:
+                            return SludgeFountainEventHandler(interactables[0])
+                        else:
+                            return PopupMessage(f"The sludge around the fountain pools impotently, devoid of power.",
+                                                MainGameEventHandler())
                     if "Door" in interactables[0].name:
                         # First check if anything prevents the door action from being performed
                         blocker = core.g.engine.game_map.get_actor_at_location(interactables[0].x, interactables[0].y)

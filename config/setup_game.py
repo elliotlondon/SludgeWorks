@@ -66,16 +66,16 @@ def new_game() -> Engine:
     player.inventory.items.append(medkit)
     player.inventory.quantities.append(2)
 
-    # Debug stuff
-    if logging.INFO >= logging.root.level:
-        twig = engine.clone('lightning_twig')
-        twig.parent = player.inventory
-        player.inventory.items.append(twig)
-        player.inventory.quantities.append(2)
-        twig = engine.clone('fireball_twig')
-        twig.parent = player.inventory
-        player.inventory.items.append(twig)
-        player.inventory.quantities.append(2)
+    # # Debug stuff
+    # if logging.INFO >= logging.root.level:
+    #     twig = engine.clone('lightning_twig')
+    #     twig.parent = player.inventory
+    #     player.inventory.items.append(twig)
+    #     player.inventory.quantities.append(2)
+    #     twig = engine.clone('fireball_twig')
+    #     twig.parent = player.inventory
+    #     player.inventory.items.append(twig)
+    #     player.inventory.quantities.append(2)
 
     core.g.engine = engine
     return engine

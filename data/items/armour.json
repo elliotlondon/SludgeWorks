@@ -48,5 +48,30 @@
       "rarity": 3,
       "description": "A thick steel platebody emblazoned with silver filigree. It feels unnaturally light."
     }
+  },
+  {
+    "vykan_boots": {
+      "char": "}",
+      "colour": [
+        101,
+        191,
+        101
+      ],
+      "tag": "vykan_boots",
+      "name": "Vykan Boots",
+      "equipment_type": "Feet",
+      "equipment": {
+        "damage_dice": 0,
+        "damage_sides": 0,
+        "strength_bonus": 0,
+        "dexterity_bonus": 2,
+        "vitality_bonus": 0,
+        "intellect_bonus": 0,
+        "armour_bonus": 1
+      },
+      "depth": 3,
+      "rarity": 4,
+      "description": "An exceptionally well crafted pair of boots, made from leather that you do not recognise. The Vykan embroidery shows scenes of merry feasts and nobility."
+    }
   }
 ]

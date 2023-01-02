@@ -84,10 +84,10 @@ class Engine:
             for ability in self.player.abilities:
                 if ability.cooldown > 0:
                     ability.tick()
-        if self.player.mutations:
-            for mutation in self.player.mutations:
-                if mutation.cooldown > 0:
-                    mutation.tick()
+        # if self.player.mutations:
+        #     for mutation in self.player.mutations:
+        #         if mutation.cooldown > 0:
+        #             mutation.tick()
         self.player.trigger_active_effects()
 
     def update_fov(self) -> None:

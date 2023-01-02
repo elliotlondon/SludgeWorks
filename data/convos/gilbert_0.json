@@ -12,7 +12,6 @@
   "11": {
     "speech": "We are in the upper caves of the Sludgeworks. First things first, you'll need a good weapon and armour, and get used to defending yourself every time you turn a corner.\nUp here too many fools have gorged themselves on the filth and have been rewarded with deformations and madness. If you have any sense to you you'll be wise to avoid their fate.",
     "111": "Where did all these mutants come from?",
-    "1": "What is this place?",
     "2": "Who are you?",
     "3": "Where can I get weapons and armour?"
   },
@@ -25,7 +24,6 @@
   "2": {
     "speech": "My name is Gilbert, I'm up here to collect resources for my allies at The Liminus.\nI can't tell you how to get there, but if you manage to, perhaps I can show you around. They're always looking for strong bodies and sane minds up there, and they might be able to protect you.",
     "1": "What is this place?",
-    "2": "Who are you?",
     "3": "Where can I get weapons and armour?"
   },
   "3": {
@@ -40,7 +38,7 @@
     "312": "I'm not risking my life just for a pair of boots!"
   },
   "311": {
-    "speech": "You're very kind to do this for me! Best of luck, and good hunting.\nWas there anything else you wanted to know about?",
+    "speech": "You're very kind to do this for me! Best of luck, and good hunting.\nI have some other business to attend to, but we can meet in the 3rd layer of this cave section, if we both survive. Was there anything else you wanted to know about?",
     "1": "What is this place?",
     "2": "Who are you?",
     "tag": "start:GilbertQuest"

@@ -17,7 +17,7 @@ import parts.consumable
 import parts.effects
 import parts.inventory
 from config.data_io import save_game
-from config.exceptions import Impossible, DataLoadError
+from config.exceptions import Impossible, DataLoadError, QuestError
 from core.actions import Action
 from core.render_functions import RenderOrder
 from maps.tiles import get_clean_name
@@ -1034,9 +1034,12 @@ class ConversationEventHandler(AskUserEventHandler):
         else:
             # If more than 1 convo, turn to the engine to work out which one should be loaded.
             step = core.g.engine.quests.get_current_convo(self.interactee.name.lower())
-            path = Path(f"data/convos/{self.interactee.name.lower()}_{step}.json")
-            f = open(path, 'r', encoding='utf-8')
-            return load(f)
+            if step is not None:
+                path = Path(f"data/convos/{self.interactee.name.lower()}_{step}.json")
+                f = open(path, 'r', encoding='utf-8')
+                return load(f)
+            else:
+                return None
 
     def init_convo(self, index: str):
         """Logic to set up the conversation with the player on first interaction."""
@@ -1075,6 +1078,34 @@ class ConversationEventHandler(AskUserEventHandler):
                                 self.convo_json[f"{self.current_screen}"]['tag'].replace("start:", ""))
                             return PopupMessage(f"Quest started: "
                                                 f"{core.g.engine.quests.get_quest_step_name(self.interactee.name.lower())}!",
+                                                ConversationEventHandler(self.interactee))
+                        if "step:" in self.convo_json[f"{self.current_screen}"]['tag']:
+                            # The player fails the quest due to an incorrect interaction or requirement.
+                            core.g.engine.quests.advance_quest(self.interactee.name.lower())
+                        if "fail:" in self.convo_json[f"{self.current_screen}"]['tag']:
+                            # The player fails the quest due to an incorrect interaction or requirement.
+                            core.g.engine.quests.fail_quest(self.interactee.name.lower())
+                            return MainGameEventHandler()
+                    if "remove" in self.convo_json[f"{self.current_screen}"]:
+                        try:
+                            for i, item in enumerate(core.g.engine.player.inventory.items):
+                                if item.tag == self.convo_json[f"{self.current_screen}"]['remove']:
+                                    core.g.engine.player.inventory.remove(item)
+                        except:
+                            raise QuestError(f"Error removing item at remove quest step.")
+                    if "reward" in self.convo_json[f"{self.current_screen}"]:
+                        item_name = self.convo_json[f"{self.current_screen}"]['reward']
+                        item = core.g.engine.clone(item_name)
+                        if not core.g.engine.player.inventory.is_full():
+                            item.parent = core.g.engine.player.inventory
+                            core.g.engine.player.inventory.items.append(item)
+                            core.g.engine.player.inventory.quantities.append(1)
+                            return PopupMessage(f"Quest step complete! Your reward: {item.name}!",
+                                                ConversationEventHandler(self.interactee))
+                        else:
+                            item.spawn(core.g.engine.game_map, core.g.engine.player.x, core.g.engine.player.y)
+                            return PopupMessage(f"Quest step complete! Your reward: {item.name}!"
+                                                f"Due to lack of inventory space, it has been placed on the floor.",
                                                 ConversationEventHandler(self.interactee))
                     break
             return self
@@ -1155,6 +1186,7 @@ class SludgeFountainEventHandler(AskUserEventHandler):
         if event.sym in config.inputs.YESNO_KEYS or event.sym == tcod.event.K_SPACE:
             if event.sym not in (tcod.event.K_n, tcod.event.K_ESCAPE, tcod.event.K_SPACE):
                 self.interactee.used = True
+                self.interactee.colour = tcod.grey
                 return MutateEventHandler()
             return MainGameEventHandler()
         return None

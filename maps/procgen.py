@@ -9,6 +9,7 @@ from typing import Tuple, Iterator, List, TYPE_CHECKING, Optional
 import numpy as np
 
 import config.colour
+import core.g
 import maps.tiles
 import parts.entity
 from config.exceptions import MapGenError, FatalMapGenError
@@ -217,6 +218,9 @@ def generate_dungeon(engine: Engine,
             place_items(dungeon, engine)
             place_static_objects(dungeon, engine)
 
+            # Quest-dependent generation stage
+            place_quest_entities(dungeon, engine)
+
             # Finally, add stairs
             dungeon = add_stairs(dungeon)
             if isinstance(dungeon, GameMap):
@@ -336,20 +340,11 @@ def place_fauna(dungeon: GameMap, engine: Engine) -> None:
                 monster.fighter.hp = random.randint(4, 8)
             monster.spawn(dungeon, x, y)
 
-    # Debug stuff
-    if current_floor == 1:
-        x, y = dungeon.get_random_walkable_nonfov_tile()
-        moire_beast = dungeon.engine.clone('moire_beast')
-        moire_beast.spawn(dungeon, x, y)
-        x, y = dungeon.get_random_walkable_nonfov_tile()
-        moire_beast = dungeon.engine.clone('moire_beast')
-        moire_beast.spawn(dungeon, x, y)
-
 
 def place_npcs(dungeon: GameMap, engine: Engine) -> None:
     # Spawn NPCs depending upon floor conditions
     counter = 0
-    if engine.game_world.current_floor == 1:
+    if engine.game_world.current_floor == 1 or engine.game_world.current_floor == 3:
         while counter < 100:
             counter += 1
             x, y = dungeon.get_random_walkable_nontunnel_tile()
@@ -390,6 +385,18 @@ def place_static_objects(dungeon: GameMap, engine: Engine) -> None:
 
     static_object = dungeon.engine.clone('sludge_fountain')
     static_object.spawn(dungeon, x, y)
+
+
+def place_quest_entities(dungeon: GameMap, engine: Engine):
+    """Place entities on this floor that are not randomly generated during mapgen or csv loading."""
+    current_floor = engine.game_world.current_floor
+
+    for convo in engine.quests.active_convos:
+        # Spawn moire beast on level 2 for Gilbert's quest
+        if convo == 'gilbert' and engine.quests.active_convos['gilbert']['step'] == 1 and current_floor == 2:
+            x, y = dungeon.get_random_walkable_nonfov_tile()
+            moire_beast = dungeon.engine.clone('moire_beast')
+            moire_beast.spawn(dungeon, x, y)
 
 
 def tunnel_between(start: Tuple[int, int], end: Tuple[int, int]) -> Iterator[Tuple[int, int]]:

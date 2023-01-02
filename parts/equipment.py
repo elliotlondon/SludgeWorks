@@ -23,8 +23,8 @@ class Equipment(BaseComponent):
                  hands: Optional[Item] = None,
                  legs: Optional[Item] = None,
                  feet: Optional[Item] = None,
-                 left_ring: Optional[Item] = None,
-                 right_ring: Optional[Item] = None
+                 ring: Optional[Item] = None,
+                 neck: Optional[Item] = None
                  ):
         self.modifiers = modifiers
         self.main_hand = main_hand
@@ -34,8 +34,8 @@ class Equipment(BaseComponent):
         self.hands = hands
         self.legs = legs
         self.feet = feet
-        self.left_ring = left_ring
-        self.right_ring = right_ring
+        self.ring = ring
+        self.neck = neck
 
     def __iter__(self):
         for attr in self.__dict__.items():
@@ -115,7 +115,7 @@ class Equipment(BaseComponent):
     def item_is_equipped(self, item: Item) -> bool:
         return self.main_hand == item or self.off_hand == item or \
                self.head == item or self.torso == item or self.legs == item or self.feet == item or \
-               self.left_ring == item or self.right_ring == item
+               self.ring == item or self.neck == item
 
     def unequip_message(self, item_name: str) -> None:
         core.g.engine.message_log.add_message(f"You remove the {item_name}.")
@@ -160,10 +160,10 @@ class Equipment(BaseComponent):
                 slot = "hands"
             elif type == EquipmentType.Feet:
                 slot = "feet"
-            elif type == EquipmentType.Left_Ring:
-                slot = "left_hand"
-            elif type == EquipmentType.Right_Ring:
-                slot = "right_hand"
+            elif type == EquipmentType.Ring:
+                slot = "ring"
+            elif type == EquipmentType.Neck:
+                slot = "neck"
 
         if getattr(self, slot) == equippable_item:
             self.unequip_from_slot(slot, add_message)

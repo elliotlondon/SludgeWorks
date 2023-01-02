@@ -72,6 +72,13 @@ class Inventory(BaseComponent):
     #                 results.append({'message': Message('Inventory full, {0} dropped'.format(item.name), tcod.grey)})
     #     return results
 
+    def is_full(self) -> bool:
+        """Returns true if inventory is at capacity"""
+        if len(self.items) >= self.capacity:
+            return True
+        else:
+            return False
+
     def sanity_check(self):
         """Check if the items and quantities are the same length"""
         if not len(self.items) == len(self.quantities):

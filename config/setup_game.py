@@ -12,6 +12,7 @@ import tcod
 import config.colour
 import core.g
 import core.input_handlers
+import parts.mutations
 from config.inputs import YESNO_KEYS
 from core.engine import Engine
 from data.item_factory import create_item_from_json
@@ -72,10 +73,12 @@ def new_game() -> Engine:
     #     twig.parent = player.inventory
     #     player.inventory.items.append(twig)
     #     player.inventory.quantities.append(2)
-    #     twig = engine.clone('fireball_twig')
-    #     twig.parent = player.inventory
-    #     player.inventory.items.append(twig)
-    #     player.inventory.quantities.append(2)
+    # twig = engine.clone('immolating_twig')
+    # twig.parent = player.inventory
+    # player.inventory.items.append(twig)
+    # player.inventory.quantities.append(2)
+    # mutation = parts.mutations.Immolate(turns=3, cooldown=22)
+    # core.g.engine.player.mutate(mutation)
 
     core.g.engine = engine
     return engine

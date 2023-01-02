@@ -184,9 +184,9 @@ class BurningEffect(Effect):
                                                   config.colour.on_fire_end)
 
     def get_colour(self):
-        if not core.g.global_clock.current_tic() % 6:
+        if not core.g.global_clock.current_tic() % 8:
             return config.colour.on_fire
-        elif not core.g.global_clock.current_tic() % 4:
+        elif not core.g.global_clock.current_tic() % 6:
             return config.colour.on_fire_2
         else:
             return None

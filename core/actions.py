@@ -211,7 +211,7 @@ class MeleeAction(ActionWithDirection):
                         core.g.engine.message_log.add_message(f'The {attacker.name} crits you for '
                                                               f'{str(damage)} damage!', config.colour.enemy_crit)
                     else:
-                        core.g.engine.message_log.add_message(f'The {attacker.name} crits the {defender.name}'
+                        core.g.engine.message_log.add_message(f'The {attacker.name} crits the {defender.name} for '
                                                               f'{str(damage)} damage!', config.colour.enemy_crit)
                     # Always apply poison on crit
                     for modifier in modifiers:
@@ -232,7 +232,7 @@ class MeleeAction(ActionWithDirection):
                         core.g.engine.message_log.add_message(f'The {attacker.name} attacks you for '
                                                               f'{str(damage)} damage.', config.colour.enemy_atk)
                     else:
-                        core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                        core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name} for '
                                                               f'{str(damage)} damage.', config.colour.enemy_atk)
                     # Roll for poison if damage is dealt!
                     for modifier in modifiers:
@@ -255,7 +255,7 @@ class MeleeAction(ActionWithDirection):
                     core.g.engine.message_log.add_message(f'The {attacker.name} attacks you '
                                                           f'but does no damage!', config.colour.player_evade)
                 else:
-                    core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                    core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name} '
                                                           f'but does no damage.', config.colour.enemy_evade)
                 if logging.DEBUG >= logging.root.level:
                     core.g.engine.message_log.add_message(f"DEBUG: Roll [{attack_roll} vs. {defence_roll}].",
@@ -268,7 +268,7 @@ class MeleeAction(ActionWithDirection):
                 core.g.engine.message_log.add_message(f'You evade the {attacker.name.capitalize()}\'s attack.',
                                                       config.colour.player_evade)
             else:
-                core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name} '
                                                       f'but the attack is evaded.', config.colour.enemy_evade)
             if logging.DEBUG >= logging.root.level:
                 core.g.engine.message_log.add_message(f"DEBUG: Roll [{attack_roll} vs. {dodge_roll}].",
@@ -558,3 +558,8 @@ class DescendAction(Action):
         core.g.engine.message_log.add_message(
             "You slide down the tunnel, descending deeper into the Sludgeworks.", config.colour.descend
         )
+        # Check if there's a bloodseeker and give the player a warning notification if so
+        for entity in core.g.engine.game_map.entities:
+            if entity.tag == 'bloodseeker':
+                core.g.engine.message_log.add_message("You hear a terrifying gutteral roar from "
+                                                      "deep within this cave section.", config.colour.warning)

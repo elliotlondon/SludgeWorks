@@ -13,6 +13,7 @@ debug = red
 invalid = (0xFF, 0xFF, 0x00)
 impossible = (0x80, 0x80, 0x80)
 error = (0xFF, 0x40, 0x40)
+warning = tcod.orange
 
 # Combat
 player_atk = tcod.light_blue
@@ -46,8 +47,8 @@ poison = tcod.dark_green
 poison_end = tcod.green
 bleed = tcod.light_red
 bleed_end = tcod.lightest_red
-on_fire = tcod.flame
-on_fire_2 = tcod.orange
+on_fire = tcod.orange
+on_fire_2 = tcod.yellow
 on_fire_end = tcod.light_flame
 enrage = tcod.dark_red
 stun = tcod.cyan

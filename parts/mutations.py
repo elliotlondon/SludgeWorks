@@ -15,13 +15,15 @@ def select_mutation(player: Actor):
     As of right now, simply choose a mutation which the player does not have, and is valid
     For them to be given. TODO: More sophisticated mutation selection.
     """
-    choices = ["Bite", "Bludgeon"]
+    choices = ["Bite", "Bludgeon", "Immolate"]
     random.shuffle(choices)
     for choice in choices:
         if choice == "Bite":
             mutation = Bite(damage=1, turns=4, difficulty=12, cooldown=10)
         elif choice == "Bludgeon":
             mutation = Bludgeon(damage=2, sides=3, turns=1, difficulty=16, cooldown=16)
+        elif choice == 'Immolate':
+            mutation = Immolate(turns=3, cooldown=22)
         if check_existing(player, mutation.name):
             continue
         return mutation
@@ -171,8 +173,8 @@ class MemoryWipe(Mutation):
 
     def __init__(self, cooldown: int):
         super().__init__(
-            name="Shove",
-            description="Savagely attack the mind of a neaby creature, performing a mental attack and "
+            name="Wipe Memory",
+            description="Savagely attack the mind of a nearby creature, performing a mental attack and "
                         "wiping memories on crit.",
             req_target=True,
             continuous=False,
@@ -190,3 +192,31 @@ class MemoryWipe(Mutation):
         else:
             self.cooldown = self.cooldown_max
             return core.abilities.MemoryWipeAction(caster, target, x, y)
+
+
+class Immolate(Mutation):
+    """Set a target on fire with your mind."""
+    parent: Actor
+
+    def __init__(self, cooldown: int, turns: int):
+        super().__init__(
+            name="Immolate",
+            message='Images of dancing flames rush through your mind...',
+            description="Set an enemy on fire with the power of your mind!",
+            req_target=True,
+            continuous=False,
+            cooldown=cooldown,
+            range=8
+        )
+        self.action = core.abilities.ImmolateAction
+        self.cooldown_max = cooldown
+        self.turns = turns
+
+    def activate(self, caster: Actor, target: Actor, x: int, y: int) -> \
+            Optional[core.abilities.ImmolateAction]:
+        if self.cooldown > 0 and self.parent.name == "Player":
+            core.g.engine.message_log.add_message("You cannot perform this ability yet.", config.colour.impossible)
+            return None
+        else:
+            self.cooldown = self.cooldown_max
+            return core.abilities.ImmolateAction(caster, target, x, y, self.turns)

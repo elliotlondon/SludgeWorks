@@ -165,13 +165,19 @@ class BiteAction(AbilityAction):
                     effect = parts.effects.BleedEffect(self.damage, self.turns, self.difficulty)
                     effect.parent = defender
                     defender.active_effects.append(effect)
+
                 if defender.name.capitalize() == 'Player':
                     core.g.engine.message_log.add_message(f'The {attacker.name} critically bites you for '
                                                           f'{str(damage)} damage!', config.colour.ability_used)
                     core.g.engine.message_log.add_message(f'You start bleeding!',
                                                           config.colour.bleed)
+                elif attacker.name.capitalize() == 'Player':
+                    core.g.engine.message_log.add_message(f'You critically bite the {defender.name} for '
+                                                          f'{str(damage)} damage!', config.colour.ability_used)
+                    core.g.engine.message_log.add_message(f'The {defender.name} starts bleeding!',
+                                                          config.colour.bleed)
                 else:
-                    core.g.engine.message_log.add_message(f'The {attacker.name} critically bites the {defender.name}'
+                    core.g.engine.message_log.add_message(f'The {attacker.name} critically bites the {defender.name} '
                                                           f'for {str(damage)} damage!', config.colour.enemy_crit)
                     core.g.engine.message_log.add_message(f"The {defender.name.capitalize()} starts bleeding!",
                                                           config.colour.enemy_crit)
@@ -184,19 +190,28 @@ class BiteAction(AbilityAction):
                         bleeding = True
                 if defender.name.capitalize() == 'Player':
                     core.g.engine.message_log.add_message(f'The {attacker.name} bites you for '
-                                                          f'{str(damage)} damage!', config.colour.ability_used)
+                                                          f'{str(damage)} damage.', config.colour.ability_used)
                     if bleeding:
                         core.g.engine.message_log.add_message(f'You start bleeding!', config.colour.bleed)
+                elif attacker.name.capitalize() == 'Player':
+                    core.g.engine.message_log.add_message(f'You bite the {defender.name} for '
+                                                          f'{str(damage)} damage.', config.colour.ability_used)
                 else:
-                    core.g.engine.message_log.add_message(f'The {attacker.name} bites the {defender.name}'
+                    core.g.engine.message_log.add_message(f'The {attacker.name} bites the {defender.name} '
                                                           f'for {str(damage)} damage.', config.colour.enemy_atk)
+                if bleeding:
+                    core.g.engine.message_log.add_message(f'The {defender.name} starts bleeding!',
+                                                          config.colour.ability_used)
             defender.fighter.hp -= damage
         else:
             if defender.name.capitalize() == 'Player':
                 core.g.engine.message_log.add_message(f'The {attacker.name} bites you '
-                                                      f'but does no damage!', config.colour.player_evade)
+                                                      f'but does no damage.', config.colour.player_evade)
+            elif attacker.name.capitalize() == 'Player':
+                core.g.engine.message_log.add_message(f'You bite the {defender.name} '
+                                                      f'but do no damage.', config.colour.player_evade)
             else:
-                core.g.engine.message_log.add_message(f'The {attacker.name} bites the {defender.name}'
+                core.g.engine.message_log.add_message(f'The {attacker.name} bites the {defender.name}, '
                                                       f'but does no damage.', config.colour.enemy_evade)
 
         return None
@@ -288,8 +303,13 @@ class BludgeonAction(AbilityAction):
                                                           f'{str(damage)} damage!', config.colour.ability_used)
                     core.g.engine.message_log.add_message(f'You are stunned!',
                                                           config.colour.stun)
+                elif attacker.name.capitalize() == 'Player':
+                    core.g.engine.message_log.add_message(f'You brutally bludgeon the {defender.name} for '
+                                                          f'{str(damage)} damage!', config.colour.ability_used)
+                    core.g.engine.message_log.add_message(f'The {defender.name} is stunned!',
+                                                          config.colour.stun)
                 else:
-                    core.g.engine.message_log.add_message(f'The {attacker.name} brutally bludgeons the {defender.name}'
+                    core.g.engine.message_log.add_message(f'The {attacker.name} brutally bludgeons the {defender.name} '
                                                           f'for {str(damage)} damage!', config.colour.enemy_crit)
                     core.g.engine.message_log.add_message(f"The {defender.name.capitalize()} is stunned!",
                                                           config.colour.enemy_crit)
@@ -304,17 +324,26 @@ class BludgeonAction(AbilityAction):
                     core.g.engine.message_log.add_message(f'The {attacker.name} bludgeons you for '
                                                           f'{str(damage)} damage!', config.colour.ability_used)
                     if stunned:
-                        core.g.engine.message_log.add_message(f'You are stunned from the blow!', config.colour.bleed)
+                        core.g.engine.message_log.add_message(f'You are stunned from the blow!', config.colour.stun)
+                elif attacker.name.capitalize() == 'Player':
+                    core.g.engine.message_log.add_message(f'You bludgeon the {defender.name} for '
+                                                          f'{str(damage)} damage!', config.colour.ability_used)
+                    if stunned:
+                        core.g.engine.message_log.add_message(f'The {defender.name} is stunned!',
+                                                              config.colour.stun)
                 else:
-                    core.g.engine.message_log.add_message(f'The {attacker.name} bludgeons the {defender.name}'
+                    core.g.engine.message_log.add_message(f'The {attacker.name} bludgeons the {defender.name} '
                                                           f'for {str(damage)} damage.', config.colour.enemy_atk)
             defender.fighter.hp -= damage
         else:
             if defender.name.capitalize() == 'Player':
                 core.g.engine.message_log.add_message(f'The {attacker.name} bludgeons you '
-                                                      f'but does no damage!', config.colour.player_evade)
+                                                      f'but does no damage.', config.colour.player_evade)
+            if attacker.name.capitalize() == 'Player':
+                core.g.engine.message_log.add_message(f'You bludgeon the {defender.name}, '
+                                                      f'but do no damage.', config.colour.player_evade)
             else:
-                core.g.engine.message_log.add_message(f'The {attacker.name} bludgeons the {defender.name}'
+                core.g.engine.message_log.add_message(f'The {attacker.name} bludgeons the {defender.name}, '
                                                       f'but does no damage.', config.colour.enemy_evade)
 
         return None
@@ -399,7 +428,7 @@ class MemoryWipeAction(AbilityAction):
                         core.g.engine.message_log.add_message(f'* Your brain hurts and you feel nauseous! Augh! *',
                                                               config.colour.red)
                     else:
-                        core.g.engine.message_log.add_message(f'The {attacker.name} crits the {defender.name}'
+                        core.g.engine.message_log.add_message(f'The {attacker.name} crits the {defender.name} for '
                                                               f'{str(damage)} damage!', config.colour.enemy_crit)
                 else:
                     if defender.name.capitalize() == 'Player':
@@ -408,7 +437,7 @@ class MemoryWipeAction(AbilityAction):
                         core.g.engine.message_log.add_message(f'* Your brain hurts and you feel nauseous! Augh! *',
                                                               config.colour.red)
                     else:
-                        core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                        core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name} '
                                                               f'{str(damage)} damage.', config.colour.enemy_atk)
                 defender.fighter.hp -= damage
             else:
@@ -416,7 +445,7 @@ class MemoryWipeAction(AbilityAction):
                     core.g.engine.message_log.add_message(f'The {attacker.name} attacks you '
                                                           f'but does no damage!', config.colour.player_evade)
                 else:
-                    core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                    core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name} '
                                                           f'but does no damage.', config.colour.enemy_evade)
 
             # Remove random tiles from explored tiles!
@@ -435,7 +464,72 @@ class MemoryWipeAction(AbilityAction):
                 core.g.engine.message_log.add_message(f'You evade the {attacker.name.capitalize()}\'s attack.',
                                                       config.colour.player_evade)
             else:
-                core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name}'
+                core.g.engine.message_log.add_message(f'The {attacker.name} attacks the {defender.name} '
                                                       f'but the attack is evaded.', config.colour.enemy_evade)
+
+        return None
+
+
+class ImmolateAction(AbilityAction):
+    """Meantally attack an enemy, setting them on fire on a successful hit. If the target is already on fire,
+    increase the number of turns on fire by the turns of this effect."""
+
+    def __init__(self, caster: Actor, target: Actor, x: int, y: int, turns: int):
+        super().__init__(
+            entity=caster,
+            target=target,
+            x=x,
+            y=y,
+        )
+        self.turns = turns
+
+    def perform(self) -> Optional[Exception]:
+        attacker = self.caster
+        defender = self.target
+
+        # Check if target is already on fire
+        on_fire = False
+        existing_burn = None
+        for effect in defender.active_effects:
+            if isinstance(effect, parts.effects.BurningEffect):
+                existing_burn = effect
+                on_fire = True
+
+        # Calculate mental armour and attacker chance
+        attack_roll = roll_dice(1, 20) + attacker.fighter.intellect_modifier
+        # Consider that enemies may be stupid enough to have negative modifiers
+        if defender.fighter.intellect_modifier > 0:
+            defence_roll = roll_dice(1, defender.fighter.intellect_modifier)
+        else:
+            defence_roll = 0
+
+        if attack_roll > defence_roll:
+            if not on_fire:
+                effect = parts.effects.BurningEffect(self.turns)
+                effect.parent = defender
+                defender.active_effects.append(effect)
+                if not isinstance(defender.ai, parts.ai.PassiveStationary) or \
+                        isinstance(defender.ai, parts.ai.HostileStationary):
+                    defender.ai = parts.ai.BurningEnemy(entity=defender, previous_ai=defender.ai)
+                if defender.name.capitalize() == 'Player':
+                    core.g.engine.message_log.add_message(f'The {attacker.name} sets you on fire with '
+                                                          f'the power of their mind!', config.colour.ability_used)
+                elif attacker.name.capitalize() == 'Player':
+                    core.g.engine.message_log.add_message(f'You set the {defender.name} on fire with '
+                                                          f'the power of your mind!', config.colour.ability_used)
+                else:
+                    core.g.engine.message_log.add_message(f'The {attacker.name} sets the {defender.name} on fire with '
+                                                          f'the power of their mind!', config.colour.enemy_atk)
+            else:
+                existing_burn.turns += self.turns
+                if defender.name.capitalize() == 'Player':
+                    core.g.engine.message_log.add_message(f'The {attacker.name} stokes the flames on your body!',
+                                                          config.colour.player_evade)
+                elif attacker.name.capitalize() == 'Player':
+                    core.g.engine.message_log.add_message(f'You stoke the flames on the {defender.name}! ',
+                                                          config.colour.ability_used)
+                else:
+                    core.g.engine.message_log.add_message(f'The {attacker.name} stokes the flames on the '
+                                                          f'{defender.name}!', config.colour.enemy_evade)
 
         return None

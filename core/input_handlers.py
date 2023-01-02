@@ -283,7 +283,10 @@ class MainGameEventHandler(EventHandler):
 
         # Inventory actions
         elif key == tcod.event.K_g:
-            action = core.actions.PickupAction(player)
+            if not player.inventory.is_full():
+                action = core.actions.PickupAction(player)
+            else:
+                core.g.engine.message_log.add_message("Your inventory is full.", config.colour.error)
         elif key == tcod.event.K_i:
             return InventoryActivateHandler()
         elif key == tcod.event.K_d:
@@ -308,16 +311,17 @@ class MainGameEventHandler(EventHandler):
                 core.g.global_clock.toc()
                 return MainGameEventHandler()
 
-        # Movement
+        # Movement keys - first check if the player is immobilized or has a movement-impairing status effect
         if key in config.inputs.MOVE_KEYS:
-            dx, dy = config.inputs.MOVE_KEYS[key]
-            # Failsafe OOB check
-            if not core.g.engine.game_map.in_bounds(player.x + dx, player.y + dy):
-                core.g.engine.message_log.add_message("That way is blocked.", config.colour.impossible)
-            elif core.g.engine.game_map.tiles[player.x + dx, player.y + dy]['name'] == 'hole':
-                return HoleJumpEventHandler()
-            else:
-                action = core.actions.BumpAction(player, dx, dy)
+            if not player.is_immobile():
+                dx, dy = config.inputs.MOVE_KEYS[key]
+                # Failsafe OOB check
+                if not core.g.engine.game_map.in_bounds(player.x + dx, player.y + dy):
+                    core.g.engine.message_log.add_message("That way is blocked.", config.colour.impossible)
+                elif core.g.engine.game_map.tiles[player.x + dx, player.y + dy]['name'] == 'hole':
+                    return HoleJumpEventHandler()
+                else:
+                    action = core.actions.BumpAction(player, dx, dy)
         elif key in config.inputs.WAIT_KEYS:
             action = core.actions.WaitAction(player)
 
@@ -732,6 +736,8 @@ class AbilityScreenEventHandler(AskUserEventHandler):
                 if ability.req_target:
                     if ability.range == 1:
                         return MeleeAbilitySelectHandler(ability)
+                    else:
+                        return RangedAbilitySelectHandler(ability)
                 else:
                     return ability.activate()
             except IndexError:
@@ -921,13 +927,13 @@ class InventoryEventHandler(AskUserEventHandler):
             console.print(width // 2, y + height // 2, "There is nothing in your inventory.")
 
         # Footer
-        if number_of_items_in_inventory <= core.g.engine.player.inventory.capacity * 0.6:
+        if len(core.g.engine.player.inventory.items) <= core.g.engine.player.inventory.capacity * 0.7:
             colour = tcod.white
-        elif number_of_items_in_inventory <= core.g.engine.player.inventory.capacity * 0.8:
+        elif len(core.g.engine.player.inventory.items) < core.g.engine.player.inventory.capacity:
             colour = tcod.yellow
         else:
             colour = tcod.red
-        print_msg = f"┤({sum(core.g.engine.player.inventory.quantities)}/{core.g.engine.player.inventory.capacity})├"
+        print_msg = f"({len(core.g.engine.player.inventory.items)}/{core.g.engine.player.inventory.capacity})"
         console.print(x + width - len(print_msg), y + height - 1, print_msg, colour)
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
@@ -1350,6 +1356,36 @@ class MeleeAbilitySelectHandler(SelectIndexHandler):
             return self
         if abs(target.x - caster.x) >= 1.5 or abs(target.y - caster.y) >= 1.5:
             core.g.engine.message_log.add_message("You must select a tile no more than 1 square away.",
+                                                  config.colour.impossible)
+            return self
+        action = self.ability.activate(caster, target, x, y)
+        action.perform()
+        # Aggravate passive enemies with this one simple trick
+        if isinstance(target.ai, parts.ai.PlantKeeper):
+            core.g.engine.message_log.add_message(f"The {target.name} responds to your aggression!",
+                                                  config.colour.enrage)
+            new_ai = parts.ai.HostileEnemy(target)
+            target.ai = new_ai
+        return MainGameEventHandler()
+
+
+class RangedAbilitySelectHandler(SelectIndexHandler):
+    """Handler for when an ability is chosen and a target is required.
+    Return the ability to be performed upon the selected tile."""
+
+    def __init__(self, ability: parts.mutations.Mutation):
+        super(RangedAbilitySelectHandler, self).__init__()
+        self.ability = ability
+
+    def on_index_selected(self, x: int, y: int) -> ActionOrHandler:
+        caster = core.g.engine.player
+        target = core.g.engine.game_map.get_blocking_entity_at_location(x, y)
+        if not target:
+            core.g.engine.message_log.add_message("There is no target at that location.",
+                                                  config.colour.impossible)
+            return self
+        if not target.fighter:
+            core.g.engine.message_log.add_message("That is not a valid target.",
                                                   config.colour.impossible)
             return self
         action = self.ability.activate(caster, target, x, y)

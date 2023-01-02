@@ -6,11 +6,12 @@ from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union, List
 
 import tcod
 
+import parts.effects
+import core.g
 from core.render_functions import RenderOrder
 from parts.level import Level
 
 if TYPE_CHECKING:
-    import parts.effects
     from parts.ai import BaseAI
     from parts.fighter import Fighter
     from parts.consumable import Consumable
@@ -265,10 +266,21 @@ class Actor(Entity):
         if not self.mutations:
             self.mutations = []
 
+    def is_stunned(self) -> bool:
+        """Returns true if there is an active stun effect upon the entity."""
+        for effect in self.active_effects:
+            if isinstance(effect, parts.effects.StunEffect):
+                return True
+        return False
+
     @property
     def is_alive(self) -> bool:
         """Returns True as long as this actor can perform actions."""
         return bool(self.ai)
+
+    def is_immobile(self):
+        """Returns True if the actor cannot move."""
+        return False
 
     def trigger_active_effects(self):
         """Function to be performed at the end of a turn. All active effects currently applied to the Actor are

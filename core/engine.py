@@ -69,11 +69,8 @@ class Engine:
                 if entity.abilities:
                     for ability in entity.abilities:
                         ability.tick()
-                        if isinstance(ability, parts.effects.StunEffect):
-                            if ability.turns > 0:
-                                stunned = True
                 # If stunned skip turn by default after ticking the effect
-                if not stunned:
+                if not entity.is_stunned():
                     try:
                         entity.ai.perform()
                     except Impossible:

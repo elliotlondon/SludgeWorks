@@ -1,0 +1,22 @@
+[
+  {
+    "moire_beast_hide": {
+      "char": "%",
+      "colour": [
+        159,
+        159,
+        159
+      ],
+      "tag": "moire_beast_hide",
+      "name": "Moire Beast Hide",
+      "consumable": {
+        "type": "junk"
+      },
+      "stackable": true,
+      "depth": 2,
+      "rarity": 2,
+      "usetext": "The hide seems valuable, but you have no idea how to work it.",
+      "description": "A mostly-intact hide skinned from a Moire Beast. The patterned surface shifts slightly with exposure to light."
+    }
+  }
+]

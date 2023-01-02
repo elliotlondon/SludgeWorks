@@ -10,3 +10,7 @@ twig_table = {
     "teleother_twig": 0.2,
     "immolating_twig": 0.2,
 }
+
+moire_beast = {
+    "moire_beast_hide": 1
+}

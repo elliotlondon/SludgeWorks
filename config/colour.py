@@ -1,5 +1,44 @@
 import tcod
 
+from typing import List
+
+import parts.entity
+
+
+def get_debuff_colours(player: parts.entity.Entity) -> List:
+    """Return an array of colours for each skill, depending upon whether it is currently being buffed or debuffed."""
+    # Str
+    if player.fighter.modified_strength > player.fighter.base_strength:
+        str_colour = tcod.green
+    elif player.fighter.modified_strength < player.fighter.base_strength:
+        str_colour = tcod.red
+    else:
+        str_colour = tcod.white
+    # Dex
+    if player.fighter.modified_dexterity > player.fighter.base_dexterity:
+        dex_colour = tcod.green
+    elif player.fighter.modified_dexterity < player.fighter.base_dexterity:
+        dex_colour = tcod.red
+    else:
+        dex_colour = tcod.white
+    # Vit
+    if player.fighter.modified_vitality > player.fighter.base_vitality:
+        vit_colour = tcod.green
+    elif player.fighter.modified_vitality < player.fighter.base_vitality:
+        vit_colour = tcod.red
+    else:
+        vit_colour = tcod.white
+    # Int
+    if player.fighter.modified_intellect > player.fighter.base_intellect:
+        int_colour = tcod.green
+    elif player.fighter.modified_intellect < player.fighter.base_intellect:
+        int_colour = tcod.red
+    else:
+        int_colour = tcod.white
+
+    return [str_colour, dex_colour, vit_colour, int_colour]
+
+
 # Basic colours
 white = (0xFF, 0xFF, 0xFF)
 black = (0x0, 0x0, 0x0)
@@ -53,6 +92,7 @@ on_fire_end = tcod.light_flame
 enrage = tcod.dark_red
 stun = tcod.cyan
 stun_end = tcod.light_cyan
+dazzle = tcod.light_grey
 
 # Liquids
 blood = tcod.darker_crimson

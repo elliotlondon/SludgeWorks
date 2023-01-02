@@ -44,7 +44,7 @@ class Effect(BaseComponent):
         for x in self.__dict__:
             yield x
 
-    def expiry_message(self):
+    def expire(self):
         """Print a message to the log when the effect is removed."""
         raise NotImplementedError()
 
@@ -81,7 +81,7 @@ class PoisonEffect(Effect):
                                                   config.colour.poison)
         self.turns -= 1
 
-    def expiry_message(self):
+    def expire(self):
         if self.parent.name == "Player":
             core.g.engine.message_log.add_message(f"You recover from the poison.", config.colour.poison)
         else:
@@ -130,7 +130,7 @@ class BleedEffect(Effect):
                     config.colour.bleed)
         self.turns -= 1
 
-    def expiry_message(self):
+    def expire(self):
         if self.parent.name == "Player":
             core.g.engine.message_log.add_message(f"You stop bleeding.", config.colour.bleed_end)
         else:
@@ -176,7 +176,7 @@ class BurningEffect(Effect):
         else:
             self.turns = 0
 
-    def expiry_message(self):
+    def expire(self):
         if self.parent.name == "Player":
             core.g.engine.message_log.add_message(f"You are no longer on fire.", config.colour.on_fire_end)
         else:
@@ -214,7 +214,7 @@ class StunEffect(Effect):
             core.g.engine.message_log.add_message(f"You are stunned!", config.colour.stun)
         self.turns -= 1
 
-    def expiry_message(self):
+    def expire(self):
         if self.parent.name == "Player":
             core.g.engine.message_log.add_message(f"You are no longer stunned.", config.colour.stun_end)
         else:
@@ -244,8 +244,51 @@ class SecondWindEffect(Effect):
         # Simply count down, this effect does nothing.
         self.turns -= 1
 
-    def expiry_message(self):
+    def expire(self):
         pass
 
     def get_colour(self):
         return None
+
+
+class DazzleEffect(Effect):
+    """Dazzle an enemy for X turns, reducing their str and def modifiers by 2 for Y turns. Effect is stackable."""
+
+    def __init__(self,
+                 turns: int,
+                 difficulty: int,
+                 parent: parts.entity.Actor
+                 ):
+        self.turns = turns
+        self.difficulty = difficulty
+        self.parent = parent
+        # Apply effect on init and remove during expiry
+        self.parent.fighter.modified_strength -= 2
+        self.parent.fighter.modified_dexterity -= 2
+
+    def tick(self):
+        """Simply tick down with no other effect."""
+        self.turns -= 1
+
+    def expire(self):
+        # Remove one dazzle from the stack
+        self.parent.fighter.modified_strength += 2
+        self.parent.fighter.modified_dexterity += 2
+
+        dazzles = 0
+        for effect in self.parent.active_effects:
+            if isinstance(effect, DazzleEffect):
+                dazzles += 1
+        if dazzles == 1:
+            if self.parent.name == "Player":
+                core.g.engine.message_log.add_message(f"You no longer feel weakened from the dazzling effect.",
+                                                      config.colour.dazzle)
+            else:
+                core.g.engine.message_log.add_message(f"The {self.parent.name} is no longer weakened.",
+                                                      config.colour.dazzle)
+
+    def get_colour(self):
+        if not core.g.global_clock.current_tic() % 10:
+            return config.colour.dazzle
+        else:
+            return None

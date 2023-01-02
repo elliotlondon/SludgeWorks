@@ -15,7 +15,6 @@
       "dexterity": 10,
       "vitality": 12,
       "intellect": 14,
-      "perception": 14,
       "armour": 1,
       "xp": 0,
       "dodges": true
@@ -51,7 +50,6 @@
       "dexterity": 16,
       "vitality": 12,
       "intellect": 14,
-      "perception": 14,
       "armour": 2,
       "xp": 0,
       "dodges": true
@@ -87,7 +85,6 @@
       "dexterity": 12,
       "vitality": 12,
       "intellect": 20,
-      "perception": 14,
       "armour": 0,
       "xp": 0,
       "dodges": true
@@ -123,7 +120,6 @@
       "dexterity": 12,
       "vitality": 14,
       "intellect": 12,
-      "perception": 12,
       "armour": 2,
       "xp": 0,
       "dodges": true
@@ -159,7 +155,6 @@
       "dexterity": 14,
       "vitality": 16,
       "intellect": 16,
-      "perception": 16,
       "armour": 1,
       "xp": 0,
       "dodges": true
@@ -195,7 +190,6 @@
       "dexterity": 10,
       "vitality": 22,
       "intellect": 26,
-      "perception": 18,
       "armour": 0,
       "xp": 0,
       "dodges": true

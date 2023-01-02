@@ -51,7 +51,7 @@ class Level(BaseComponent):
 
     def increase_max_hp(self) -> None:
         # Increase hp by vitality level
-        amount = self.parent.fighter.base_vitality
+        amount = self.parent.fighter.modified_vitality
 
         self.parent.fighter.base_max_hp += amount
         self.parent.fighter.hp += amount
@@ -62,6 +62,7 @@ class Level(BaseComponent):
 
     def increase_power(self, amount: int = 1) -> None:
         self.parent.fighter.base_strength += amount
+        self.parent.fighter.modified_strength += amount
 
         core.g.engine.message_log.add_message(f"Your strength skill improves by {amount}.")
 
@@ -69,6 +70,7 @@ class Level(BaseComponent):
 
     def increase_defense(self, amount: int = 1) -> None:
         self.parent.fighter.base_dexterity += amount
+        self.parent.fighter.modified_dexterity += amount
 
         core.g.engine.message_log.add_message(f"Your dexterity skill improves by {amount}.")
 

@@ -75,7 +75,6 @@ def create_monster(data: dict) -> Actor:
             dexterity=data['fighter']['dexterity'],
             vitality=data['fighter']['vitality'],
             intellect=data['fighter']['intellect'],
-            perception=data['fighter']['perception'],
             armour=data['fighter']['armour'],
             dodges=data['fighter']['dodges'],
         ),
@@ -122,6 +121,10 @@ def create_monster(data: dict) -> Actor:
                                                        data['abilities']['Bludgeon']['turns'],
                                                        data['abilities']['Bludgeon']['difficulty'],
                                                        data['abilities']['Bludgeon']['cooldown'])
+            elif ability == "DazzleEffect":
+                ability_obj = parts.mutations.MoireBeastHide(data['abilities']['DazzleEffect']['turns'],
+                                                             data['abilities']['DazzleEffect']['difficulty'],
+                                                             data['abilities']['DazzleEffect']['cooldown'])
             monster.abilities.append(ability_obj)
     if 'mutations' in data:
         monster.mutations = []

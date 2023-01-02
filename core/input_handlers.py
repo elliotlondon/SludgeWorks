@@ -642,14 +642,16 @@ class CharacterScreenEventHandler(AskUserEventHandler):
             sides = core.g.engine.player.fighter.damage_sides
         console.print(x=x + 1, y=y + 7, string=f"Current weapon damage: {dice}d{sides}", alignment=tcod.LEFT)
 
-        console.print(x=x + 1, y=y + 9, string=f"Strength: {core.g.engine.player.fighter.base_strength}",
-                      alignment=tcod.LEFT)
-        console.print(x=x + 1, y=y + 10, string=f"Dexterity: {core.g.engine.player.fighter.base_dexterity}",
-                      alignment=tcod.LEFT)
-        console.print(x=x + 1, y=y + 11, string=f"Vitality: {core.g.engine.player.fighter.base_vitality}",
-                      alignment=tcod.LEFT)
-        console.print(x=x + 1, y=y + 12, string=f"Intellect: {core.g.engine.player.fighter.base_intellect}",
-                      alignment=tcod.LEFT)
+        # Check if there are any buffs or debuffs applied to any of the current player skills
+        sheet_colours = config.colour.get_debuff_colours(core.g.engine.player)
+        console.print(x=x + 1, y=y + 9, string=f"Strength: {core.g.engine.player.fighter.modified_strength}",
+                      alignment=tcod.LEFT, fg=sheet_colours[0])
+        console.print(x=x + 1, y=y + 10, string=f"Dexterity: {core.g.engine.player.fighter.modified_dexterity}",
+                      alignment=tcod.LEFT, fg=sheet_colours[1])
+        console.print(x=x + 1, y=y + 11, string=f"Vitality: {core.g.engine.player.fighter.modified_vitality}",
+                      alignment=tcod.LEFT, fg=sheet_colours[2])
+        console.print(x=x + 1, y=y + 12, string=f"Intellect: {core.g.engine.player.fighter.modified_intellect}",
+                      alignment=tcod.LEFT, fg=sheet_colours[3])
 
 
 class AbilityScreenEventHandler(AskUserEventHandler):
@@ -970,7 +972,7 @@ class InventoryActivateHandler(InventoryEventHandler):
                 return PopupMessage("You are stunned!", InventoryActivateHandler())
         if item.consumable:
             if isinstance(item.consumable, parts.consumable.Junk):
-                return core.input_handlers.PopupMessage("You do not have a use for this item.",
+                return core.input_handlers.PopupMessage(item.usetext,
                                                         InventoryActivateHandler())
             # Return the action for the selected item.
             return item.consumable.get_action(core.g.engine.player)

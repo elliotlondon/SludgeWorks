@@ -291,7 +291,7 @@ class Actor(Entity):
                     if effect.turns > 0:
                             effect.tick()
                     else:
-                        effect.expiry_message()
+                        effect.expire()
                         self.active_effects.remove(effect)
 
     def mutate(self, mutation: parts.mutations.Mutation) -> Optional[str]:

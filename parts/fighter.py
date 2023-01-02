@@ -22,7 +22,7 @@ class Fighter(BaseComponent):
     parent: Actor
 
     def __init__(self, hp, max_hp, damage_dice, damage_sides, strength, dexterity, vitality, intellect,
-                 perception, armour, xp=0, level=1, dodges=False):
+                 armour, xp=0, level=1, dodges=False):
         self._hp = hp
         self.base_max_hp = max_hp
         self.damage_dice = damage_dice
@@ -31,8 +31,12 @@ class Fighter(BaseComponent):
         self.base_dexterity = dexterity
         self.base_vitality = vitality
         self.base_intellect = intellect
-        self.base_perception = perception
         self.base_armour = armour
+        self.modified_strength = self.base_strength
+        self.modified_dexterity = self.base_dexterity
+        self.modified_vitality = self.base_vitality
+        self.modified_intellect = self.base_intellect
+        self.modified_armour = self.base_armour
         self.xp = xp
         self.level = level
         self.dodges = dodges
@@ -73,23 +77,23 @@ class Fighter(BaseComponent):
 
     @property
     def strength_modifier(self):
-        return dnd_bonus_calc(self.base_strength) + self.parent.equipment.strength_bonus
+        return dnd_bonus_calc(self.modified_strength) + self.parent.equipment.strength_bonus
 
     @property
     def dexterity_modifier(self):
-        return dnd_bonus_calc(self.base_dexterity) + self.parent.equipment.dexterity_bonus
+        return dnd_bonus_calc(self.modified_dexterity) + self.parent.equipment.dexterity_bonus
 
     @property
     def vitality_modifier(self):
-        return dnd_bonus_calc(self.base_vitality) + self.parent.equipment.vitality_bonus
+        return dnd_bonus_calc(self.modified_vitality) + self.parent.equipment.vitality_bonus
 
     @property
     def intellect_modifier(self):
-        return dnd_bonus_calc(self.base_intellect) + self.parent.equipment.intellect_bonus
+        return dnd_bonus_calc(self.modified_intellect) + self.parent.equipment.intellect_bonus
 
     @property
     def armour_total(self):
-        return self.base_armour + self.parent.equipment.armour_bonus
+        return self.modified_armour + self.parent.equipment.armour_bonus
 
     def heal(self, amount: int) -> int:
         if self.hp == self.max_hp:

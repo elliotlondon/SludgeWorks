@@ -40,6 +40,7 @@ class Engine:
         # self.entities.extend(create_all_items_from_json('data/items/artefacts.json'))
         self.entities.extend(create_all_items_from_json('data/items/healing.json'))
         self.entities.extend(create_all_items_from_json('data/items/other.json'))
+        self.entities.extend(create_all_items_from_json('data/items/quest.json'))
         self.entities.extend(create_all_items_from_json('data/items/twigs.json'))
         self.entities.extend(create_all_items_from_json('data/items/weapons.json'))
         # # Load entities
@@ -62,7 +63,6 @@ class Engine:
 
     def handle_enemy_turns(self) -> None:
         # Iterate over all enemy turns
-        stunned = False
         for entity in set(self.game_map.actors) - {self.player}:
             if entity.ai:
                 entity.trigger_active_effects()

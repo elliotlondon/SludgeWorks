@@ -470,6 +470,41 @@ class MemoryWipeAction(AbilityAction):
         return None
 
 
+class MoireDazzleAction(AbilityAction):
+    """Dazzle an enemy for 20 turns, reducing their str and dex. Stackable debuff."""
+
+    def __init__(self, caster: Actor, target: Actor, x: int, y: int, difficulty: int):
+        super().__init__(
+            entity=caster,
+            target=target,
+            x=x,
+            y=y
+        )
+        self.difficulty = difficulty
+
+    def perform(self) -> Optional[Exception]:
+        attacker = self.caster
+        defender = self.target
+
+        # See if the defender resists the attack. Always resisted if defender has visual shielding.
+        if roll_dice(1, 20) + defender.fighter.vitality_modifier > self.difficulty:
+            core.g.engine.message_log.add_message(f'The hide of the {attacker.name} flashes rhythmically...',
+                                                  config.colour.ability_used)
+            core.g.engine.message_log.add_message(f'But you manage to resist the dazzling effect!',
+                                                  config.colour.warning)
+
+        if defender.name.capitalize() == 'Player':
+            core.g.engine.message_log.add_message(f'The hide of the {attacker.name} flashes rhythmically...',
+                                                  config.colour.ability_used)
+            core.g.engine.message_log.add_message(f'The strobes are sickening! You feel slow and weak!',
+                                                  config.colour.warning)
+            effect = parts.effects.DazzleEffect(turns=10, difficulty=self.difficulty, parent=self.target)
+            effect.parent = defender
+            defender.active_effects.append(effect)
+
+        return None
+
+
 class ImmolateAction(AbilityAction):
     """Meantally attack an enemy, setting them on fire on a successful hit. If the target is already on fire,
     increase the number of turns on fire by the turns of this effect."""

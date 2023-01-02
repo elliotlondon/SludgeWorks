@@ -130,7 +130,7 @@ class GameMap:
         for x in x_values:
             for y in y_values:
                 for entity in self.entities:
-                    if (entity.x == x and entity.y == y) and (isinstance(entity, parts.entity.StaticObject) or \
+                    if (entity.x == x and entity.y == y) and (isinstance(entity, parts.entity.StaticObject) or
                                                               isinstance(entity.ai, parts.ai.NPC)):
                         interactables.append(entity)
         return interactables

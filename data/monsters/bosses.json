@@ -15,7 +15,6 @@
       "dexterity": 28,
       "vitality": 18,
       "intellect": 16,
-      "perception": 18,
       "armour": 6,
       "xp": 2500,
       "dodges": true
@@ -51,7 +50,6 @@
       "dexterity": 20,
       "vitality": 20,
       "intellect": 20,
-      "perception": 20,
       "armour": 0,
       "xp": 2500,
       "dodges": true
@@ -87,7 +85,6 @@
       "dexterity": 20,
       "vitality": 24,
       "intellect": 30,
-      "perception": 26,
       "armour": 2,
       "xp": 2500,
       "dodges": true

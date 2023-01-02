@@ -336,6 +336,15 @@ def place_fauna(dungeon: GameMap, engine: Engine) -> None:
                 monster.fighter.hp = random.randint(4, 8)
             monster.spawn(dungeon, x, y)
 
+    # Debug stuff
+    if current_floor == 1:
+        x, y = dungeon.get_random_walkable_nonfov_tile()
+        moire_beast = dungeon.engine.clone('moire_beast')
+        moire_beast.spawn(dungeon, x, y)
+        x, y = dungeon.get_random_walkable_nonfov_tile()
+        moire_beast = dungeon.engine.clone('moire_beast')
+        moire_beast.spawn(dungeon, x, y)
+
 
 def place_npcs(dungeon: GameMap, engine: Engine) -> None:
     # Spawn NPCs depending upon floor conditions

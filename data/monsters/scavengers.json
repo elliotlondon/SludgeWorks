@@ -15,7 +15,6 @@
       "dexterity": 10,
       "vitality": 12,
       "intellect": 8,
-      "perception": 10,
       "armour": 0,
       "xp": 30,
       "dodges": true
@@ -51,7 +50,6 @@
       "dexterity": 8,
       "vitality": 10,
       "intellect": 6,
-      "perception": 8,
       "armour": 0,
       "xp": 50,
       "dodges": true
@@ -95,7 +93,6 @@
       "dexterity": 12,
       "vitality": 12,
       "intellect": 4,
-      "perception": 8,
       "armour": 1,
       "xp": 275,
       "dodges": true
@@ -140,7 +137,6 @@
       "dexterity": 16,
       "vitality": 12,
       "intellect": 10,
-      "perception": 10,
       "armour": 1,
       "xp": 200,
       "dodges": true
@@ -151,6 +147,7 @@
       "name": "Dazzling beast corpse",
       "description": "With the beast dead, the dazzling scintillations of its hide are no more. It's body is agile, cat-like and starved."
     },
+    "drop_table": "moire_beast",
     "inventory": {
       "capacity": 0
     },
@@ -158,7 +155,14 @@
       "level_up_base": 0,
       "xp_given": 20
     },
-    "description": "A short four-legged beast with an intricate and migraine-inducing greyscale pattern printed over its body. Its yellow catlike eyes peer out from its dazzling form."
+    "description": "A short four-legged beast with an intricate and migraine-inducing greyscale pattern printed over its body. Its yellow catlike eyes peer out from its dazzling form.",
+    "abilities": {
+      "DazzleEffect": {
+        "turns": 10,
+        "difficulty": 20,
+        "cooldown": 8
+      }
+    }
   },
   "lupine_terror": {
     "char": "L",
@@ -176,7 +180,6 @@
       "dexterity": 12,
       "vitality": 10,
       "intellect": 8,
-      "perception": 14,
       "armour": 1,
       "xp": 200,
       "dodges": true
@@ -212,7 +215,6 @@
       "dexterity": 16,
       "vitality": 18,
       "intellect": 12,
-      "perception": 14,
       "armour": 0,
       "xp": 1500,
       "dodges": true

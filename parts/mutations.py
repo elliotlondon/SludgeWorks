@@ -220,3 +220,32 @@ class Immolate(Mutation):
         else:
             self.cooldown = self.cooldown_max
             return core.abilities.ImmolateAction(caster, target, x, y, self.turns)
+
+
+class MoireBeastHide(Mutation):
+    """Dazzle an opponent, weakening them."""
+    parent: Actor
+
+    def __init__(self, cooldown: int, turns: int, difficulty: int):
+        super().__init__(
+            name="Dazzle",
+            message='You gain the ability to emit brief but intense pulses of light from your skin!',
+            description="Reduce the STR and DEX of an enemy by dazzling them with flashes of light.",
+            req_target=True,
+            continuous=False,
+            cooldown=cooldown,
+            range=1
+        )
+        self.action = core.abilities.MoireDazzleAction
+        self.cooldown_max = cooldown
+        self.turns = turns
+        self.difficulty = difficulty
+
+    def activate(self, caster: Actor, target: Actor, x: int, y: int) -> \
+            Optional[core.abilities.MoireDazzleAction]:
+        if self.cooldown > 0 and self.parent.name == "Player":
+            core.g.engine.message_log.add_message("You cannot perform this ability yet.", config.colour.impossible)
+            return None
+        else:
+            self.cooldown = self.cooldown_max
+            return core.abilities.MoireDazzleAction(caster, target, x, y, self.turns)

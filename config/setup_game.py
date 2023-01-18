@@ -79,6 +79,9 @@ def new_game() -> Engine:
     # player.inventory.quantities.append(2)
     # mutation = parts.mutations.Immolate(turns=3, cooldown=22)
     # core.g.engine.player.mutate(mutation)
+    # hide = engine.clone('moire_beast_hide')
+    # player.inventory.items.append(hide)
+    # player.inventory.quantities.append(1)
 
     core.g.engine = engine
     return engine

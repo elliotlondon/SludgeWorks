@@ -28,12 +28,12 @@ def get_convo(entity_tag: str) -> [None, dict]:
         elif core.g.engine.game_world.current_floor == 3:
             if not quest:
                 return gilbert.gilbert_3_default
-            elif quest.step == 1:
+            elif quest.step == 0:
                 for item in core.g.engine.player.inventory.items:
                     if item.tag == 'moire_beast_hide':
                         return gilbert.gilbert_3_started_hide
                 return gilbert.gilbert_3_started_nohide
-            elif quest.step == 2:
+            elif quest.step == 1:
                 return gilbert.gilbert_3_init
     else:
         # All other entities do not talk with the player and give generic no reply messages.

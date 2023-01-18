@@ -6,10 +6,12 @@ from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union, List
 
 import tcod
 
+import data.convos.logic
 import parts.effects
 import core.g
 from core.render_functions import RenderOrder
 from parts.level import Level
+from data.convos import logic
 
 if TYPE_CHECKING:
     from parts.ai import BaseAI
@@ -230,7 +232,8 @@ class Actor(Entity):
             description: str,
             blood: str,
             abilities: Optional[List[Mutation]] = None,  # Inherent abilities
-            mutations: Optional[List[Mutation]] = None  # Added mutations/abilities
+            mutations: Optional[List[Mutation]] = None,  # Added mutations/abilities
+            conversations: Optional[List] = None
     ):
         super().__init__(
             x=x,
@@ -265,6 +268,9 @@ class Actor(Entity):
         self.mutations = mutations
         if not self.mutations:
             self.mutations = []
+        self.conversations = conversations
+        if not self.conversations:
+            self.conversations = []
 
     def is_stunned(self) -> bool:
         """Returns true if there is an active stun effect upon the entity."""
@@ -308,6 +314,10 @@ class Actor(Entity):
                 return mutation.message + ' '
             else:
                 return ''
+
+    def get_conversation(self) -> [None, dict]:
+        """Return the current conversation when the player interacts with this entity."""
+        return data.convos.logic.get_convo(self.tag)
 
 
 class Item(Entity):

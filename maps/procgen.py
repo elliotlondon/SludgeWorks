@@ -391,13 +391,12 @@ def place_quest_entities(dungeon: GameMap, engine: Engine):
     """Place entities on this floor that are not randomly generated during mapgen or csv loading."""
     current_floor = engine.game_world.current_floor
 
-    for convo in engine.quests.active_convos:
-        # Spawn moire beast on level 2 for Gilbert's quest
-        if convo == 'gilbert' and engine.quests.active_convos['gilbert']['step'] == 1 and current_floor == 2:
-            x, y = dungeon.get_random_walkable_nonfov_tile()
-            moire_beast = dungeon.engine.clone('moire_beast')
-            moire_beast.spawn(dungeon, x, y)
-
+    if current_floor == 2:
+        for quest in engine.quests.active_quests:
+            if 'gilbert' in quest.name and not quest.failed:
+                x, y = dungeon.get_random_walkable_nonfov_tile()
+                moire_beast = dungeon.engine.clone('moire_beast')
+                moire_beast.spawn(dungeon, x, y)
 
 def tunnel_between(start: Tuple[int, int], end: Tuple[int, int]) -> Iterator[Tuple[int, int]]:
     """

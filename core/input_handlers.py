@@ -1005,7 +1005,7 @@ class ConversationEventHandler(AskUserEventHandler):
         self.new_screen: int
         self.leave = True
         self.leave_str = "Goodbye."
-        self.convo_json = self.get_convo_from_json()
+        self.convo_json = self.interactee.get_conversation()
         self.speech = []
         self.replies = []
 
@@ -1014,32 +1014,6 @@ class ConversationEventHandler(AskUserEventHandler):
         """Return a wrapped text message."""
         for line in string.splitlines():
             yield from textwrap.wrap(line, width, expand_tabs=True)
-
-    def get_convo_from_json(self) -> Optional[dict]:
-        """Load a conversation json file for a specified character."""
-
-        # First, check if the interactee provides context-dependent conversations
-        convos = 0
-        for fname in Path(f"data/convos").glob("*.json"):
-            if self.interactee.name.lower() in fname.stem:
-                convos += 1
-        if convos == 0:
-            return None
-            # raise DataLoadError(f"Conversation could not be loaded for entity {self.interactee.name}, "
-            #                     f"{self.interactee}")
-        elif convos == 1:
-            path = Path(f"data/convos/{self.interactee.name.lower()}_0.json")
-            f = open(path, 'r', encoding='utf-8')
-            return load(f)
-        else:
-            # If more than 1 convo, turn to the engine to work out which one should be loaded.
-            step = core.g.engine.quests.get_current_convo(self.interactee.name.lower())
-            if step is not None:
-                path = Path(f"data/convos/{self.interactee.name.lower()}_{step}.json")
-                f = open(path, 'r', encoding='utf-8')
-                return load(f)
-            else:
-                return None
 
     def init_convo(self, index: str):
         """Logic to set up the conversation with the player on first interaction."""
@@ -1080,13 +1054,14 @@ class ConversationEventHandler(AskUserEventHandler):
                                                 f"{core.g.engine.quests.get_quest_step_name(self.interactee.name.lower())}!",
                                                 ConversationEventHandler(self.interactee))
                         if "step:" in self.convo_json[f"{self.current_screen}"]['tag']:
-                            # The player fails the quest due to an incorrect interaction or requirement.
+                            # The current quest step is advanced.
                             core.g.engine.quests.advance_quest(self.interactee.name.lower())
                         if "fail:" in self.convo_json[f"{self.current_screen}"]['tag']:
-                            # The player fails the quest due to an incorrect interaction or requirement.
+                            # The player fails the quest due to an incorrect interaction or missed requirement.
                             core.g.engine.quests.fail_quest(self.interactee.name.lower())
                             return MainGameEventHandler()
                     if "remove" in self.convo_json[f"{self.current_screen}"]:
+                        # Remove an item as a result of the interaction or quest handover.
                         try:
                             for i, item in enumerate(core.g.engine.player.inventory.items):
                                 if item.tag == self.convo_json[f"{self.current_screen}"]['remove']:
@@ -1094,6 +1069,7 @@ class ConversationEventHandler(AskUserEventHandler):
                         except:
                             raise QuestError(f"Error removing item at remove quest step.")
                     if "reward" in self.convo_json[f"{self.current_screen}"]:
+                        # Give the player an item as a reward.
                         item_name = self.convo_json[f"{self.current_screen}"]['reward']
                         item = core.g.engine.clone(item_name)
                         if not core.g.engine.player.inventory.is_full():
@@ -1112,7 +1088,6 @@ class ConversationEventHandler(AskUserEventHandler):
         elif key == tcod.event.K_ESCAPE or index == self.len_replies:
             # Make it so that the next interaction returns the generic interaction
             self.init_convo("0")
-
             return MainGameEventHandler()
 
     def on_render(self, console: tcod.Console) -> Optional[PopupMessage]:

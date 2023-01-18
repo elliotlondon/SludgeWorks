@@ -14,38 +14,6 @@ class QuestTracker():
 
     def __init__(self):
         self.active_quests = []
-        self.active_convos = {}
-
-        # Init quests
-
-        # Init convos
-        self.active_convos['gilbert'] = {}
-        self.active_convos['gilbert']['step'] = 0
-
-    def get_current_convo(self, interactee: str):
-        """For NPCs which are tied to the questing system, the step of the current quest can be returned from here
-        to provide context."""
-        # Failed quests with certain NPCs return specific convos
-        if interactee == 'gilbert':
-            for quest in self.active_quests:
-                if quest.name == 'gilbertquest' and quest.failed:
-                    return None
-
-        # Advance Gilbert questline on level 3
-        if core.g.engine.game_world.current_floor == 3:
-            if self.active_convos.get(interactee)['step'] == 2:
-                return "3"
-            if self.active_convos.get(interactee)['step'] == 1:
-                for item in core.g.engine.player.inventory.items:
-                    if item.tag == 'moire_beast_hide':
-                        return "2_hide"
-                return "2_nohide"
-            else:
-                return "2_default"
-        try:
-            return self.active_convos.get(interactee)['step']
-        except KeyError:
-            raise DataLoadError(f"Interactee {interactee} was not found within the conversation tracker.")
 
     def get_quest_step_name(self, questline):
         for quest in self.active_quests:
@@ -67,14 +35,12 @@ class QuestTracker():
         # Start the quest.
         if questline.lower() == "gilbertquest":
             self.active_quests.append(GilbertQuest())
-            self.active_convos.get('gilbert')['step'] = 1
 
     def advance_quest(self, interactee: str):
         if interactee == "gilbert":
             for quest in self.active_quests:
                 if quest.name == 'gilbertquest':
                     quest.step += 1
-                    self.active_convos['gilbert']['step'] += 1
 
     def fail_quest(self, interactee: str):
         """Quest is marked as failed within the tracker."""

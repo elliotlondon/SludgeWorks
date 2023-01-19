@@ -1026,7 +1026,7 @@ class ConversationEventHandler(AskUserEventHandler):
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler, PopupMessage]:
         key = event.sym
-        index = key - tcod.event.K_a
+        index = key - tcod.event.KeySym.N1
 
         if 0 <= index < self.len_replies:
             selected = list(self.convo_json[self.current_screen])[index + 1]
@@ -1105,6 +1105,8 @@ class ConversationEventHandler(AskUserEventHandler):
         self.width = console.width // 2 + 20
         self.len_speech = len(list(self.wrap(self.speech, self.width - 2)))
         self.height = 4 + self.len_speech + self.len_replies
+        if self.height < 6:
+            self.height = 6
         x = console.width // 2 - int(self.width / 2)
         y = console.height // 3  # Clamp height so that extra text moves downwards
 
@@ -1139,15 +1141,21 @@ class ConversationEventHandler(AskUserEventHandler):
         self.len_replies = len(replies)
 
         i = 0
+        reply = None
         for i, reply in enumerate(replies):
-            reply_key = chr(ord("a") + i)
+            reply_key = i + 1
             reply_str = f"[{reply_key}]: {reply}"
             console.print(x, y + i, reply_str, fg=tcod.white)
 
         # Goodbye message
         if self.leave:
-            console.print(x=x, y=y + i + 1, string=f"[{chr(ord('a') + i + 1)}]: {self.leave_str}",
-                          alignment=tcod.constants.LEFT, fg=tcod.white)
+            # Goodbye as (1) if there are no replies
+            if not reply:
+                console.print(x=x, y=y + i + 1, string=f"[{i + 1}]: {self.leave_str}",
+                              alignment=tcod.constants.LEFT, fg=tcod.white)
+            else:
+                console.print(x=x, y=y + i + 1, string=f"[{i + 2}]: {self.leave_str}",
+                              alignment=tcod.constants.LEFT, fg=tcod.white)
 
 
 class SludgeFountainEventHandler(AskUserEventHandler):

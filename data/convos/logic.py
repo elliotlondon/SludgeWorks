@@ -35,6 +35,8 @@ def get_convo(entity_tag: str) -> [None, dict]:
                 return gilbert.gilbert_3_started_nohide
             elif quest.step == 1:
                 return gilbert.gilbert_3_init
+            elif quest.step == 2:
+                return gilbert.gilbert_3_started
     else:
         # All other entities do not talk with the player and give generic no reply messages.
         return None

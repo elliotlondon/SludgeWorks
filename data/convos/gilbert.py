@@ -105,7 +105,7 @@ gilbert_3_default = {
     "3": "Where can I get weapons and armour?"
   },
   "111": {
-    "speech": "Practically everything that has come in contact with Sludge have soaked up its putridity. It completely messes up your genetic code, and whats worse is that it's everywhere.\nMaybe the fools took a slip near a puddle of the stuff but I'm more supposing that they went for a dip. Too many stupid stories about illuscence flying around.",
+    "speech": "Practically everything that has come in contact with Sludge have soaked up its putridity. It corrupts your genetic code, and whats worse is that it's everywhere.\nMaybe the fools took a slip near a puddle of the stuff but I'm more supposing that they went for a dip. Too many stupid stories about illuscence flying around.",
     "1": "What is this place?",
     "2": "Who are you?",
     "3": "Where can I get weapons and armour?"

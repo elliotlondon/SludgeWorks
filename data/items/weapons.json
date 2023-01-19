@@ -53,7 +53,7 @@
       },
       "depth": 1,
       "rarity": 5,
-      "description": "A dagger which has been imbued with caustic cave fungus. The metal of the blade has resettled into strata resembling gills."
+      "description": "A dagger which has been imbued with caustic cave fungus. The metal of the blade has resettled into strata resembling fungal gills."
     }
   },
   {
@@ -78,7 +78,7 @@
       },
       "depth": 1,
       "rarity": 2,
-      "description": "A longsword made of iron, with a t-shaped hilt. It retains its edge well."
+      "description": "A longsword made of iron, with a t-shaped hilt. It is well balanced, in good condition, and the edge is well maintained."
     }
   },
   {
@@ -103,7 +103,7 @@
       },
       "depth": 5,
       "rarity": 4,
-      "description": "A thin, curved blade covered with glowing red inscriptions. It reeks of sap, and as you hold it against some nearby cave moss, you observe it rapidly wilt and die."
+      "description": "A thin, curved blade with a runic inscription running along the edge. It reeks of sap, and as you hold it against some nearby cave moss, you observe it to rapidly wilt and die. The metal is surprisingly light and casts chromatic reflections."
     }
   }
 ]

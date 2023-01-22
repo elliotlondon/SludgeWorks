@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import numpy as np
 import logging
 import textwrap
 from json import load
@@ -115,7 +116,7 @@ class PopupMessage(EventHandler):
     def on_render(self, console: tcod.Console) -> None:
         """Create the popup window with a message within."""
         super().on_render(console)
-        width = 34
+        width = 42
 
         # Split up message here
         lines = list(self.wrap(self.text, width - 4))
@@ -140,6 +141,76 @@ class PopupMessage(EventHandler):
             console.print(x=x + int(width / 2), y=y + y_offset, string=line, alignment=tcod.CENTER)
             y_offset += 1
         console.print(x=x + int(width / 2), y=y + height - 1, string="[OK]", alignment=tcod.CENTER)
+
+
+class MultiPopupMessage(EventHandler):
+    """Produces a stack of popup messages, clearing each with an interaction, then returning to the previously
+    supplied event handler when this is finished. Primitive event stack implementation :)"""
+    TITLE = "<Untitled>"
+
+    def __init__(self, text_arr: List[str], handler: EventHandler):
+        """First text in the array is the first text to be rendered."""
+        self.text_arr = text_arr
+        self.handler = handler
+        self.processed = np.full(len(self.text_arr), False)
+        self.stack = []
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[EventHandler]:
+        # For an interaction event, move to the next popup. If no more popups, return original event handler
+        for i in range(len(self.processed)):
+            if self.processed[i] == False:
+                self.processed[i] = True
+                break
+        if self.processed[-1] == True:
+            return self.handler
+
+    def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[EventHandler]:
+        # For an interaction event, move to the next popup. If no more popups, return original event handler
+        for i in range(len(self.processed)):
+            if self.processed[i] == False:
+                self.processed[i] = True
+                break
+        if self.processed[-1] == True:
+            return self.handler
+
+    def create_message_box(self, console: tcod.Console):
+        """Separate function for generating a populated text box outside a loop"""
+        width = 42
+
+        arr_iter = len(self.processed) - 1
+        for i in self.processed[::-1]:
+            if not i:
+                # Split up message here
+                lines = list(self.wrap(self.text_arr[arr_iter], width - 4))
+                height = len(lines) + 4
+                x = console.width // 2 - int(width / 2)
+                y = console.height // 2 - int(height / 2)
+                # Draw a frame and place text inside for each message
+                console.draw_frame(
+                    x=x,
+                    y=y,
+                    width=width,
+                    height=height,
+                    title='',
+                    clear=True,
+                    fg=(255, 255, 255),
+                    bg=tcod.black
+                )
+                # Wrap the message and print it line by line
+                y_offset = 2
+                for line in lines:
+                    console.print(x=x + int(width / 2), y=y + y_offset, string=line, alignment=tcod.CENTER)
+                    y_offset += 1
+                console.print(x=x + int(width / 2), y=y + height - 1, string="[OK]", alignment=tcod.CENTER)
+                arr_iter -= 1
+            else:
+                break
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Create the popup window with a message within. Render all popups in reverse order, offset by 1 in x and y
+        until the final popup is reached, depending upon how many have already been cancelled."""
+        super().on_render(console)
+        self.stack.append(self.create_message_box(console))
 
 
 class ExploreEventHandler(EventHandler):
@@ -785,17 +856,17 @@ class QuestScreenHandler(AskUserEventHandler):
             console.print(x=x + 1, y=y + 2, string=f"You have no active quests.")
         else:
             for quest in core.g.engine.quests.active_quests:
-                current_step = quest
-                self.quests.append(quest)
+                if not quest.completed or not quest.failed:
+                    self.quests.append(quest)
 
-                # Print quest name and description
-                fg_colour = tcod.white
-                console.print(x=x + 1, y=y + y_offset + 2,
-                              string=f"[{core.g.engine.quests.get_quest_step_name(quest.name)}]", fg=fg_colour)
-                for line in self.wrap(core.g.engine.quests.get_quest_step_description(quest.name), width - 4):
-                    console.print(x=x + 3, y=y + y_offset + 3, string=f"{line}", fg=fg_colour)
+                    # Print quest name and description
+                    fg_colour = tcod.white
+                    console.print(x=x + 1, y=y + y_offset + 2,
+                                  string=f"[{core.g.engine.quests.get_quest_step_name(quest.name)}]", fg=fg_colour)
+                    for line in self.wrap(core.g.engine.quests.get_quest_step_description(quest.name), width - 4):
+                        console.print(x=x + 3, y=y + y_offset + 3, string=f"{line}", fg=fg_colour)
+                        y_offset += 1
                     y_offset += 1
-                y_offset += 1
 
 
 class LevelUpEventHandler(AskUserEventHandler):
@@ -1028,10 +1099,12 @@ class ConversationEventHandler(AskUserEventHandler):
         key = event.sym
         index = key - tcod.event.KeySym.N1
 
+        # Iterate through all the options to see which was selected and return the new convo screen
         if 0 <= index < self.len_replies:
             selected = list(self.convo_json[self.current_screen])[index + 1]
             self.new_screen = selected
-            # If first interaction, provide init
+            # Process logic for each line of the new screen
+            event_stack = []
             for element in self.convo_json[f"{self.current_screen}"]:
                 if element == "speech":
                     continue
@@ -1039,52 +1112,64 @@ class ConversationEventHandler(AskUserEventHandler):
                     self.current_screen = self.new_screen
                     self.speech = self.convo_json[f"{self.current_screen}"]['speech']
                     replies = []
+                    tags = []
+                    # Check for speech and tags
                     for i in self.convo_json[f"{self.current_screen}"]:
-                        # Process speech
-                        if i != "speech" and i != "tag":
+                        if i.isalnum() and not "speech" in i:
                             replies.append(self.convo_json[f"{self.current_screen}"][f'{i}'])
+                        if "tag" in i:
+                            tags.append(i)
                     self.replies = replies
-                    # Process tagging
-                    if "tag" in self.convo_json[f"{self.current_screen}"]:
-                        if "start:" in self.convo_json[f"{self.current_screen}"]['tag']:
-                            # Set up everything for starting a new quest
+                    # Process tagging. Always starts at "tag_1" and increments
+                    for tag in tags:
+                        if "start:" in self.convo_json[f"{self.current_screen}"][tag]:
+                            # Set up everything for starting a new quest.
                             core.g.engine.quests.start_quest(
-                                self.convo_json[f"{self.current_screen}"]['tag'].replace("start:", ""))
-                            return PopupMessage(f"Quest started: "
-                                                f"{core.g.engine.quests.get_quest_step_name(self.interactee.name.lower())}!",
-                                                ConversationEventHandler(self.interactee))
-                        if "step:" in self.convo_json[f"{self.current_screen}"]['tag']:
+                                self.convo_json[f"{self.current_screen}"][tag].replace("start:", ""))
+                            event_stack.append(f"Quest started: "
+                                               f"{core.g.engine.quests.get_quest_step_name(self.interactee.name.lower())}!")
+                        elif "step:" in self.convo_json[f"{self.current_screen}"][tag]:
                             # The current quest step is advanced.
                             core.g.engine.quests.advance_quest(self.interactee.name.lower())
-                        if "fail:" in self.convo_json[f"{self.current_screen}"]['tag']:
+                        elif "complete:" in self.convo_json[f"{self.current_screen}"][tag]:
+                            # The current quest is completed.
+                            core.g.engine.quests.complete_quest(self.interactee.name.lower())
+                            event_stack.append(f"Quest completed: "
+                                                f"{core.g.engine.quests.get_quest_step_name(self.interactee.name.lower())}!")
+                        elif "continue:" in self.convo_json[f"{self.current_screen}"][tag]:
+                            # The current quest step is advanced.
+                            core.g.engine.quests.continue_quest(self.interactee.name.lower())
+                        elif "fail:" in self.convo_json[f"{self.current_screen}"][tag]:
                             # The player fails the quest due to an incorrect interaction or missed requirement.
                             core.g.engine.quests.fail_quest(self.interactee.name.lower())
-                            return MainGameEventHandler()
-                    if "remove" in self.convo_json[f"{self.current_screen}"]:
-                        # Remove an item as a result of the interaction or quest handover.
-                        try:
-                            for i, item in enumerate(core.g.engine.player.inventory.items):
-                                if item.tag == self.convo_json[f"{self.current_screen}"]['remove']:
-                                    core.g.engine.player.inventory.remove(item)
-                        except:
-                            raise QuestError(f"Error removing item at remove quest step.")
-                    if "reward" in self.convo_json[f"{self.current_screen}"]:
-                        # Give the player an item as a reward.
-                        item_name = self.convo_json[f"{self.current_screen}"]['reward']
-                        item = core.g.engine.clone(item_name)
-                        if not core.g.engine.player.inventory.is_full():
-                            item.parent = core.g.engine.player.inventory
-                            core.g.engine.player.inventory.items.append(item)
-                            core.g.engine.player.inventory.quantities.append(1)
-                            return PopupMessage(f"Quest step complete! Your reward: {item.name}!",
-                                                ConversationEventHandler(self.interactee))
-                        else:
-                            item.spawn(core.g.engine.game_map, core.g.engine.player.x, core.g.engine.player.y)
-                            return PopupMessage(f"Quest step complete! Your reward: {item.name}!"
-                                                f"Due to lack of inventory space, it has been placed on the floor.",
-                                                ConversationEventHandler(self.interactee))
-                    break
-            return self
+                            event_stack.append(f"Quest failed: {core.g.engine.quests.get_quest_step_name(self.interactee.name.lower())}!")
+                        elif "remove" in self.convo_json[f"{self.current_screen}"][tag]:
+                            # Remove an item as a result of the interaction or quest handover.
+                            try:
+                                for i, item in enumerate(core.g.engine.player.inventory.items):
+                                    if item.tag in self.convo_json[f"{self.current_screen}"][tag].replace("remove:", ""):
+                                        core.g.engine.player.inventory.remove(item)
+                                        event_stack.append(f"{self.interactee.name} takes your {item.name}.")
+                            except:
+                                raise QuestError(f"Error removing item at remove quest step.")
+                        elif "reward" in self.convo_json[f"{self.current_screen}"][tag]:
+                            # Give the player an item as a reward.
+                            item_name = self.convo_json[f"{self.current_screen}"][tag].replace("reward:", "")
+                            item = core.g.engine.clone(item_name)
+                            if not core.g.engine.player.inventory.is_full():
+                                item.parent = core.g.engine.player.inventory
+                                core.g.engine.player.inventory.items.append(item)
+                                core.g.engine.player.inventory.quantities.append(1)
+                                event_stack.append(f"You receive an item: {item.name}!")
+                            else:
+                                item.spawn(core.g.engine.game_map, core.g.engine.player.x, core.g.engine.player.y)
+                                event_stack.append(f"You receive an item: {item.name}! Due to a lack of inventory"
+                                                   f"space, it has been placed on the floor.")
+                # Create the popup stack if there have been any tags which produce them
+            if len(event_stack) > 0:
+                return MultiPopupMessage(event_stack, ConversationEventHandler(self.interactee))
+            else:
+                return self
         elif key == tcod.event.K_ESCAPE or index == self.len_replies:
             # Make it so that the next interaction returns the generic interaction
             self.init_convo("0")
@@ -1097,16 +1182,17 @@ class ConversationEventHandler(AskUserEventHandler):
             return
 
         # Populate speech and replies
-        if not self.speech or not self.replies:
+        if not self.speech:
             self.init_convo("0")
 
         # Init console sizing
         self.len_replies = len(self.replies)
         self.width = console.width // 2 + 20
         self.len_speech = len(list(self.wrap(self.speech, self.width - 2)))
-        self.height = 4 + self.len_speech + self.len_replies
-        if self.height < 6:
-            self.height = 6
+        if self.len_replies == 0:
+            self.height = 4 + self.len_speech + 1
+        else:
+            self.height = 4 + self.len_speech + self.len_replies
         x = console.width // 2 - int(self.width / 2)
         y = console.height // 3  # Clamp height so that extra text moves downwards
 

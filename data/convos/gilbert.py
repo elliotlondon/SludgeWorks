@@ -41,7 +41,7 @@ gilbert_1_init = {
     "speech": "You're very kind to do this for me! Best of luck, and good hunting.\nI have some other business to attend to, but we can meet in the 3rd layer of this cave section, if we both survive. Was there anything else you wanted to know about?",
     "1": "What is this place?",
     "2": "Who are you?",
-    "tag": "start:GilbertQuest"
+    "tag_1": "start:gilbertQuest"
   },
   "312": {
     "speech": "I can't blame you, but at the same time you can't expect anything for free down here.",
@@ -133,8 +133,7 @@ gilbert_3_started_hide = {
     "12": "On second thoughts, I'm keeping it for myself."
   },
   "2": {
-    "speech": "Not to worry. If you do acquire a hide, may one day we meet again and our trade be prosperous.",
-    "tag": "fail:GilbertQuest"
+    "speech": "Not to worry. If you do acquire a hide, may one day we meet again and our trade be prosperous."
   },
   "12": {
     "speech": "Are you sure? Only the Weoben can properly work this hide, and these days they are highly reclusive and certainly do not reveal themselves to descenders.",
@@ -143,10 +142,28 @@ gilbert_3_started_hide = {
   },
   "11": {
     "speech": "Many thanks... Say, would you like to perform one more task for me? I might be able to share something with you if you are successful, but I can't rightly say what it is unless you are successful.",
-    "tag": "step:GilbertQuest",
-    "remove": "moire_beast_hide",
-    "reward": "vykan_boots"
-  }
+    "111": "This sounds interesting. What is your task?",
+    "112": "This sounds ominous. No.",
+    "tag_1": "complete:gilbertquest",
+    "tag_2": "remove:moire_beast_hide",
+    "tag_3": "reward:vykan_boots"
+  },
+  "111": {
+    "speech": "You may have noticed in this cave layer that the plant life has started to grow visciously and desperately. Normally this sort of thing is self-limiting, but I fear that here it is being driven by some blasted creature with the ability to spur floral growth.\nI want you to find it, and slay it. I will provide you with a tool to help you do this.\nWhat do you say?",
+    "1111": "I will do this for you.",
+    "1112": "I don't think I am ready for this task."
+  },
+  "1111": {
+    "speech": "You are brave, descender. Spill yellow blood with this Withering Blade. Good luck.",
+    "tag_1:": "continue:gilbertquest",
+    "tag_2": "reward:withering_blade"
+  },
+  "1112": {
+    "speech": "I agree, the task is daunting. If you reconsider, I will be here."
+  },
+  "112": {
+    "speech": "I appreciate it is hard to trust strangers but this is an important task, not some stupid trick. If you change your mind, I will be here."
+  },
 }
 gilbert_3_started_nohide = {
   "0": {
@@ -173,8 +190,8 @@ gilbert_3_init = {
   },
   "11": {
     "speech": "You are brave, descender. Spill yellow blood with this Withering Blade. Good luck.",
-    "tag": "step:Gilbertquest",
-    "reward": "withering_blade"
+    "tag_1:": "continue:gilbertquest",
+    "tag_2": "reward:withering_blade"
   },
   "12": {
     "speech": "I agree, the task is daunting. If you reconsider, I will be here."

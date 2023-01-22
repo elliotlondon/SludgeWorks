@@ -37,9 +37,26 @@ class QuestTracker():
             self.active_quests.append(GilbertQuest())
 
     def advance_quest(self, interactee: str):
+        """Move to the next step of the quest."""
         if interactee == "gilbert":
             for quest in self.active_quests:
                 if quest.name == 'gilbertquest':
+                    quest.step += 1
+
+    def complete_quest(self, interactee: str):
+        """Finish this part of the quest line."""
+        if interactee == "gilbert":
+            for quest in self.active_quests:
+                if quest.name == 'gilbertquest':
+                    quest.completed = True
+
+    def continue_quest(self, interactee: str):
+        """Revive this previously completed or failed quest line."""
+        if interactee == "gilbert":
+            for quest in self.active_quests:
+                if quest.name == 'gilbertquest':
+                    quest.failed = False
+                    quest.completed = False
                     quest.step += 1
 
     def fail_quest(self, interactee: str):
@@ -54,9 +71,11 @@ class Quest():
     def __init__(self,
                  name: str = '<Undefined>',
                  step: int = 0,
+                 completed: bool = False,
                  failed: bool = False):
         self.name = name
         self.step = step
+        self.completed = completed
         self.failed = failed
 
 
@@ -70,6 +89,7 @@ class GilbertQuest(Quest):
         super().__init__(
             name='gilbertquest',
             step=0,
+            completed=False,
             failed=False
         )
 

@@ -1302,7 +1302,9 @@ class MutateEventHandler(AskUserEventHandler):
             self.mutation = parts.mutations.select_mutation(core.g.engine.player)
             if self.mutation:
                 mutate_msg = core.g.engine.player.mutate(self.mutation)
-                self.message = f"Your body mutates! {mutate_msg}You gain the mutation: {self.mutation.name}"
+                return MultiPopupMessage([f'Your body mutates! {mutate_msg}',
+                                          f'You gain the mutation: {self.mutation.name}!'],
+                                          MainGameEventHandler())
             else:
                 self.message = "You sense that a great change in your body would have occurred, were your genome " \
                                "not already so cluttered."

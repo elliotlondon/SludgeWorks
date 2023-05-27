@@ -113,7 +113,7 @@ class Bite(Mutation):
     def __init__(self, damage: int, turns: int, difficulty: int, cooldown: int):
         super().__init__(
             name="Bite",
-            message="You gain a set of animalistic fangs!",
+            message="Your teeth grow into a set of wickedly sharp, animalistic fangs!",
             description="Bite a neaby creature. Deals 1d4, and can cause minor bleeding on hit.",
             req_target=True,
             continuous=False,
@@ -143,7 +143,7 @@ class Bludgeon(Mutation):
     def __init__(self, damage: int, sides: int, turns: int, difficulty: int, cooldown: int):
         super().__init__(
             name="Bludgeon",
-            description="Pummel a nearby creature, dealing 2d4 and stunning on a successful hit.",
+            description="Pummel a nearby creature, dealing 2d4 and stunning on a successful hit. Smash them!!!",
             req_target=True,
             continuous=False,
             cooldown=0,
@@ -201,7 +201,7 @@ class Immolate(Mutation):
     def __init__(self, cooldown: int, turns: int):
         super().__init__(
             name="Immolate",
-            message='Images of dancing flames rush through your mind...',
+            message='Images of dancing, white-gold flames rush through your mind...',
             description="Set an enemy on fire with the power of your mind!",
             req_target=True,
             continuous=False,
@@ -249,3 +249,63 @@ class MoireBeastHide(Mutation):
         else:
             self.cooldown = self.cooldown_max
             return core.abilities.MoireDazzleAction(caster, target, x, y, self.turns)
+
+
+class Wither(Mutation):
+    """Enfeeble the opponent, causing a permanent max hp reduction that persists until it is removed from
+    other sources, such as a sludge fountain, or rare enfeeble removal items."""
+    parent: Actor
+
+    def __init__(self, hp_reduction: int, cooldown: int):
+        super().__init__(
+            name="Wither",
+            message='The world around you feels almost imperceptibly less corporeal, '
+                    'like you are truly the only thing that is real...',
+            description=f"Enfeeble an enemy, permanently reducing their max hp by {hp_reduction}. Does not stack.",
+            req_target=True,
+            continuous=False,
+            cooldown=cooldown,
+            range=1
+        )
+        self.action = core.abilities.WitherAction
+        self.cooldown_max = cooldown
+        self.hp_reduction = hp_reduction
+
+    def activate(self, caster: Actor, target: Actor, x: int, y: int) -> \
+            Optional[core.abilities.WitherAction]:
+        if self.cooldown > 0 and self.parent.name == "Player":
+            core.g.engine.message_log.add_message("You cannot perform this ability yet.", config.colour.impossible)
+            return None
+        else:
+            self.cooldown = self.cooldown_max
+            return core.abilities.WitherAction(caster, target, x, y, self.hp_reduction)
+
+
+class Fear(Mutation):
+    """Fear an entity at close range, causing them to flee for a given number of turns. Can be resisted with INT.
+    Direct damage taken may break the effect"""
+    parent: Actor
+
+    def __init__(self, turns: int, difficulty: int, cooldown: int):
+        super().__init__(
+            name="Fear",
+            message='You begin to comprehend primordial sensations that created this place. It is horrifying!',
+            description=f"Inflict Fear upon an enemy near you, causing them to run from you for {turns}.",
+            req_target=True,
+            continuous=False,
+            cooldown=cooldown,
+            range=1
+        )
+        self.action = core.abilities.WitherAction
+        self.cooldown_max = cooldown
+        self.turns = turns
+        self.difficulty = difficulty
+
+    def activate(self, caster: Actor, target: Actor, x: int, y: int) -> \
+            Optional[core.abilities.WitherAction]:
+        if self.cooldown > 0 and self.parent.name == "Player":
+            core.g.engine.message_log.add_message("You cannot perform this ability yet.", config.colour.impossible)
+            return None
+        else:
+            self.cooldown = self.cooldown_max
+            return core.abilities.FearAction(caster, target, x, y, self.turns, self.difficulty)

@@ -181,17 +181,16 @@ gilbert_3_init = {
     "2": "This sounds ominous. No."
   },
   "1": {
-    "speech": "You may have noticed in this cave layer that the plant life has started to grow visciously and desperately. Normally this sort of thing is self-limiting, but I fear that here it is being driven by some blasted creature with the ability to spur floral growth.\nI want you to find it, and slay it. I will provide you with a tool to help you do this.\nWhat do you say?",
-    "11": "I will do this for you.",
-    "12": "I don't think I am ready for this task."
+    "speech": "Occasionally, the genetic chaos births a mutant which has a particular advantage over the rest. One such mutant recently used its newfound intelligence to sneak into my camp and stole an important book from me. I'd like you to find this book and return it to me.\nThis mutant should still be in this cave layer. Be warned, when fighting this abomination you should expect fierce resistance; prepare yourself for a tough fight.",
+    "11": "I will help you get your book back.",
+    "12": "I don't think I am ready for this..."
   },
   "2": {
-    "speech": "I appreciate it is hard to trust strangers but this is an important task, not some stupid trick. If you change your mind, I will be here."
+    "speech": "If you change your mind, I will be here."
   },
   "11": {
-    "speech": "You are brave, descender. Spill yellow blood with this Withering Blade. Good luck.",
+    "speech": "You are brave, descender. Your help will be greatly appreciated by my benefactors, who are always looking for reliable assistants. Good luck.",
     "tag_1:": "continue:gilbertquest",
-    "tag_2": "reward:withering_blade"
   },
   "12": {
     "speech": "I agree, the task is daunting. If you reconsider, I will be here."
@@ -199,6 +198,6 @@ gilbert_3_init = {
 }
 gilbert_3_started = {
   "0": {
-    "speech": "Return to me when you have slain that abomination."
+    "speech": "Did you kill it? Do you have my book?"
   }
 }

@@ -34,6 +34,58 @@
     },
     "description": "What you can only assume is a hunched humanoid draped in tattered linens. Its face is completely concealed by a tapered hood. It chants in a gutteral language as it paces slowly."
   },
+  "ashen_lurker": {
+    "char": "a",
+    "colour": [101, 101, 101],
+    "tag": "ashen_lurker",
+    "name": "Ashen Lurker",
+    "ai_cls": "HostileEnemy",
+    "equipment": "equipment",
+    "fighter": {
+      "hp": 26,
+      "max_hp": 26,
+      "damage_dice": 2,
+      "damage_sides": 3,
+      "strength": 15,
+      "dexterity": 20,
+      "vitality": 16,
+      "intellect": 28,
+      "armour": 0,
+      "xp": 760,
+      "dodges": true
+    },
+    "corpse": {
+      "char": "%",
+      "colour": [127, 0, 0],
+      "name": "Humanoid corpse",
+      "description": "The body of a creature somewhat resembling a human, but with many subtle and horrific differences."
+    },
+    "inventory": {
+      "capacity": 8
+    },
+    "level": {
+      "level_up_base": 0,
+      "xp_given": 760
+    },
+    "description": "A curious-looking face with disturbingly smooth and animalistic features peers over its shoulder to face you. Its three-armed body is asymmetric and its skin is gaunt and ashen, but it strides confidently through the cave, avoiding patches of moss and lichen that shy away from its presence.",
+    "abilities": {
+      "Wither": {
+        "hp_reduction": 6,
+        "cooldown": 50
+      },
+      "Fear": {
+        "turns": 6,
+        "difficulty": 14,
+        "cooldown": 25
+      },
+      "Bite": {
+        "damage": 1,
+        "turns": 4,
+        "difficulty": 16,
+        "cooldown": 10
+      }
+    }
+  },
   "brainraker": {
     "char": "ß",
     "colour": [0, 95, 151],

@@ -199,7 +199,7 @@ class BiteAction(AbilityAction):
                 else:
                     core.g.engine.message_log.add_message(f'The {attacker.name} bites the {defender.name} '
                                                           f'for {str(damage)} damage.', config.colour.enemy_atk)
-                if bleeding:
+                if bleeding and not defender.name.capitalize() == 'Player':
                     core.g.engine.message_log.add_message(f'The {defender.name} starts bleeding!',
                                                           config.colour.ability_used)
             defender.fighter.hp -= damage
@@ -499,6 +499,84 @@ class MoireDazzleAction(AbilityAction):
             core.g.engine.message_log.add_message(f'The strobes are sickening! You feel slow and weak!',
                                                   config.colour.warning)
             effect = parts.effects.DazzleEffect(turns=10, difficulty=self.difficulty, parent=self.target)
+            effect.parent = defender
+            defender.active_effects.append(effect)
+
+        return None
+
+
+class WitherAction(AbilityAction):
+    """Wither an enemy, permanently reducing their max hp. Not stackable curse."""
+
+    def __init__(self, caster: Actor, target: Actor, x: int, y: int, hp_reduction: int):
+        super().__init__(
+            entity=caster,
+            target=target,
+            x=x,
+            y=y
+        )
+        self.hp_reduction = hp_reduction
+
+    def perform(self) -> Optional[Exception]:
+        attacker = self.caster
+        defender = self.target
+
+        # First check if a stronger wither effect is already active
+        for effect in defender.active_effects:
+            if isinstance(effect, parts.effects.WitherEffect):
+                if effect.hp_reduction >= self.hp_reduction:
+                    if defender.name.capitalize() == 'Player':
+                        core.g.engine.message_log.add_message(f'The {attacker.name} faces its palms towards you...',
+                                                              config.colour.ability_used)
+                        core.g.engine.message_log.add_message(f'Your pathetic, enfeebled body is unaffected by the Withering effect.',
+                                                              config.colour.warning)
+                    return None
+                else:
+                    # Replace the old effect with the new one
+                    defender.active_effects.remove(effect)
+
+        if defender.name.capitalize() == 'Player':
+            core.g.engine.message_log.add_message(f'The {attacker.name} faces its palms towards you...',
+                                                  config.colour.ability_used)
+            core.g.engine.message_log.add_message(f'Something deep within you permanently disintegrates!',
+                                                  config.colour.warning)
+            core.g.engine.message_log.add_message(f'You are Withered! Your max HP is lowered!',
+                                                  config.colour.wither)
+            effect = parts.effects.WitherEffect(hp_reduction=self.hp_reduction, parent=self.target)
+            effect.parent = defender
+            defender.active_effects.append(effect)
+
+        return None
+
+
+class FearAction(AbilityAction):
+    """Fear an enemy, causing them to flee for X turns. Effect may be broken when the entity takes damage."""
+
+    def __init__(self, caster: Actor, target: Actor, x: int, y: int, turns: int, difficulty: int):
+        super().__init__(
+            entity=caster,
+            target=target,
+            x=x,
+            y=y
+        )
+        self.turns = turns
+        self.difficulty = difficulty
+
+    def perform(self) -> Optional[Exception]:
+        attacker = self.caster
+        defender = self.target
+
+        # If the entity is feared, does nothing.
+        for effect in defender.active_effects:
+            if isinstance(effect, parts.effects.FearEffect):
+                return None
+
+        if defender.name.capitalize() == 'Player':
+            core.g.engine.message_log.add_message(f'The sight of {attacker.name} awakens a deep primal terror!',
+                                                  config.colour.ability_used)
+            core.g.engine.message_log.add_message(f'You are terrified!',
+                                                  config.colour.feared)
+            effect = parts.effects.FearEffect(turns=self.turns, difficulty=self.difficulty, parent=self.target)
             effect.parent = defender
             defender.active_effects.append(effect)
 

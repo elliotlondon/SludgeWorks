@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 import numpy as np
 import logging
 import textwrap
@@ -17,6 +19,7 @@ import core.g
 import parts.consumable
 import parts.effects
 import parts.inventory
+from parts.equipment_types import WEAPON_LIST, ARMOUR_LIST
 from config.data_io import save_game
 from config.exceptions import Impossible, DataLoadError, QuestError
 from core.actions import Action
@@ -359,7 +362,8 @@ class MainGameEventHandler(EventHandler):
             else:
                 core.g.engine.message_log.add_message("Your inventory is full.", config.colour.error)
         elif key == tcod.event.K_i:
-            return InventoryActivateHandler()
+            return ExperimentalInventoryHandler()
+            # return InventoryActivateHandler()
         elif key == tcod.event.K_d:
             return InventoryDropHandler()
 
@@ -676,11 +680,17 @@ class HelpScreenEventHandler(EventHandler):
 class CharacterScreenEventHandler(AskUserEventHandler):
     """Handler to show the user their character stats and status during the main game loop."""
 
+    @staticmethod
+    def wrap(string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():
+            yield from textwrap.wrap(line, width, expand_tabs=True)
+
     def on_render(self, console: tcod.Console) -> None:
         super().on_render(console)
 
         width = 40
-        height = 14
+        height = 18
         x = console.width // 2 - int(width / 2)
         y = console.height // 2 - int(height / 2)
 
@@ -723,6 +733,15 @@ class CharacterScreenEventHandler(AskUserEventHandler):
                       alignment=tcod.LEFT, fg=sheet_colours[2])
         console.print(x=x + 1, y=y + 12, string=f"Intellect: {core.g.engine.player.fighter.modified_intellect}",
                       alignment=tcod.LEFT, fg=sheet_colours[3])
+
+        # Current effects
+        console.print(x=x + 1, y=y + 14, string=f"Active effects: ",
+                      alignment=tcod.LEFT, fg=sheet_colours[0])
+        x_offset = 0
+        for effect in core.g.engine.player.active_effects:
+            console.print(x=x + 1 + x_offset, y=y + 15, string=f"{effect.name}",
+                          alignment=tcod.LEFT, fg=effect.colour)
+            x_offset += len(effect.name) + 1
 
 
 class AbilityScreenEventHandler(AskUserEventHandler):
@@ -1060,6 +1079,265 @@ class InventoryDropHandler(InventoryEventHandler):
     def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
         """Drop this item."""
         return core.actions.DropItem(core.g.engine.player, item)
+
+
+class ExperimentalInventoryHandler(EventHandler):
+    """This handler displays a visual inventory with spaces equal to inventory slots.
+    The use is able to select an item, either by navigating with the keyboard, or by clicking with the mouse.
+    Items which are selected or hovered over have a visible border, and on right click or space a dropdown menu
+    is created to show all available options.
+    ."""
+    #
+    # Grids are 3x3, with the center empty unless there is an item there.
+    # There are 6 boxes in each row, with 4 columns, giving a total of 26 items.
+    # Quantity can be displayed in the hover menu when the player selects the item.
+    #
+    # '┌─┐┌─┐┌─┐┌─┐┌─┐┌─┐'
+    # '│ ││ ││ ││ ││ ││ │'
+    # '└─┘└─┘└─┘└─┘└─┘└─┘'
+
+    def __init__(self):
+        """Sets the cursor to the player when this handler is constructed."""
+        super().__init__()
+        screen_shape = core.g.console.width, core.g.console.height - 7
+        cam_x, cam_y = core.g.engine.game_map.camera.get_left_top_pos(screen_shape)
+        core.g.engine.mouse_location = (core.g.engine.player.x - cam_x, core.g.engine.player.y - cam_y)
+        self.selected = None
+        self.height = 22
+        self.width = 14
+        self.num_items = len(core.g.engine.player.inventory.items)
+        # Array for slot coordinates
+        self.slots = []
+        self.occupied_slots = []
+        self.held_down = False
+        self.presstime = 0
+
+    @staticmethod
+    def wrap(string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():
+            yield from textwrap.wrap(line, width, expand_tabs=True)
+
+    def on_render(self, console: tcod.Console) -> Optional[ExperimentalInventoryHandler]:
+        super().on_render(console)
+        core.g.global_clock.toc()
+        x = console.width // 2 - int(self.width / 2)
+        y = console.height // 2 - int(self.height / 2)
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=self.width,
+            height=self.height,
+            title='',
+            clear=True,
+            fg=tcod.white,
+            bg=tcod.black,
+        )
+        # Header
+        console.print(x + 1, y, f"┤INVENTORY├")
+
+        # Loop through the inventory box, printing the grid and adding the items.
+        ypos = 2
+        placed_items = 0
+        while ypos < 18:
+            # Is there an item to put here? If so, colour it white. Else grey
+            xpos = 0
+            while xpos < 12:
+                if placed_items < self.num_items:
+                    # Hacky way of dealing with potential items list changing size during iteration
+                    try:
+                        item = core.g.engine.player.inventory.items[placed_items]
+                    except:
+                        return ExperimentalInventoryHandler()
+                    item_icon = item.char
+                    str_colour = item.str_colour
+                    placed_items += 1
+                else:
+                    item_icon = ''
+                    str_colour = config.colour.black
+                console.print(x + xpos + 1, y + ypos, '┌─┐', fg=str_colour)
+                console.print(x + xpos + 1, y + ypos + 1, '│', fg=str_colour)
+                console.print(x + xpos + 2, y + ypos + 1, item_icon, fg=str_colour)
+                console.print(x + xpos + 3, y + ypos + 1, '│', fg=str_colour)
+                console.print(x + xpos + 1, y + ypos + 2, '└─┘', fg=str_colour)
+                if item_icon != '':
+                    # Provide max and min x and y coords
+                    self.occupied_slots.append([x + xpos, y + ypos + 1])
+                self.slots.append([x + xpos, y + ypos + 1])
+                xpos += 3
+            ypos += 3
+
+        # Footer
+        if len(core.g.engine.player.inventory.items) <= core.g.engine.player.inventory.capacity * 0.7:
+            colour = tcod.white
+        elif len(core.g.engine.player.inventory.items) < core.g.engine.player.inventory.capacity:
+            colour = tcod.yellow
+        else:
+            colour = tcod.red
+        print_msg = f"({len(core.g.engine.player.inventory.items)}/{core.g.engine.player.inventory.capacity})"
+        console.print(x + self.width - len(print_msg), y + self.height - 1, print_msg, colour)
+
+        # Create the look box when the mouse is hovering over one of the items.
+        index = 0
+        slot = None
+        draw_box = False
+        for slot in self.occupied_slots:
+            if slot[0] <= core.g.engine.mouse_location[0] <= slot[0] + 3 and \
+                slot[1] <= core.g.engine.mouse_location[1] < slot[1] + 3:
+                draw_box = True
+                break
+            index += 1
+        if draw_box and not self.held_down:
+            self.create_inv_box(slot[0] + 2, slot[1] + 1, console, index=index)
+
+        # # Print mouse position here in inventory coordinates just for debugging purposes.
+        # console.print(x + 1, y + self.height - 1, f'x={mouse_x}, '
+        #                                           f'y={mouse_y}', config.colour.white)
+        # Update global clock
+
+    def create_inv_box(self, x_pos: int, y_pos: int, console: tcod.Console, index : int) -> None:
+        """Render the parent and dim the result, then print the message on top.
+        x_pos: x index of selected tile
+        y_pos: y index of selected tile
+        """
+        item = core.g.engine.player.inventory.items[index]
+
+        # Dictionary for all required item information
+        item_dict = {}
+        item_dict['name'] = item.name
+        item_dict['colour'] = item.colour
+        item_dict['description'] = item.description
+        # Find out whether this is a weapon, armour, consumable, quest item, or junk.
+        if item.consumable:
+            if item.consumable == 'junk':
+                item_dict['type'] = 'Junk'
+                item_dict['type_colour'] = config.colour.grey
+            else:
+                item_dict['type'] = 'Consumable'
+                item_dict['type_colour'] = config.colour.cyan
+        elif item.equippable:
+            if item.equippable.equipment_type.name in WEAPON_LIST:
+                item_dict['type'] = 'Weapon'
+                item_dict['type_colour'] = config.colour.white
+            elif item.equippable.equipment_type.name in ARMOUR_LIST:
+                item_dict['type'] = 'Armour'
+                item_dict['type_colour'] = config.colour.orange
+        if core.g.engine.player.equipment.item_is_equipped(item):
+            item_dict['extras'] = 'Equipped'
+            item_dict['extras_colour'] = config.colour.grey
+
+        # Box size
+        width = self.width * 2
+        height = self.height - 4
+
+        # Calculate whether the box should be rendered above or below the selected tile
+        if x_pos >= console.width // 2:
+            box_x = x_pos - self.width
+        else:
+            box_x = x_pos + 1
+        if y_pos >= console.height // 2:
+            box_y = y_pos - self.height
+        else:
+            box_y = y_pos + 1
+
+        # First draw a box for the tile
+        console.draw_frame(
+            x=box_x,
+            y=box_y,
+            width=width,
+            height=height,
+            title='',
+            clear=True,
+            fg=(255, 255, 255),
+            bg=(0, 0, 0)
+        )
+        # Add white bg to title if item colour is too dark
+        if sum(item_dict['colour']) < 121:
+            bg = (255, 255, 255)
+        else:
+            bg = (0, 0, 0)
+        console.print(x=box_x + 1, y=box_y, string=f"{item_dict['name']}", fg=item_dict['colour'], bg=bg,
+                      alignment=tcod.constants.LEFT)
+
+        # Break up description string into sub-strings if it is longer than the box width.
+        y_offset = 2
+        item_dict['description'] = item_dict['description'].replace(".", ".\n")
+        for line in list(self.wrap(item_dict['description'], width - 2)):
+            console.print(x=box_x + 1, y=box_y + y_offset, string=line, fg=tcod.white)
+            y_offset += 1
+
+        if 'extras' in item_dict:
+            console.print(x=box_x + 1, y=box_y + y_offset + 2, string=item_dict['extras'], fg=item_dict['extras_colour'])
+
+        quantity = core.g.engine.player.inventory.quantities[index]
+        num_digits = int(np.log10(quantity)) + 1
+        # Print quantity in bottom right corner if stackable
+        if item.stackable:
+            console.print(x=box_x + width - num_digits - 3, y=box_y + height - 1,
+                          string=f'#:{core.g.engine.player.inventory.quantities[index]}',
+                          fg=config.colour.white)
+
+        # Cool footer zone B-)
+        console.print(x=box_x + 1, y=box_y + height - 1, string=f"{item_dict['type']}", fg=item_dict['type_colour'],
+                      bg=bg, alignment=tcod.constants.LEFT)
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        player = core.g.engine.player
+        key = event.sym
+
+        if key == tcod.event.KeySym.TAB:
+            player.inventory.autosort()
+            core.g.engine.message_log.add_message("You reorganize your inventory.",
+                                                  config.colour.use)
+            return ExperimentalInventoryHandler()
+        elif key == tcod.event.KeySym.ESCAPE:
+            return MainGameEventHandler()
+        return super().ev_keydown(event)
+
+    # def ev_mousebuttondown(self, event: tcod.event.MouseButtonUp):
+    #     """When the left mouse button is pressed down, register that it is held down for movement, if in the grid."""
+    #     for slot in self.slots:
+    #         if slot[0] <= core.g.engine.mouse_location[0] <= slot[0] + 3 and \
+    #                 slot[1] <= core.g.engine.mouse_location[1] < slot[1] + 3:
+    #             self.held_down = True
+    #             self.presstime = time.time()
+    #             break
+
+    # def ev_mousemotion(self, event: tcod.event.MouseMotion) -> None:
+    #     """If the left mouse button is being held down, and more than 0.5 seconds has passed, make the original tile
+    #      blank, and provide a copy that moves with the player cursor."""
+    #     if self.held_down and (time.time() - self.presstime >= 0.5):
+
+    def ev_mousebuttonup(self, event: tcod.event.MouseButtonUp):
+        """When the left mouse button is released, check where the mouse location is within the slot grid.
+         If it's within the same location as it started, use the item if there has not been a delay of more than 0.5s
+         Elif the grid position is different, swap the items!"""
+        index = 0
+        for slot in self.slots:
+            if index > self.num_items - 1:
+                return ExperimentalInventoryHandler()
+            if slot[0] <= core.g.engine.mouse_location[0] <= slot[0] + 3 and \
+                    slot[1] <= core.g.engine.mouse_location[1] < slot[1] + 3:
+                selected_item = core.g.engine.player.inventory.items[index]
+                return self.on_item_selected(selected_item)
+            index += 1
+        self.held_down = False
+
+    def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
+        for effect in core.g.engine.player.active_effects:
+            if isinstance(effect, parts.effects.StunEffect):
+                return PopupMessage("You are stunned!", ExperimentalInventoryHandler())
+        if item.consumable:
+            if isinstance(item.consumable, parts.consumable.Junk):
+                return core.input_handlers.PopupMessage(item.usetext,
+                                                        ExperimentalInventoryHandler())
+            # Return the action for the selected item.
+            return item.consumable.get_action(core.g.engine.player)
+        elif item.equippable:
+            return core.actions.EquipAction(core.g.engine.player, item)
+        else:
+            return None
 
 
 class ConversationEventHandler(AskUserEventHandler):

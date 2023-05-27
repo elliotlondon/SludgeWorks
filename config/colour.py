@@ -41,10 +41,13 @@ def get_debuff_colours(player: parts.entity.Entity) -> List:
 
 # Basic colours
 white = (0xFF, 0xFF, 0xFF)
+grey = tcod.grey
 black = (0x0, 0x0, 0x0)
 red = (0xFF, 0x0, 0x0)
+orange = tcod.orange
 green = (0x0, 0xFF, 0x0)
 blue = (0x0, 0x0, 0xFF)
+cyan = tcod.cyan
 yellow = (0xFF, 0xFF, 0x0)
 
 # System decorators
@@ -93,6 +96,8 @@ enrage = tcod.dark_red
 stun = tcod.cyan
 stun_end = tcod.light_cyan
 dazzle = tcod.light_grey
+wither = tcod.grey
+feared = tcod.light_purple
 
 # Liquids
 blood = tcod.darker_crimson
@@ -101,6 +106,7 @@ sap = tcod.dark_yellow
 # Screen info
 bar_text = white
 hp_bar_filled = (0x0, 0x60, 0x0)
+hp_bar_withered = tcod.grey
 hp_bar_empty = tcod.darkest_red
 xp_bar_filled = tcod.dark_blue
 xp_bar_empty = tcod.darkest_blue

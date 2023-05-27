@@ -1,5 +1,8 @@
 from enum import Enum, auto
 
+ARMOUR_LIST = ['Head', 'Torso', 'Hands', 'Legs', 'Feet', 'Ring', 'Neck']
+WEAPON_LIST = ['Main_Hand', 'Off_Hand']
+
 
 class EquipmentType(Enum):
     # Weapons

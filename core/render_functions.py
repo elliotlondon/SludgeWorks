@@ -26,20 +26,30 @@ class RenderOrder(Enum):
     ACTOR = auto()
 
 
-def render_bar(console: Console, current_value: int, max_value: int, text: str,
+def render_bar(console: Console, current_value: int, max_value_1 : int, max_value_2 : int, text: str,
                x: int, y: int, total_width: int, bg_empty: Tuple[int, int, int], bg_full: Tuple[int, int, int]) -> None:
-    if current_value > max_value:
-        bar_width = total_width
+    # Different max and effective max mean that the player has a curse/effect which lowers max hp.
+    if max_value_1 == max_value_2:
+        if current_value > max_value_1:
+            bar_width = total_width
+        else:
+            bar_width = int(float(current_value) / max_value_1 * total_width)
+        console.draw_rect(x=x - 1, y=y, width=total_width, height=1, ch=1, bg=bg_empty)
+
+        if bar_width > 0:
+            console.draw_rect(x=x - 1, y=y, width=bar_width, height=1, ch=1, bg=bg_full)
+        console.print(x=x, y=y, string=text, fg=config.colour.bar_text)
     else:
-        bar_width = int(float(current_value) / max_value * total_width)
+        # First bar, effective max hp
+        console.draw_rect(x=x - 1, y=y, width=total_width, height=1, ch=1, bg=config.colour.wither)
 
-    console.draw_rect(x=x - 1, y=y, width=total_width, height=1, ch=1, bg=bg_empty)
+        # Second bar, same as first switch case, but shortened
+        new_width = int((max_value_1 / max_value_2) * total_width)
+        console.draw_rect(x=x - 1, y=y, width=new_width, height=1, ch=1, bg=bg_empty)
 
-    if bar_width > 0:
-        console.draw_rect(x=x - 1, y=y, width=bar_width, height=1, ch=1, bg=bg_full)
-
-    console.print(x=x, y=y, string=text, fg=config.colour.bar_text)
-
+        if new_width > 0:
+            console.draw_rect(x=x - 1, y=y, width=int((current_value / max_value_2) * total_width), height=1, ch=1, bg=bg_full)
+        console.print(x=x, y=y, string=text, fg=config.colour.bar_text)
 
 def render_dungeon_level(console: Console, dungeon_level: int, location: Tuple[int, int]) -> None:
     """Render the level the player is currently on, at the given location."""

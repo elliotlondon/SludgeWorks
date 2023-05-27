@@ -206,7 +206,7 @@ def generate_dungeon(engine: Engine,
                     if logging.DEBUG >= logging.root.level:
                         engine.message_log.add_message("Could not add new room...", config.colour.debug)
 
-            # Add rocks/water
+            # # Add rocks/water
             dungeon = add_rubble(dungeon, events=4)
             dungeon = add_hazards(dungeon, engine, floods=4, holes=3)
             dungeon = add_features(dungeon)
@@ -397,6 +397,13 @@ def place_quest_entities(dungeon: GameMap, engine: Engine):
                 x, y = dungeon.get_random_walkable_nonfov_tile()
                 moire_beast = dungeon.engine.clone('moire_beast')
                 moire_beast.spawn(dungeon, x, y)
+    elif current_floor == 3:
+        for quest in engine.quests.active_quests:
+            if 'gilbert' in quest.name and not quest.failed:
+                x, y = dungeon.get_random_walkable_nonfov_tile()
+                ashen_lurker = dungeon.engine.clone('ashen_lurker')
+                ashen_lurker.spawn(dungeon, x, y)
+
 
 def tunnel_between(start: Tuple[int, int], end: Tuple[int, int]) -> Iterator[Tuple[int, int]]:
     """

@@ -82,15 +82,15 @@
     }
   },
   {
-    "withering_blade": {
+    "darker_blade": {
       "char": "/",
       "colour": [
         121,
-        56,
+        96,
         79
       ],
-      "tag": "withering_blade",
-      "name": "Withering Blade",
+      "tag": "darker_blade",
+      "name": "Darker Blade",
       "equipment_type": "MainHand",
       "equipment": {
         "damage_dice": 2,
@@ -99,11 +99,17 @@
         "dexterity_bonus": 0,
         "vitality_bonus": 0,
         "intellect_bonus": 0,
-        "armour_bonus": 0
+        "armour_bonus": 0,
+        "modifiers": {
+          "wither": {
+            "hp_reduction": 3,
+            "difficulty": 14
+          }
+        }
       },
-      "depth": 5,
-      "rarity": 4,
-      "description": "A thin, curved blade with a runic inscription running along the edge. It reeks of sap, and as you hold it against some nearby cave moss, you observe it to rapidly wilt and die. The metal is surprisingly light and casts chromatic reflections."
+      "depth": 4,
+      "rarity": 5,
+      "description": "A thin, curved blade imbued with a withering force. The metal is surprisingly light and casts chromatic reflections."
     }
   }
 ]

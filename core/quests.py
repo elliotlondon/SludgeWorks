@@ -105,14 +105,13 @@ class GilbertQuest(Quest):
     @staticmethod
     def get_step_description(step):
         if step == 0:
-            return "Gilbert has asked me to kill a Moire Beast and collect its hide in exchange for a pair of" \
+            return "Gilbert has asked me to kill a Moire Beast and collect its hide in exchange for a pair of " \
                    "leather boots."
         elif step == 1:
-            return "I have been tasked by Gilbert to find and slay the creature which is making the plant life grow " \
-                   "out of control in this section of the cave. He has given me a Withering Blade to help me achieve " \
-                   "this."
+            return "Gilbert wants me to get back an important book for him. It should be within the 3rd level down " \
+                   "of the Upper Caves. He says to watch out for an intelligent mutant creature who likely has it."
         elif step == 2:
-            return "Gilbert spoke about a safe place called 'The Liminus' which can be reached by continuing down these" \
+            return "Gilbert spoke about a safe place called 'The Liminus' which can be reached by continuing down these " \
                    "caverns. He says he can help me further if I meet him there."
 
     def complete_step(self):

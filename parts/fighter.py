@@ -12,6 +12,7 @@ from config.colour import player_die, enemy_die
 from maps.tiles import verdant_chars
 from parts.ai import HostileStationary, PassiveStationary
 from parts.base_component import BaseComponent
+from parts.effects import WitherEffect
 from utils.random_utils import roll_dice, dnd_bonus_calc
 
 if TYPE_CHECKING:
@@ -25,6 +26,7 @@ class Fighter(BaseComponent):
                  armour, xp=0, level=1, dodges=False):
         self._hp = hp
         self.base_max_hp = max_hp
+        self.base_effective_max_hp = max_hp
         self.damage_dice = damage_dice
         self.damage_sides = damage_sides
         self.base_strength = strength
@@ -47,15 +49,27 @@ class Fighter(BaseComponent):
 
     @hp.setter
     def hp(self, value: int) -> None:
+        """Current HP of the entity"""
         self._hp = max(0, min(value, self.max_hp))
         if self._hp == 0 and self.parent.ai:
             self.die()
 
     @property
     def max_hp(self):
+        """Real max HP of the entity, calculated through stats and from equipment bonuses"""
         bonus = 0
-
         return self.base_max_hp + bonus
+
+    @property
+    def effective_max_hp(self):
+        """Temporary max HP of the enemy after applying curses and debuffs"""
+        # Check if a withering effect is present
+        hp_reduction = 0
+        for effect in self.parent.active_effects:
+            if isinstance(effect, parts.effects.WitherEffect):
+                hp_reduction = effect.hp_reduction
+        bonus = 0
+        return self.base_max_hp + bonus - hp_reduction
 
     @property
     def damage(self):
@@ -96,13 +110,13 @@ class Fighter(BaseComponent):
         return self.modified_armour + self.parent.equipment.armour_bonus
 
     def heal(self, amount: int) -> int:
-        if self.hp == self.max_hp:
+        if self.hp >= self.effective_max_hp:
             return 0
 
         new_hp_value = self.hp + amount
 
-        if new_hp_value > self.max_hp:
-            new_hp_value = self.max_hp
+        if new_hp_value > self.effective_max_hp:
+            new_hp_value = self.effective_max_hp
 
         amount_recovered = new_hp_value - self.hp
 

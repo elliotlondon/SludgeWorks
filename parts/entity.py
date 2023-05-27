@@ -294,7 +294,9 @@ class Actor(Entity):
         if self.active_effects:
             for effect in self.active_effects:
                 if self.is_alive:
-                    if effect.turns > 0:
+                    if not hasattr(effect, 'turns'):
+                        continue
+                    elif effect.turns > 0:
                             effect.tick()
                     else:
                         effect.expire()

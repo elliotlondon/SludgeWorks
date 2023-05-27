@@ -14,3 +14,8 @@ twig_table = {
 moire_beast = {
     "moire_beast_hide": 1
 }
+
+ashenlurker = {
+    "book_veilworks": 1,
+    "darker_blade": 1
+}

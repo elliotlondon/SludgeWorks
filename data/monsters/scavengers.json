@@ -112,13 +112,13 @@
     },
     "description": "A colossal ogre-like hominid covered in patches of matted hair and littered with scars. It smashes everything it can find with childlike glee.",
     "abilities": {
-         "Bludgeon": {
-          "damage": 2,
-          "sides": 3,
-          "turns": 1,
-          "difficulty": 16,
-           "cooldown": 5
-        }
+     "Bludgeon": {
+        "damage": 2,
+        "sides": 3,
+        "turns": 1,
+        "difficulty": 16,
+         "cooldown": 5
+      }
     }
   },
   "moire_beast": {
@@ -197,7 +197,15 @@
       "level_up_base": 0,
       "xp_given": 200
     },
-    "description": "This upright beast is nothing but fangs and matted, grey fur. It twiches constantly, shying from the light as frothy saliva drips from its mouth."
+    "description": "This upright beast is nothing but fangs and matted, grey fur. It twiches constantly, shying from the light as frothy saliva drips from its mouth.",
+    "abilities": {
+       "Bite": {
+        "damage": 2,
+        "turns": 3,
+        "difficulty": 14,
+         "cooldown": 8
+      }
+    }
   },
   "bloodseeker": {
     "char": "B",
@@ -215,8 +223,8 @@
       "dexterity": 16,
       "vitality": 18,
       "intellect": 12,
-      "armour": 0,
-      "xp": 1500,
+      "armour": 2,
+      "xp": 3000,
       "dodges": true
     },
     "corpse": {
@@ -232,6 +240,21 @@
       "level_up_base": 0,
       "xp_given": 1500
     },
-    "description": "An asymmetric monstrosity the size of a bear, rippling with muscle. Rusted weaponry is embedded within its body, sticking out in many directions, with pale and twisted flesh creeping up the hilts. It regularly cries out in agony."
+    "description": "An asymmetric monstrosity the size of a bear, rippling with muscle. Rusted weaponry is embedded within its body, sticking out in many directions, with pale and twisted flesh creeping up the hilts. It regularly cries out in agony.",
+    "abilities": {
+     "Bludgeon": {
+        "damage": 4,
+        "sides": 4,
+        "turns": 3,
+        "difficulty": 20,
+         "cooldown": 16
+      },
+      "Bite": {
+        "damage": 2,
+        "turns": 4,
+        "difficulty": 18,
+         "cooldown": 10
+      }
+    }
   }
 }

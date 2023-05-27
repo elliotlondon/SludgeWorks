@@ -80,9 +80,12 @@ class Inventory(BaseComponent):
             return False
 
     def sanity_check(self):
-        """Check if the items and quantities are the same length"""
+        """Check if the items and quantities are the same length, and upper bound quantities"""
         if not len(self.items) == len(self.quantities):
             raise TypeError(f"Inventory crash. {len(self.items)} and {len(self.quantities)}.")
+        for quantity in range(len(self.quantities)):
+            if self.quantities[quantity] >= 1000:
+                self.quantities[quantity] = 999
 
     def remove(self, item: Item):
         """Redefined list method to handle stackable items"""

@@ -350,11 +350,12 @@ class GameMap:
         # Now render the ui components
         core.g.engine.message_log.render(console=console, x=21, y=45, width=55, height=5)
 
-        # Render hp bar
+        # Render hp bar. Check if withered and render a different bar if so.
         core.render_functions.render_bar(
             console=console,
             current_value=core.g.engine.player.fighter.hp,
-            max_value=core.g.engine.player.fighter.max_hp,
+            max_value_1=core.g.engine.player.fighter.effective_max_hp,
+            max_value_2=core.g.engine.player.fighter.max_hp,
             x=1,
             y=core.g.screen_height - 5,
             bg_empty=config.colour.hp_bar_empty,
@@ -367,7 +368,8 @@ class GameMap:
         core.render_functions.render_bar(
             console=console,
             current_value=core.g.engine.player.level.current_xp,
-            max_value=core.g.engine.player.level.experience_to_next_level,
+            max_value_1=core.g.engine.player.level.experience_to_next_level,
+            max_value_2=core.g.engine.player.level.experience_to_next_level,
             x=1,
             y=core.g.screen_height - 4,
             bg_empty=config.colour.xp_bar_empty,

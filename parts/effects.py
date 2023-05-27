@@ -65,6 +65,8 @@ class PoisonEffect(Effect):
                  turns: int,
                  parent: Optional[parts.entity.Actor] = None,
                  ):
+        self.name = "Poison"
+        self.colour = config.colour.poison
         self.damage = damage
         self.turns = turns
         if parent:
@@ -104,6 +106,8 @@ class BleedEffect(Effect):
                  difficulty: int,
                  parent: Optional[parts.entity.Actor] = None,
                  ):
+        self.name = "Bleeding"
+        self.colour = config.colour.bleed
         self.damage = damage
         self.turns = turns
         self.difficulty = difficulty
@@ -152,6 +156,8 @@ class BurningEffect(Effect):
                  turns: int,
                  parent: Optional[parts.entity.Actor] = None,
                  ):
+        self.name = "On Fire"
+        self.colour = config.colour.on_fire
         self.turns = turns
         if parent:
             # If parent isn't provided now then it will be set later.
@@ -199,6 +205,8 @@ class StunEffect(Effect):
                  turns: int,
                  parent: Optional[parts.entity.Actor] = None,
                  ):
+        self.name = "Stunned"
+        self.colour = config.colour.stun
         self.turns = turns
         if parent:
             # If parent isn't provided now then it will be set later.
@@ -235,6 +243,8 @@ class SecondWindEffect(Effect):
                  turns: int,
                  parent: Optional[parts.entity.Actor] = None,
                  ):
+        self.name = "Second Wind"
+        self.colour = config.colour.stun
         self.turns = turns
         if parent:
             # If parent isn't provided now then it will be set later.
@@ -259,6 +269,8 @@ class DazzleEffect(Effect):
                  difficulty: int,
                  parent: parts.entity.Actor
                  ):
+        self.name = "Dazzled"
+        self.colour = config.colour.dazzle
         self.turns = turns
         self.difficulty = difficulty
         self.parent = parent
@@ -290,5 +302,63 @@ class DazzleEffect(Effect):
     def get_colour(self):
         if not core.g.global_clock.current_tic() % 10:
             return config.colour.dazzle
+        else:
+            return None
+
+
+class WitherEffect(Effect):
+    """Effect with a hp_reduction method that permanently reduces hp."""
+
+    def __init__(self,
+                 hp_reduction: int,
+                 parent: Optional[parts.entity.Actor] = None,
+                 ):
+        self.name = "Withered"
+        self.colour = config.colour.wither
+        self.hp_reduction = hp_reduction
+        if parent:
+            # If parent isn't provided now then it will be set later.
+            self.parent = parent
+
+    def tick(self):
+        pass
+
+    def expire(self):
+        pass
+
+    def get_colour(self):
+        return None
+
+
+class FearEffect(Effect):
+    """Effect that stalls turns for the player, and causes all entities which are effected by it to run away."""
+
+    def __init__(self,
+                 turns: int,
+                 difficulty : int,
+                 parent: Optional[parts.entity.Actor] = None,
+                 ):
+        self.name = "Feared"
+        self.colour = config.colour.feared
+        self.turns = turns
+        self.difficulty = difficulty
+        if parent:
+            # If parent isn't provided now then it will be set later.
+            self.parent = parent
+
+    def tick(self):
+        self.turns -= 1
+
+    def expire(self):
+        if self.parent.name == "Player":
+            core.g.engine.message_log.add_message(f"You pull yourself together, the psychic fear has worn off.",
+                                                  config.colour.feared)
+        else:
+            core.g.engine.message_log.add_message(f"The {self.parent.name} is no longer feared.",
+                                                  config.colour.feared)
+
+    def get_colour(self):
+        if not core.g.global_clock.current_tic() % 14:
+            return config.colour.feared
         else:
             return None
